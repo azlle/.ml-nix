@@ -70,7 +70,6 @@
       noto-fonts-cjk-sans
       noto-fonts-emoji
       hackgen-nf-font
-      nerdfonts
     ];
     fontDir.enable = true;
     fontconfig = {
@@ -103,7 +102,7 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
