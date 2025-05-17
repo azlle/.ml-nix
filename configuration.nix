@@ -8,6 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./settings/users.nix
       ./settings/fonts.nix
     ];
 
