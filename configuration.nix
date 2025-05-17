@@ -10,6 +10,7 @@
       ./hardware-configuration.nix
       ./settings/users.nix
       ./settings/fonts.nix
+      ./settings/networks.nix
     ];
 
   # Bootloader.
@@ -17,30 +18,11 @@
   boot.loader.grub.device = "/dev/sda";
   boot.loader.grub.useOSProber = true;
 
-  # networking.hostName = "necrofantasia"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = false;
-  networking = {
-    hostName = "necrofantasia";
-    useDHCP = false;
-    interfaces.ens33 = {
-      ipv4.addresses = [{
-        address = "192.168.1.189";
-        prefixLength = 24;
-      }];
-    };
-    defaultGateway = {
-      address = "192.168.1.1";
-      interface = "ens33";
-    };
-    nameservers = [ "8.8.8.8" ];
-  };
 
   # Set your time zone.
   time.timeZone = "Asia/Tokyo";
@@ -143,12 +125,6 @@
     settings.PasswordAuthentication = false;
     settings.KbdInteractiveAuthentication = false;
   };
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
