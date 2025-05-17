@@ -1,5 +1,5 @@
 #fonts.nix
-{ config, lib, pkgs, ... };
+{ config, lib, pkgs, ... }:
 
 {
   fonts = {
