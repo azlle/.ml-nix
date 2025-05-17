@@ -13,4 +13,6 @@
     #  thunderbird
     ];
   };
+
+  programs.fish.enable = true;
 }
