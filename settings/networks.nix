@@ -6,6 +6,7 @@
   networking.wireless = {
     enable = true;
     networks."Buffalo-A-DF70".pskRaw = "***REMOVED***";
+  };
   networking.hostName = "necrofantasia";
 
   networking = {
