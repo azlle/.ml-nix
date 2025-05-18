@@ -105,7 +105,7 @@
       options = "--delete-older-than 7d";
     };
   };
-  services.power-profiles-deamon.enable = false;
+  services.power-profiles-daemon.enable = false;
   services.tlp = {
     enable = true;
     settings = {
