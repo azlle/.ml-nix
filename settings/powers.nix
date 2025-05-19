@@ -1,8 +1,8 @@
-#users.nix
+#powers.nix
 { config, lib, pkgs, ... }:
 
 {
-  services.power-profiles-daemon.enable = false;
+  services.power-profiles-daemon.enable = true; # asusctl need
 
   services.tlp = {
     enable = false;
