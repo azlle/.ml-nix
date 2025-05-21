@@ -1,4 +1,4 @@
-#audios.nix
+# audios.nix
 { config, lib, pkgs, ... }:
 
 {

@@ -6,6 +6,7 @@
     ./i18n.nix
     ./networks.nix
     ./powers.nix
+    ./ssh.nix
     ./users.nix
   ];
 }

@@ -1,4 +1,4 @@
-#powers.nix
+# powers.nix
 { config, lib, pkgs, ... }:
 
 {

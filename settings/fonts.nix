@@ -1,4 +1,4 @@
-#fonts.nix
+# fonts.nix
 { config, lib, pkgs, ... }:
 
 {

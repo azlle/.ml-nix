@@ -1,4 +1,4 @@
-#users.nix
+# users.nix
 { config, lib, pkgs, ... }:
 
 {

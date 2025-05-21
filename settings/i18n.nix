@@ -1,4 +1,4 @@
-#i18n.nix
+# i18n.nix
 { config, lib, pkgs, ... }:
 
 {
