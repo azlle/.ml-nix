@@ -1,3 +1,4 @@
+# fish.nix
 { pkgs, config, ... }:
 
 {
