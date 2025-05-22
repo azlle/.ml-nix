@@ -11,10 +11,10 @@
     extraGroups = [ "wheel" ];
     packages = with pkgs; [
       protonup-qt
+      discord-canary
     ];
   };
 
-  programs.fish.enable = true;
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
