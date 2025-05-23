@@ -12,9 +12,9 @@
     fontDir.enable = true;
     fontconfig = {
       defaultFonts = {
-        serif = [ "Noto Serif CJK JP" "Noto Color Emoji" ];
-        sansSerif = [ "Noto Sans CJK JP" "Noto Color Emoji" ];
-        monospace = [ "JetBrainsMono Nerd Font" "Noto Color Emoji" ];
+        serif = [ "Noto Serif CJK JP" ];
+        sansSerif = [ "Noto Sans CJK JP" ];
+        monospace = [ "HackGen Console NF" ];
         emoji = [ "Noto Color Emoji" ];
       };
     };
