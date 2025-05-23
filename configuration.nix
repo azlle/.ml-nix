@@ -27,19 +27,15 @@
   };
 
   services.gnome.gnome-keyring.enable = true;
-  programs.sway = {
+  programs.hyprland = {
     enable = true;
-    wrapperFeatures.gtk = true;
-    extraOptions = [ "--unsupported-gpu" ];
   };
 
   environment.systemPackages = with pkgs; [
-    grim
-    slurp
-    wl-clipboard
-    mako
+    kitty
     waybar
-    rofi
+    hyprpaper
+    wofi
   ];
 
   # Configure keymap in X11
