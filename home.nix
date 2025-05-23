@@ -4,6 +4,7 @@
 {
   imports = [
     ./home-manager/ghostty.nix
+    ./home-manager/waybar/waybar.nix
   ];
 
   home = rec {
