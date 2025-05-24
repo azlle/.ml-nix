@@ -20,10 +20,11 @@
   time.timeZone = "Asia/Tokyo";
 
   # Enable the X11 windowing system.
-  services.xserver = {
-    enable = true;
-    displayManager.gdm.enable = true;
+  services.xserver. enable = true;
     # windowManager.gnome.enable = true;
+  services.displayManager.sddm = {
+    enable = true;
+    wayland.enable = true;
   };
 
   services.gnome.gnome-keyring.enable = true;
