@@ -2,10 +2,10 @@
 { config, lib, pkgs, ... }:
 
 {
-  services.power-profiles-daemon.enable = true; # asusctl need
+  services.power-profiles-daemon.enable = false; # asusctl need
 
   services.tlp = {
-    enable = false;
+    enable = true;
     settings = {
       CPU_SCALING_GOVERNOR_ON_AC = "performance";
       CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
@@ -25,7 +25,7 @@
   };
 
   services.asusd = {
-    enable = true;
-    enableUserService = true;
+    enable = false;
+    enableUserService = false;
   };
 }
