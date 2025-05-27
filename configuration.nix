@@ -19,19 +19,11 @@
   # Set your time zone.
   time.timeZone = "Asia/Tokyo";
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-    # windowManager.gnome.enable = true;
-
-  services.gnome.gnome-keyring.enable = true;
-  programs.hyprland = {
-    enable = true;
-  };
-
   environment.systemPackages = with pkgs; [
-    kitty
-    hyprpaper
     wofi
+    feh
+    polybar
+    picom
   ];
 
   # Configure keymap in X11

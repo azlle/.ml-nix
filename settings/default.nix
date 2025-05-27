@@ -2,6 +2,7 @@
 {
   imports = [
     ./audios.nix
+    ./de.nix
     ./fish.nix
     ./fonts.nix
     ./git.nix
@@ -10,5 +11,6 @@
     ./powers.nix
     ./ssh.nix
     ./users.nix
+    ./videodrivers.nix
   ];
 }
