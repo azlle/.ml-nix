@@ -20,7 +20,7 @@
   time.timeZone = "Asia/Tokyo";
 
   environment.systemPackages = with pkgs; [
-    wofi
+    rofi
     feh
     polybar
     picom

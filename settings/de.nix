@@ -14,7 +14,7 @@
     };
   };
 
-  programs.xwayland.enable = true;
+  programs.xwayland.enable = false;
   boot.plymouth.enable = true;
 
   services.libinput.enable = true;

@@ -85,7 +85,8 @@ keys = [
     Key([mod], "t", lazy.window.toggle_floating(), desc="Toggle floating on the focused window"),
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
-    Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    #  Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    Key([mod], "r", lazy.spawn('rofi -show drun -theme ~/.local/share/rofi/themes/rounded-yellow-dark.rasi')),
 ]
 
 # Add key bindings to switch VTs in Wayland.
@@ -130,10 +131,11 @@ for i in groups:
 
 layouts = [
     # layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4),
-    layout.Max(
-       border_width=5,
-       margin=5,
-       border_focus=GradientBorder(colours=["ffffff", "ff4444"], points=[(0, 0), (1, 1)])
+    layout.Columns(
+       border_width=3,
+       margin=12,
+       border_focus=["ff7777"],
+       border_normal=["dcb898"]
     ),
     # Try more layouts by unleashing below layouts.
     # layout.Stack(num_stacks=2),
