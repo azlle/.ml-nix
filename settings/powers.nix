@@ -2,30 +2,30 @@
 { config, lib, pkgs, ... }:
 
 {
-  services.power-profiles-daemon.enable = true; # asusctl need
+  services.power-profiles-daemon.enable = false; # asusctl need true
 
   services.tlp = {
     enable = false;
     settings = {
-      CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      CPU_SCALING_GOVERNOR_ON_AC = "schedutil";
+      CPU_SCALING_GOVERNOR_ON_BAT = "schedutil";
 
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
       CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "balance_power";
 
       CPU_MIN_PERF_ON_AC = 0;
       CPU_MAX_PERF_ON_AC = 100;
       CPU_MIN_PERF_ON_BAT = 0;
-      CPU_MAX_PERF_ON_BAT = 20;
+      CPU_MAX_PERF_ON_BAT = 50;
 
       #Optional helps save long term battery health
-      START_CHARGE_THRESH_BAT0 = 30; # 40 and below it starts to charge
+      START_CHARGE_THRESH_BAT0 = 20; # 40 and below it starts to charge
       STOP_CHARGE_THRESH_BAT0 = 60; # 80 and above it stops charging
     };
   };
 
   services.asusd = {
-    enable = true;
-    enableUserService = true;
+    enable = false;
+    enableUserService = false;
   };
 }
