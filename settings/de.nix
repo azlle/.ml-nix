@@ -4,7 +4,11 @@
 {
   services.xserver = {
     enable = true;
-    displayManager.lightdm.enable = true;
+
+    displayManager.lightdm = {
+      enable = true;
+      background = /home/eeshta/Pictures/eeshta_wallpaper.png;
+    };
 
     windowManager.qtile = {
       enable = true;
