@@ -7,7 +7,7 @@
 
     displayManager.lightdm = {
       enable = true;
-      background = /home/eeshta/Pictures/eeshta_wallpaper.png;
+      background = ../artworks/nix-wallpaper-simple-dark-gray_bottom_ngomixed.png;
     };
 
     windowManager.qtile = {
