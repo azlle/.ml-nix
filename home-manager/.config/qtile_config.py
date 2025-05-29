@@ -87,6 +87,7 @@ keys = [
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
     #  Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     Key([mod], "r", lazy.spawn('rofi -show drun -theme ~/.local/share/rofi/themes/rounded-yellow-dark.rasi')),
+    Key([mod, "shift"], "p", lazy.spawn('pkill polybar && polybar')),
 ]
 
 # Add key bindings to switch VTs in Wayland.
