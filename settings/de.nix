@@ -26,4 +26,12 @@
     tapping = true;
     naturalScrolling = true;
   };
+
+  environment.systemPackages = with pkgs; [
+    rofi
+    feh
+    polybar
+    picom
+    dunst
+  ];
 }

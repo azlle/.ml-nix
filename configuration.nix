@@ -20,10 +20,6 @@
   time.timeZone = "Asia/Tokyo";
 
   environment.systemPackages = with pkgs; [
-    rofi
-    feh
-    polybar
-    picom
   ];
 
   # Configure keymap in X11
