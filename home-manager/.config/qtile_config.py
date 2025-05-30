@@ -30,7 +30,8 @@ from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 import os
 import subprocess
-from qtile_extras.layout.decorations import GradientBorder
+volume_script = os.path.expanduser("~/.config/qtile/volume.sh")
+# from qtile_extras.layout.decorations import GradientBorder
 
 @hook.subscribe.startup_once
 def autostart():
@@ -88,9 +89,9 @@ keys = [
     #  Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     Key([mod], "r", lazy.spawn('rofi -show drun -theme ~/.local/share/rofi/themes/rounded-yellow-dark.rasi')),
     Key([mod, "shift"], "p", lazy.spawn("pkill polybar && polybar")),
-    Key([], "XF86AudioRaiseVolume", lazy.spawn("~/.config/qtile/volume.sh +")),
-    Key([], "XF86AudioLowerVolume", lazy.spawn("~/.config/qtile/volume.sh -")),
-    Key([], "XF86AudioMute", lazy.spawn("~/.config/qtile/volume.sh m")),
+    Key([], "XF86AudioRaiseVolume", lazy.spawn(f"{volume_script} +")),
+    Key([], "XF86AudioLowerVolume", lazy.spawn(f"{volume_script} -")),
+    Key([], "XF86AudioMute", lazy.spawn(f"{volume_script} m")),
 ]
 
 # Add key bindings to switch VTs in Wayland.

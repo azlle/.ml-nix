@@ -1,27 +1,17 @@
-#!/bin/sh
-
+#!/usr/bin/env bash
 NOTIFY_ID=868
 
 case $1 in
-    +)
-        pactl set-sink-volume @DEFAULT_SINK@ +5%
-        ;;
-    -)
-        pactl set-sink-volume @DEFAULT_SINK@ -5%
-        ;;
-    m)
-        pactl set-sink-mute @DEFAULT_SINK@ toggle
-
-        MUTED=`pactl get-sink-mute @DEFAULT_SINK@ | grep -o 'yes'`
-        if [ "$MUTED" = "yes" ]; then
-            dunstify -t 1500 -r $NOTIFY_ID -h int:value:0 "🔇 ミュート"
-        else
-            VOL=`pactl get-sink-volume @DEFAULT_SINK@ | sed 's/.*\([0-9][0-9]*\)%.*/\1/' | head -1`
-            dunstify -t 1500 -r $NOTIFY_ID -h int:value:$VOL "🔊 音量: ${VOL}%"
-        fi
-        exit 0
-        ;;
+    +) amixer set Master 5%+ unmute > /dev/null ;;
+    -) amixer set Master 5%- unmute > /dev/null ;;
+    m) amixer set Master toggle > /dev/null ;;
 esac
 
-VOL=`pactl get-sink-volume @DEFAULT_SINK@ | sed 's/.*\([0-9][0-9]*\)%.*/\1/' | head -1`
-dunstify -t 1500 -r $NOTIFY_ID -h int:value:$VOL "🔊 ${VOL}%"
+# 一度のamixer実行で両方取得
+output=$(amixer get Master)
+vol=$(echo "$output" | grep -oP '\[\d+%\]' | head -1 | tr -d '[]%')
+muted=$(echo "$output" | grep -o '\[off\]' | head -1)
+
+[ "$muted" = "[off]" ] && \
+    dunstify -t 1500 -r $NOTIFY_ID -h int:value:0 "🔇 ミュート" || \
+    dunstify -t 1500 -r $NOTIFY_ID -h int:value:$vol "🔊 音量: ${vol}%"

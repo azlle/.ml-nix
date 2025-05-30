@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/usr/bin/env bash
 feh --bg-scale /home/eeshta/Pictures/eeshta_wallpaper.png &
 
 picom -b &
