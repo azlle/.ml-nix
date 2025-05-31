@@ -26,10 +26,12 @@
   services.xserver.xkb = {
     layout = "jp";
     variant = "";
+    model = "jp106";
+    options = "";
   };
 
   # Configure console keymap
-  console.keyMap = "uk";
+  console.keyMap = "jp106";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;

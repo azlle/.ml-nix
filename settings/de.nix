@@ -39,7 +39,7 @@
     polybar
     picom
     dunst
-    gnome.gnome-themes-extra
-    gnome.adwaita-icon-theme
+    gnome-themes-extra
+    adwaita-icon-theme
   ];
 }
