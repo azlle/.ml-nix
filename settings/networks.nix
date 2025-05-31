@@ -25,10 +25,34 @@
   };
 
   networking = {
-    firewall = {
+    firewall.enable = false;
+
+    nftables = {
       enable = true;
-      # allowedTCPPorts = [ ... ];
-      # allowedUDPPorts = [ ... ];
+      ruleset = ''
+        table inet filter {
+          chain input {
+            type filter hook input priority 0; policy drop;
+
+            iif lo accept
+
+            ct state established,related accept
+
+            tcp dport 22 accept
+
+            ip protocol icmp accept
+            ip6 nexthdr icmpv6 accept
+          }
+
+          chain forward{
+            type filter hook forward priority 0; policy drop;
+          }
+
+          chain output {
+            type filter hook output priority 0; policy accept;
+          }
+        }
+      '';
     };
   };
 
