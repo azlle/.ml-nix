@@ -37,6 +37,7 @@
     rofi
     feh
     polybar
+    pywal
     picom
     dunst
     gnome-themes-extra
