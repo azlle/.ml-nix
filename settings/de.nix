@@ -27,11 +27,19 @@
     naturalScrolling = true;
   };
 
+  programs.dconf.enable = true;
+
+  environment.variables = {
+    GTK_THEME = "Adwaita:dark";
+  };
+
   environment.systemPackages = with pkgs; [
     rofi
     feh
     polybar
     picom
     dunst
+    gnome.gnome-themes-extra
+    gnome.adwaita-icon-theme
   ];
 }
