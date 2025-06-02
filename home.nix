@@ -5,7 +5,6 @@
   imports = [
     ./home-manager/ghostty.nix
     ./home-manager/.config
-    ./home-manager/.config/polybar
   ];
 
   home = rec {

@@ -18,6 +18,26 @@
     };
   };
 
+  services.picom = {
+    enable = true;
+
+    backend = "glx";
+    vSync = true;
+    fade = true;
+    fadeSteps = [ (0.03) (0.03) ];
+
+    shadow = true;
+    shadowOffsets = [ (-7) (-7) ];
+    wintypes = {
+      menu = { shadow = false; };
+    };
+
+    settings = {
+      shadow-radius = 7;
+      corner-radius = 20;
+    };
+  };
+  
   programs.xwayland.enable = false;
   boot.plymouth.enable = true;
 
@@ -38,7 +58,6 @@
     feh
     polybar
     pywal
-    picom
     dunst
     gnome-themes-extra
     adwaita-icon-theme
