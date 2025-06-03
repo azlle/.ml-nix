@@ -57,7 +57,6 @@
     rofi
     feh
     polybar
-    pywal
     dunst
     gnome-themes-extra
     adwaita-icon-theme
