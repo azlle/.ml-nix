@@ -28,6 +28,7 @@
 
     shadow = true;
     shadowOffsets = [ (-7) (-7) ];
+    shadowExclude = [ "class_g = 'Polybar'" "name = 'polybar'" ];
     wintypes = {
       menu = { shadow = false; };
     };
@@ -35,6 +36,7 @@
     settings = {
       shadow-radius = 7;
       corner-radius = 20;
+      rounded-corners-exclude = [ "class_g = 'Polybar'" "name = 'polybar'" ];
     };
   };
   

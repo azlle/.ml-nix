@@ -12,5 +12,6 @@
     ./ssh.nix
     ./users.nix
     ./videodrivers.nix
+    ./vrc.nix
   ];
 }
