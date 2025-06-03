@@ -7,12 +7,12 @@
   hardware.nvidia = {
     modesetting.enable = true;
 
-    prime = {
-      offload.enable = false;
-      sync.enable = true;
+    prime = lib.mkForce {
+      offload.enable = true;
+      offload.enableOffloadCmd = true;
 
-      # nvidiaBusId = "PCI:1:0:0";
-      # amdgpuBusId = "PCI:6:0:0";
+      nvidiaBusId = "PCI:1:0:0";
+      amdgpuBusId = "PCI:6:0:0";
     };
 
     open = true;
