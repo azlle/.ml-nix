@@ -7,6 +7,7 @@
     ./fonts.nix
     ./git.nix
     ./i18n.nix
+    ./mounts.nix
     ./networks.nix
     ./powers.nix
     ./ssh.nix
