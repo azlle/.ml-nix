@@ -3,7 +3,6 @@
 
 {
   environment.systemPackages = with pkgs; [
-    vrcx
     unityhub
     vrc-get
   ];
