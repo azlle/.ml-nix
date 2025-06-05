@@ -9,3 +9,5 @@ polybar &
 
 fcitx5 -d --replace &
 # xrandr --output --mode 2560x1440
+
+discordcanary --start-minimized &
