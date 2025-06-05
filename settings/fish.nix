@@ -16,6 +16,7 @@
       nrsfn = "sudo nixos-rebuild switch --flake ~/.dotfiles#necrofantasia";
       npwh = "nix profile wipe-history";
       nsgc = "nix store gc";
+      nedg = "sudo nix-env --delete-generations +3 --profile /nix/var/nix/profiles/system";
 
       #git
       gst = "git status";
