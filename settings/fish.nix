@@ -2,11 +2,18 @@
 { pkgs, config, ... }:
 
 {
+  environment.systemPackages = with pkgs; [
+    keychain
+  ];
+    
   programs.fish = {
     enable = true;
 
     interactiveShellInit = ''
       set fish_greeting
+      if command -v keychain > /dev/null
+        eval (keychain --eval --quiet nix-git_ed25519)
+      end
     '';
 
     shellAbbrs = {

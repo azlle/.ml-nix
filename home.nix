@@ -5,7 +5,6 @@
   imports = [
     ./home-manager/ghostty.nix
     ./home-manager/nvim.nix
-    ./home-manager/keychain.nix
     ./home-manager/.config
   ];
 
