@@ -5,5 +5,6 @@
   environment.systemPackages = with pkgs; [
     unityhub
     vrc-get
+    gimp3
   ];
 }
