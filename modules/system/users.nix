@@ -12,6 +12,11 @@
     packages = with pkgs; [
       protonup-qt
       discord-canary
+
+      # VRChatとか
+      unityhub
+      vrc-get
+      gimp3
     ];
   };
 

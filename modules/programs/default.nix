@@ -1,7 +1,7 @@
 # default.nix
 {
   imports = [
-    ./system
-    ./programs
+    ./fish.nix
+    ./git.nix
   ];
 }

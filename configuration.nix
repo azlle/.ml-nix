@@ -11,12 +11,6 @@
       ./modules
     ];
 
-  # Bootloader and Kernel.
-  boot.kernelPackages = pkgs.linuxPackages_zen;
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 5;
-  boot.loader.efi.canTouchEfiVariables = true;
-
   # Set your time zone.
   time.timeZone = "Asia/Tokyo";
 
@@ -46,16 +40,4 @@
   nixpkgs.config.allowUnfree = true;
 
   system.stateVersion = "24.11";
-
-  nix = {
-    settings = {
-      auto-optimise-store = true;
-      experimental-features = ["nix-command" "flakes"];
-    };
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 7d";
-    };
-  };
 }

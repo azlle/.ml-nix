@@ -7,7 +7,7 @@
 
     displayManager.lightdm = {
       enable = true;
-      background = ../artworks/nix-wallpaper-simple-dark-gray_bottom_ngomixed.png;
+      background = ../../artworks/nix-wallpaper-simple-dark-gray_bottom_ngomixed.png;
     };
 
     windowManager.qtile = {
