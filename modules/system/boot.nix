@@ -2,12 +2,21 @@
 { config, lib, pkgs, ... }:
 
 {
-  boot.kernelPackages = pkgs.linuxPackages_zen;
+  boot = {
+    kernelPackages = pkgs.linuxPackages_zen;
+    loader = {
+      systemd-boot.enable = lib.mkForce false;
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot";
+      };
+    };
 
-  boot.loader.systemd-boot = {
-    enable = true;
-    configurationLimit = 5;
+    lanzaboote = {
+      enable = true;
+      pkiBundle = "/var/lib/sbctl"; # 先にnix shell nixpkgs#sbctlなどしてsudo sbctl create-keysしておく
+    };
   };
 
-  boot.loader.efi.canTouchEfiVariables = true;
+  environment.systemPackages = with pkgs; [ sbctl ];
 }
