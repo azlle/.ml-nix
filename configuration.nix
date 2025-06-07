@@ -11,19 +11,8 @@
       ./modules
     ];
 
-  # Set your time zone.
-  time.timeZone = "Asia/Tokyo";
-
   environment.systemPackages = with pkgs; [
   ];
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "jp";
-    variant = "";
-    model = "jp106";
-    options = "";
-  };
 
   # Configure console keymap
   console.keyMap = "jp106";
@@ -31,13 +20,7 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  programs = {
-    firefox = {
-      enable = true;
-    };
-  };
-
-  nixpkgs.config.allowUnfree = true;
+  programs.firefox.enable = true;
 
   system.stateVersion = "24.11";
 }

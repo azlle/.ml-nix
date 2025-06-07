@@ -16,6 +16,11 @@
         qtile-extras
       ];
     };
+
+    xkb = {
+      layout = "jp,gb";
+      model = "jp106";
+    };
   };
 
   services.picom = {

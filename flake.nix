@@ -13,7 +13,15 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixos-hardware, home-manager, ... }@inputs: {
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixos-hardware,
+      home-manager,
+      ...
+    }@inputs: {
+
     nixosConfigurations.necrofantasia = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
