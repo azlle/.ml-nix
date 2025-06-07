@@ -12,6 +12,7 @@
     packages = with pkgs; [
       protonup-qt
       discord-canary
+      obsidian
 
       # VRChatとか
       unityhub
