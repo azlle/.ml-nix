@@ -6,5 +6,6 @@
     ./ghostty.nix
     ./nvim.nix
     ./yazi.nix
+    ./yt-dlp.nix
   ];
 }

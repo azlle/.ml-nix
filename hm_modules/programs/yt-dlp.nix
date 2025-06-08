@@ -2,12 +2,9 @@
 { config, pkgs, ... }:
 
 {
-  programs.yazi = {
+  programs.yt-dlp = {
     enable = true;
     settings = {
-      mgr = {
-        show_hidden = true;
-      };
     };
   };
 }
