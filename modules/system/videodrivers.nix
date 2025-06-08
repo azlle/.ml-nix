@@ -1,25 +1,27 @@
 # videodrives.nix
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, hostType ? "necrofantasia", ... }:
 
 {
-  services.xserver.videoDrivers = [ "amdgpu" "nvidia" ];
+  config = lib.mkIf (hostType == "necrofantasia") {
+    services.xserver.videoDrivers = [ "amdgpu" "nvidia" ];
 
-  hardware.nvidia = {
-    modesetting.enable = true;
+    hardware.nvidia = {
+      modesetting.enable = true;
 
-    prime = lib.mkForce {
-      offload.enable = true;
-      offload.enableOffloadCmd = true;
+      prime = lib.mkForce {
+        offload.enable = true;
+        offload.enableOffloadCmd = true;
 
-      nvidiaBusId = "PCI:1:0:0";
-      amdgpuBusId = "PCI:6:0:0";
+        nvidiaBusId = "PCI:1:0:0";
+        amdgpuBusId = "PCI:6:0:0";
+      };
+
+      open = true;
+      nvidiaSettings = true;
     };
 
-    open = true;
-    nvidiaSettings = true;
+    boot.kernelParams = [
+      "nvidia-drm.modeset=1"
+    ];
   };
-
-  boot.kernelParams = [
-    "nvidia-drm.modeset=1"
-  ];
 }
