@@ -7,6 +7,7 @@
     settings = {
       mgr = {
         show_hidden = true;
+        mouse_events = [];
       };
     };
   };
