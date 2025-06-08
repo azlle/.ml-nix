@@ -54,9 +54,9 @@
         specialArgs = { hostType = "cosmicmind"; };
         modules = [
           ./modules
-          ./machines/ga503_hardware.nix
+          ./machines/intelvm_hardware.nix
 
-          nixos-hardware.nixosModules.asus-zephyrus-ga503
+          # nixos-hardware.nixosModules.asus-zephyrus-ga503
 
           home-manager.nixosModules.home-manager
           {
