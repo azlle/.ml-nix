@@ -16,6 +16,8 @@
       url = "github:nix-community/lanzaboote/v0.4.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    catppuccin.url = "github:catppuccin/nix";
   };
 
   outputs =
@@ -25,6 +27,7 @@
       nixos-hardware,
       home-manager,
       lanzaboote,
+      catppuccin,
       ...
     }@inputs: {
 
@@ -42,10 +45,17 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.eeshta = ./home.nix;
+            home-manager.users.eeshta = {
+              imports = [
+                ./home.nix
+                catppuccin.homeModules.catppuccin
+              ];
+            };
           }
 
           lanzaboote.nixosModules.lanzaboote
+
+          catppuccin.nixosModules.catppuccin
         ];
       };
 

@@ -1,5 +1,5 @@
 # nvim.nix
-{ config, pkgs, ... }:
+{ ... }:
 
 {
   programs.yazi = {
@@ -10,5 +10,10 @@
         mouse_events = [];
       };
     };
+  };
+
+  catppuccin.yazi = {
+    enable = true;
+    flavor = "mocha";
   };
 }

@@ -1,5 +1,5 @@
 # nvim.nix
-{ config, pkgs, ... }:
+{ ... }:
 
 {
   programs.yt-dlp = {

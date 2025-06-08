@@ -1,5 +1,5 @@
 # ghostty.nix
-{ pkgs, ... }:
+{ ... }:
 
 {
   programs.ghostty = {

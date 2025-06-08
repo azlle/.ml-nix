@@ -1,5 +1,5 @@
 # nvim.nix
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   programs.neovim = {
