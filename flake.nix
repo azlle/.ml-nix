@@ -28,23 +28,46 @@
       ...
     }@inputs: {
 
-    nixosConfigurations.necrofantasia = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ./modules
-        ./machines/ga503_hardware.nix
+    nixosConfigurations = {
+      necrofantasia = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { hostType = "necrofantasia"; };
+        modules = [
+          ./modules
+          ./machines/ga503_hardware.nix
 
-	nixos-hardware.nixosModules.asus-zephyrus-ga503
+          nixos-hardware.nixosModules.asus-zephyrus-ga503
 
-        home-manager.nixosModules.home-manager
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.eeshta = ./home.nix;
-        }
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.eeshta = ./home.nix;
+          }
 
-        lanzaboote.nixosModules.lanzaboote
-      ];
+          lanzaboote.nixosModules.lanzaboote
+        ];
+      };
+
+      cosmicmind = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { hostType = "cosmicmind"; };
+        modules = [
+          ./modules
+          ./machines/ga503_hardware.nix
+
+          nixos-hardware.nixosModules.asus-zephyrus-ga503
+
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.eeshta = ./home.nix;
+          }
+
+          lanzaboote.nixosModules.lanzaboote
+        ];
+      };
     };
   };
 }
