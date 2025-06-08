@@ -3,9 +3,7 @@
 
 {
   imports = [
-    ./hm_modules/ghostty.nix
-    ./hm_modules/nvim.nix
-    ./hm_modules/.config
+    ./hm_modules
   ];
 
   home = rec {

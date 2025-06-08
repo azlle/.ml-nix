@@ -10,6 +10,8 @@
     extraPackages = with pkgs; [
       nixfmt-rfc-style
     ];
-    plugins = with pkgs.vimPlugins; [ lazy-nvim ];
+    plugins = with pkgs.vimPlugins; [
+      lazy-nvim
+    ];
   };
 }
