@@ -15,5 +15,6 @@
   catppuccin.yazi = {
     enable = true;
     flavor = "mocha";
+    accent = "yellow";
   };
 }

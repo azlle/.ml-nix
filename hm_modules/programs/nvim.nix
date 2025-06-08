@@ -14,4 +14,9 @@
       lazy-nvim
     ];
   };
+
+  catppuccin.nvim = {
+    enable = true;
+    flavor = "mocha";
+  };
 }
