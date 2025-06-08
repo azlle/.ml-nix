@@ -4,7 +4,7 @@
     ./audios.nix
     ./boot.nix
     ./fonts.nix
-    ./i18n.nix
+    ./locale.nix
     ./mounts.nix
     ./networks.nix
     ./nix.nix

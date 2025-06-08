@@ -4,6 +4,8 @@
 {
   time.timeZone = "Asia/Tokyo";
 
+  console.keyMap = "jp106";
+
   i18n = {
     defaultLocale = "en_GB.UTF-8";
     extraLocaleSettings = {

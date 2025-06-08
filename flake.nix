@@ -31,7 +31,8 @@
     nixosConfigurations.necrofantasia = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        ./configuration.nix
+        ./modules
+        ./machines/ga503_hardware.nix
 
 	nixos-hardware.nixosModules.asus-zephyrus-ga503
 

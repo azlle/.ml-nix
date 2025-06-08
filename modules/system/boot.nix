@@ -12,9 +12,9 @@
       };
     };
 
-    # 先にnix shell nixpkgs#sbctlなどしてsudo sbctl create-keysしておく
-    # BIOSでSBを有効化し、Reset to Setup Modeする
-    # sudo sbctl enroll-keys --microsoftして、bootctlでSBが有効なのを確認する
+    # nix shell nixpkgs#sbctl -> sudo sbctl create-keys -> rebuild -> reboot
+    # BIOS: Secure Boot Enable -> Reset to Setup Mode -> Save & Exit
+    # sudo sbctl enroll-keys --microsoft -> reboot -> bootctl status 
     lanzaboote = {
       enable = true;
       pkiBundle = "/var/lib/sbctl";
