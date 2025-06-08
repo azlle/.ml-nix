@@ -4,7 +4,7 @@
 {
   imports = [
     ./hm_modules/ghostty.nix
-    ./hm_modules/nvim.nix
+    ./hm_modules/helix.nix
     ./hm_modules/.config
   ];
 
