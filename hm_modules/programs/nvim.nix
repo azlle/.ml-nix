@@ -12,11 +12,7 @@
     ];
     plugins = with pkgs.vimPlugins; [
       lazy-nvim
+      lualine-nvim
     ];
-  };
-
-  catppuccin.nvim = {
-    enable = true;
-    flavor = "mocha";
   };
 }

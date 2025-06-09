@@ -64,7 +64,6 @@
     rofi
     feh
     polybar
-    dunst
     xclip
     gnome-themes-extra
     adwaita-icon-theme

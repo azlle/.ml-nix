@@ -3,6 +3,7 @@
 
 {
   imports = [
+    ./dunst.nix
     ./ghostty.nix
     ./nvim.nix
     ./yazi.nix

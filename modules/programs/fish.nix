@@ -27,9 +27,12 @@
 
     shellAbbrs = {
       la = "ls -ahl --group-directories-first";
+      rmtrash = "rm -rf ~/.local/share/Trash/files/*";
+      nano = "nvim";
 
       #nix
       nrsfn = "sudo nixos-rebuild switch --flake ~/.dotfiles#necrofantasia";
+      nrsfc = "sudo nixos-rebuild switch --flake ~/.dotfiles#cosmicmind";
       npwh = "nix profile wipe-history";
       nsgc = "nix store gc";
       nedg = "sudo nix-env --delete-generations +3 --profile /nix/var/nix/profiles/system";
