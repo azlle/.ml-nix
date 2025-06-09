@@ -1,5 +1,5 @@
 # nvim.nix
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
   programs.neovim = {
@@ -14,5 +14,10 @@
       lazy-nvim
       lualine-nvim
     ];
+  };
+
+  xdg.configFile."../.config/nvim" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/hm_modules/.config/nvim";
+    recursive = true;
   };
 }
