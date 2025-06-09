@@ -41,7 +41,20 @@
     settings = {
       shadow-radius = 7;
       corner-radius = 20;
-      rounded-corners-exclude = [ "class_g = 'Polybar'" "name = 'polybar'" ];
+      rounded-corners-exclude = [ 
+        "class_g = 'Polybar'" "name = 'polybar'"
+        "class_g = 'Dunst'"
+      ];
+      blur = {
+        method = "dual_kawase";
+        strength = 1;
+      };
+      blur-background = [
+        "class_g = 'Dunst'"
+      ];
+      blur-background-exclude = [
+        "class_g != 'Dunst'"
+      ];
     };
   };
   
