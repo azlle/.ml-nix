@@ -2,26 +2,11 @@
 { config, lib, pkgs, ... }:
 
 {
-  services.xserver = {
+  services.xserver.enable = true;
+
+  programs.sway = {
     enable = true;
-
-    displayManager.lightdm = {
-      enable = true;
-      background = ../../artworks/nix-wallpaper-simple-dark-gray_bottom_ngomixed.png;
-    };
-
-    windowManager.qtile = {
-      enable = true;
-      extraPackages = python3Packages: with python3Packages; [
-        qtile-extras
-        pywlroots
-      ];
-    };
-
-    xkb = {
-      layout = "jp,gb";
-      model = "jp106";
-    };
+    wrapperFeatures.gtk = true;
   };
 
   services.picom = {
@@ -62,7 +47,7 @@
     };
   };
   
-  programs.xwayland.enable = false;
+  programs.xwayland.enable = true;
   boot.plymouth.enable = true;
 
   services.libinput.enable = true;

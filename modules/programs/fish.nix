@@ -9,6 +9,12 @@
   programs.fish = {
     enable = true;
 
+    loginShellInit = ''
+      if test -z "$DISPLAY" -a -z "$WAYLAND_DISPLAY" -a "$XDG_VTNR" = "1"
+        exec sway --unsupported-gpu
+      end
+    '';
+
     interactiveShellInit = ''
       set fish_greeting
       if command -v keychain > /dev/null
