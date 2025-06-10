@@ -11,7 +11,7 @@
     extraGroups = [ "wheel" ];
     packages = with pkgs; [
       protonup-qt
-      discord-canary
+      vesktop
       obsidian
 
       # VRChatとか

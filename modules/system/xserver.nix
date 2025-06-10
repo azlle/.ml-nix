@@ -33,7 +33,10 @@
 
     shadow = true;
     shadowOffsets = [ (-7) (-7) ];
-    shadowExclude = [ "class_g = 'Polybar'" "name = 'polybar'" ];
+    shadowExclude = [
+      "class_g = 'Polybar'" "name = 'polybar'"
+      "class_g = 'Dunst'"
+    ];
     wintypes = {
       menu = { shadow = false; };
     };
