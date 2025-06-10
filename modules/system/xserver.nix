@@ -14,6 +14,7 @@
       enable = true;
       extraPackages = python3Packages: with python3Packages; [
         qtile-extras
+        pywlroots
       ];
     };
 
@@ -24,7 +25,7 @@
   };
 
   services.picom = {
-    enable = true;
+    enable = false;
 
     backend = "glx";
     vSync = true;
@@ -77,6 +78,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    wlroots_0_17
     rofi
     feh
     polybar
