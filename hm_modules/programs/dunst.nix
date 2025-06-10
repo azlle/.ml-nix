@@ -6,7 +6,7 @@
     settings = {
       global = {
         width = 400;
-        height = 100;
+        height = 120;
         offset = "(30, 60)";
         origin = "top-right";
         padding = 24;
@@ -26,6 +26,8 @@
         max_icon_size = 64;
         strip_newlines = false;
         ignore_newline = false;
+        shrink = true;
+        show_indicators = false;
         ellipsize = "end";
       };
     };
