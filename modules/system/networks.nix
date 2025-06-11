@@ -6,6 +6,7 @@
       networkmanager.enable = false;
       useDHCP = false;
       nameservers = [ "8.8.8.8" ];
+      extraHosts = "127.0.0.1 suki-kira.com";
 
       firewall.enable = false;
 

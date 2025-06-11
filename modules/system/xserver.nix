@@ -3,11 +3,10 @@
 
 {
   services.xserver.enable = true;
+  programs.xwayland.enable = true;
 
-  programs.sway = {
-    enable = true;
-    wrapperFeatures.gtk = true;
-  };
+  # Sway settings can be found here: ~/.dotfiles/hm_modules/sway.nix
+  security.polkit.enable = true;
 
   services.picom = {
     enable = false;
@@ -47,7 +46,6 @@
     };
   };
   
-  programs.xwayland.enable = true;
   boot.plymouth.enable = true;
 
   services.libinput.enable = true;
@@ -65,9 +63,6 @@
   environment.systemPackages = with pkgs; [
     wlroots_0_17
     rofi
-    feh
-    polybar
-    xclip
     gnome-themes-extra
     adwaita-icon-theme
   ];

@@ -5,5 +5,6 @@
   imports = [
     ./.config
     ./programs
+    ./sway.nix
   ];
 }
