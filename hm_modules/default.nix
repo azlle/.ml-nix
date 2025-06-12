@@ -5,6 +5,6 @@
   imports = [
     ./.config
     ./programs
-    ./sway.nix
+    ./hyprland.nix
   ];
 }
