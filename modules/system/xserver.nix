@@ -4,6 +4,7 @@
 {
   services.xserver.enable = true;
   programs.xwayland.enable = true;
+  services.xserver.displayManager.lightdm.enable = false;
 
   # Sway settings can be found here: ~/.dotfiles/hm_modules/sway.nix
   security.polkit.enable = true;
