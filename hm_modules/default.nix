@@ -5,6 +5,5 @@
   imports = [
     ./.config
     ./programs
-    ./hyprland.nix
   ];
 }
