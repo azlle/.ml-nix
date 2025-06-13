@@ -16,7 +16,7 @@
 
   # XWaylandを明示的にインポートしなくていいらしいのでそうする
 
-  boot.plymouth.enable = true;
+  boot.plymouth.enable = false;
 
   programs.dconf.enable = true;
 
