@@ -13,6 +13,8 @@
       protonup-qt
       vesktop
       obsidian
+      zoom-us
+      imv
 
       # VRChatとか
       unityhub
