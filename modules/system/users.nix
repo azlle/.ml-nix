@@ -1,5 +1,5 @@
 # users.nix
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 {
   users.users.eeshta = {
@@ -17,10 +17,14 @@
       zoom-us
       imv
 
+      wineWowPackages.stagingFull
+      winetricks
+
       # VRChatとか
       unityhub
       vrc-get
       gimp3
+      inputs.blender-bin.packages.x86_64-linux.blender_4_1
     ];
   };
 
