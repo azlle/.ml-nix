@@ -36,6 +36,11 @@
         cd "/home/eeshta/.winetouhou/TH07/drive_c/Program Files/東方妖々夢/"
         and WINEPREFIX="/home/eeshta/.winetouhou/TH07" LANG="ja_JP.UTF-8" wine "./th07.exe"
       end
+
+      function th07c
+        cd "/home/eeshta/.winetouhou/TH07/drive_c/Program Files/東方妖々夢/"
+        and WINEPREFIX="/home/eeshta/.winetouhou/TH07" LANG="ja_JP.UTF-8" wine "./custom.exe"
+      end
     '';
 
     shellAbbrs = {
