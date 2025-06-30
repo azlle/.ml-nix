@@ -17,10 +17,20 @@
       zoom-us
       imv
 
+      # 主に東方向け
       wineWowPackages.stagingFull
       winetricks
 
-      # VRChatとか
+      # Minecraftのヤツ
+      (prismlauncher.override {
+        jdks = [
+          temurin-jre-bin-8
+          temurin-jre-bin-17
+          temurin-jre-bin
+        ];
+      })
+
+      # 作業系など
       unityhub
       vrc-get
       gimp3
@@ -28,8 +38,9 @@
     ];
   };
 
-  programs = { # for filemanager
+  programs = {
     thunar.enable = true;
     xfconf.enable = true;
+    thunderbird.enable = true;
   };
 }
