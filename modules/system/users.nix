@@ -18,7 +18,8 @@
       imv
 
       # 主に東方向け
-      wineWowPackages.stagingFull
+      #wineWowPackages.stagingFull
+      wineWowPackages.waylandFull
       winetricks
 
       # Minecraftのヤツ
