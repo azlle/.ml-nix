@@ -34,15 +34,13 @@
 
       function th07
         cd "/home/eeshta/.winetouhou/TH07/drive_c/Program Files/東方妖々夢/"
-        and WINEPREFIX="/home/eeshta/.winetouhou/TH07" LANG="ja_JP.UTF-8" wine "./th07.exe"
-        sleep 5
+        and WINEPREFIX="/home/eeshta/.winetouhou/TH07" LANG="ja_JP.UTF-8" wine "./vpatch.exe"
         cd -
       end
 
       function th07c
         cd "/home/eeshta/.winetouhou/TH07/drive_c/Program Files/東方妖々夢/"
         and WINEPREFIX="/home/eeshta/.winetouhou/TH07" LANG="ja_JP.UTF-8" wine "./custom.exe"
-        sleep 5
         cd -
       end
     '';
