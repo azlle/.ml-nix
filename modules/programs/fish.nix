@@ -9,14 +9,6 @@
   programs.fish = {
     enable = true;
 
-    loginShellInit = ''
-      if status is-login
-        if test (tty) = "/dev/tty1"
-          exec hyprland
-        end
-      end
-    '';
-
     interactiveShellInit = ''
       set fish_greeting
       if command -v keychain > /dev/null

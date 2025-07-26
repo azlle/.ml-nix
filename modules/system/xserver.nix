@@ -2,21 +2,17 @@
 { config, lib, pkgs, ... }:
 
 {
-  programs = {
-    hyprland = {
-      enable = true;
-      withUWSM = true;
-      xwayland.enable = true;
-    };
-  };
+  programs.niri.enable = true;
+  programs.niri.package = pkgs.niri-unstable;
+
+  programs.waybar.enable = true;
 
   services = {
     hypridle.enable = true;
+    displayManager.ly.enable = true;
   };
 
-  # XWaylandを明示的にインポートしなくていいらしいのでそうする
-
-  boot.plymouth.enable = false;
+  niri-flake.cache.enable = true;
 
   programs.dconf.enable = true;
 
@@ -25,10 +21,10 @@
   };
 
   environment.systemPackages = with pkgs; [
+    xwayland-satellite
+    niriswitcher
     rofi-wayland
-    waybar
     swww
-    grimblast
     wl-clipboard
     cliphist
     xdg-utils

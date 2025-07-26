@@ -32,16 +32,8 @@
     };
 
     extraConfig = ''
-      # 透明度の代替（makoではalpha値で指定）
-      # background-color=#1f1f1f72 は既に上記で設定済み
-      
-      # テキストの省略設定（dunstのellipsizeに相当）
       text-alignment=left
-      
-      # アクション設定
       actions=1
-      
-      # グループ化設定
       group-by=app-name
     '';
   };

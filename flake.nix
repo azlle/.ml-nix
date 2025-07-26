@@ -20,6 +20,8 @@
     catppuccin.url = "github:catppuccin/nix";
 
     blender-bin.url = "github:edolstra/nix-warez?dir=blender";
+
+    niri.url = "github:sodiboo/niri-flake";
   };
 
   outputs =
@@ -31,12 +33,18 @@
       lanzaboote,
       catppuccin,
       blender-bin,
+      niri,
       ...
     }@inputs: {
 
     nixosConfigurations = {
       necrofantasia = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
+        pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+          overlays = [ niri.overlays.niri ];
+        };
         specialArgs = {
           hostType = "necrofantasia";
           inherit inputs;
@@ -62,6 +70,8 @@
           lanzaboote.nixosModules.lanzaboote
 
           catppuccin.nixosModules.catppuccin
+
+          niri.nixosModules.niri
         ];
       };
 
