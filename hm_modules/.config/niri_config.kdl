@@ -1,0 +1,379 @@
+//         __        __      ______               ___ __        
+// .-----.|__|.----.|__|    |      |.-----.-----.'  _|__|.-----.
+// |     ||  ||   _||  |    |   ---||  _  |     |   _|  ||  _  |
+// |__|__||__||__|  |__|    |______||_____|__|__|__| |__||___  |
+//                                                       |_____|
+
+
+//  _______ _______ ______ _______ _______ 
+// |_     _|    |  |   __ \   |   |_     _|
+//  _|   |_|       |    __/   |   | |   |  
+// |_______|__|____|___|  |_______| |___|  
+                                        
+
+input {
+    keyboard {
+        xkb {
+            layout "jp"
+            // file "~/.config/niri/zephyrus.xkb"
+        }
+    }
+
+    touchpad {
+        tap
+        dwt
+        drag true
+        natural-scroll
+        scroll-factor 1.0
+        scroll-method "two-finger"
+        middle-emulation
+    }
+
+    mouse {
+      off
+    }
+
+    trackpoint {
+      off
+    }
+
+    focus-follows-mouse max-scroll-amount="0%"
+}
+
+gestures {
+    hot-corners {
+      off
+    }
+}
+
+// 出力チェックのときは`niri msg outputs`
+output "eDP-1" {
+    background-color "transparent"
+    mode "2560x1440@165"
+    scale 1
+    transform "normal"
+    position x=0 y=0
+}
+
+
+//  _____   _______ ___ ___ _______ _______ _______ 
+// |     |_|   _   |   |   |       |   |   |_     _|
+// |       |       |\     /|   -   |   |   | |   |  
+// |_______|___|___| |___| |_______|_______| |___|  
+
+
+layout {
+    // Set gaps around windows in logical pixels.
+    gaps 24
+
+    // When to center a column when changing focus, options are:
+    // - "never", default behavior, focusing an off-screen column will keep at the left
+    //   or right edge of the screen.
+    // - "always", the focused column will always be centered.
+    // - "on-overflow", focusing a column will center it if it doesn't fit
+    //   together with the previously focused column.
+    center-focused-column "never"
+
+    // You can customize the widths that "switch-preset-column-width" (Mod+R) toggles between.
+    preset-column-widths {
+        // Proportion sets the width as a fraction of the output width, taking gaps into account.
+        // For example, you can perfectly fit four windows sized "proportion 0.25" on an output.
+        // The default preset widths are 1/3, 1/2 and 2/3 of the output.
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+
+        // Fixed sets the width in logical pixels exactly.
+        // fixed 1920
+    }
+
+    // You can also customize the heights that "switch-preset-window-height" (Mod+Shift+R) toggles between.
+    // preset-window-heights { }
+
+    // You can change the default width of the new windows.
+    default-column-width { proportion 0.5; }
+    background-color "transparent"
+    // If you leave the brackets empty, the windows themselves will decide their initial width.
+    // default-column-width {}
+
+    // You can change how the focus ring looks.
+    focus-ring {
+        off
+    }
+
+    // You can also add a border. It's similar to the focus ring, but always visible.
+    border {
+        width 3
+        inactive-color "dcb898aa"
+        urgent-color "#9b0000"
+        active-gradient from="#ffffff" to="#ff4444" angle=135 // relative-to="workspace-view"
+    }
+
+    shadow {
+        softness 20
+        spread 0
+        offset x=0 y=0
+        color "#ff4444"
+        inactive-color "#00000000"
+    }
+
+    struts {
+        // left 64
+        // right 64
+        top 32 // ewwの領域調整
+        // bottom 64
+    }
+}
+
+
+//  _______ _______ _______ ______ _______ _______ ______ 
+// |     __|_     _|   _   |   __ \_     _|   |   |   __ \
+// |__     | |   | |       |      < |   | |   |   |    __/
+// |_______| |___| |___|___|___|__| |___| |_______|___|   
+                                                       
+
+// spawn-at-startup "waybar"
+spawn-at-startup "eww" "daemon"
+spawn-at-startup "eww" "open" "bar"
+spawn-at-startup "niriswitcher"
+spawn-at-startup "swww-daemon"
+spawn-at-startup "swww" "img" "~/Pictures/eeshta_wallpaper.png"
+spawn-at-startup "hypridle"
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "fcitx5" "-d" "--replace"
+spawn-at-startup "steam"
+spawn-at-startup "vesktop"
+spawn-at-startup "thunderbird"
+spawn-at-startup "wl-paste" "--type" "text" "--watch" "cliphist" "store"
+spawn-at-startup "wl-paste" "--type" "image" "--watch" "cliphist" "store"
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+
+//  _______ _______ ___ ___ _______ ______ _______ _______ _______ _______ _______ _______ 
+// |    ___|    |  |   |   |_     _|   __ \       |    |  |   |   |    ___|    |  |_     _|
+// |    ___|       |   |   |_|   |_|      <   -   |       |       |    ___|       | |   |  
+// |_______|__|____|\_____/|_______|___|__|_______|__|____|__|_|__|_______|__|____| |___|  
+                                                                                        
+
+environment {
+  DISPLAY ":0"
+  QT_QPA_PLATFORM "wayland"
+  QT_QPA_PLATFORMTHEME "qt6ct"
+  ELECTRON_OZONE_PLATFORM_HINT "auto"
+  OZONE_PLATFORM "wayland"
+  MOZ_ENABLE_WAYLAND "1"
+  XDG_SESSION_TYPE "wayland"
+  XDG_CURRENT_DESKTOP "niri"
+  XDG_SESSION_DESKTOP "niri"
+  GDK_BACKEND "wayland"
+}
+
+cursor {
+    xcursor-theme "breeze_cursors"
+    xcursor-size 8
+}
+
+screenshot-path "~/Pictures/Screenshots/Screenshot_%Y-%m-%d_%H%M%S.png"
+
+
+//  _______ _______ _______ _______ _______ _______ _______ _______ _______ _______ 
+// |   _   |    |  |_     _|   |   |   _   |_     _|_     _|       |    |  |     __|
+// |       |       |_|   |_|       |       | |   |  _|   |_|   -   |       |__     |
+// |___|___|__|____|_______|__|_|__|___|___| |___| |_______|_______|__|____|_______|
+                                                                                 
+
+animations {
+    // Uncomment to turn off all animations.
+    // off
+
+    // Slow down all animations by this factor. Values below 1 speed them up instead.
+    // slowdown 3.0
+}
+
+
+//  ________ _______ _______ _____  _______ ________        ______ _______ _____   _______ 
+// |  |  |  |_     _|    |  |     \|       |  |  |  |______|   __ \   |   |     |_|    ___|
+// |  |  |  |_|   |_|       |  --  |   -   |  |  |  |______|      <   |   |       |    ___|
+// |________|_______|__|____|_____/|_______|________|      |___|__|_______|_______|_______|
+                                                                                        
+
+// Client-Side Decorationsの無効化
+prefer-no-csd
+
+// Overviewの背景に設定
+layer-rule {
+    match namespace="^swww-daemon$"
+    place-within-backdrop true
+}
+
+// ウィンドウ全般
+window-rule {
+    draw-border-with-background false
+    geometry-corner-radius 20
+    clip-to-geometry true
+}
+
+// 東方のリサイズ
+window-rule {
+    match app-id="th07.exe"
+    open-floating true
+    min-width 1600
+    min-height 1200
+    geometry-corner-radius 0
+    border {
+      off
+    }
+}
+
+// Steamの通知修正
+window-rule {
+    match app-id="steam" title=r#"^notificationtoasts_\d+_desktop$"#
+    default-floating-position x=0 y=0 relative-to="bottom-right"
+    open-focused false
+    geometry-corner-radius 0
+    border {
+      off
+    }
+}
+
+// Example: block out two password managers from screen capture.
+// (This example rule is commented out with a "/-" in front.)
+/-window-rule {
+    match app-id=r#"^org\.keepassxc\.KeePassXC$"#
+    match app-id=r#"^org\.gnome\.World\.Secrets$"#
+
+    block-out-from "screen-capture"
+
+    // Use this instead if you want them visible on third-party screenshot tools.
+    // block-out-from "screencast"
+}
+
+
+//  ______ _______ _______ _____  _______ 
+// |   __ \_     _|    |  |     \|     __|
+// |   __ <_|   |_|       |  --  |__     |
+// |______/_______|__|____|_____/|_______|
+                                       
+
+binds {
+    // 追加で設定したモノなど
+    Mod+Y { spawn "ghostty" "-e" "fish" "-c" "yazi"; }
+    Mod+Shift+S { screenshot; }
+    Mod+Ctrl+S { screenshot-window; }
+
+    // 音量設定とかは全部コレ
+    Mod+F1 allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    Mod+Shift+F1 allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+    Mod+F2 allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    Mod+F3 allow-when-locked=true { spawn "wpctl" "set-volume" "-l" "1" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+
+    Mod+F5 allow-when-locked=true { spawn "brightnessctl" "set" "5%-"; }
+    Mod+F6 allow-when-locked=true { spawn "brightnessctl" "set" "+5%"; }
+    
+    // niriswitcherのヤツ
+        Alt+Tab repeat=false { spawn "gdbus" "call" "--session" "--dest" "io.github.isaksamsten.Niriswitcher" "--object-path" "/io/github/isaksamsten/Niriswitcher" "--method" "io.github.isaksamsten.Niriswitcher.application" ; }
+    Alt+Shift+Tab repeat=false { spawn "gdbus" "call" "--session" "--dest" "io.github.isaksamsten.Niriswitcher" "--object-path" "/io/github/isaksamsten/Niriswitcher" "--method" "io.github.isaksamsten.Niriswitcher.application" ; }
+    
+    // Mod-Shift-/, which is usually the same as Mod-?,
+    // shows a list of important hotkeys.
+    Mod+Shift+Slash { show-hotkey-overlay; }
+
+    // Suggested binds for running programs: terminal, app launcher, screen locker.
+    Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
+    Mod+R hotkey-overlay-title="Run an Application: rofi" { spawn "rofi" "-show" "drun"; }
+    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+
+    // You can also use a shell. Do this if you need pipes, multiple commands, etc.
+    // Note: the entire command goes as a single argument in the end.
+    // Mod+T { spawn "bash" "-c" "notify-send hello && exec alacritty"; }
+    
+    // Open/close the Overview: a zoomed-out view of workspaces and windows.
+    // You can also move the mouse into the top-left hot corner,
+    // or do a four-finger swipe up on a touchpad.
+    Mod+O repeat=false { toggle-overview; }
+
+    Mod+W { close-window; }
+
+    // focus-window-or-workspace-<down/up>はWorkspaceを越境できる
+    Mod+H     { focus-column-left; }
+    Mod+J     { focus-window-or-workspace-down; }
+    Mod+K     { focus-window-or-workspace-up; }
+    Mod+L     { focus-column-right; }
+
+    // move-window-<down/up>-or-to-workspace-<down/up>もWorkspaceを越境できる
+    // consume-or-expel-window-<left/right>は隣のColumnにもう一段領域を作って移動できる
+    Mod+Shift+H     { consume-or-expel-window-left; }
+    Mod+Shift+J     { move-window-down-or-to-workspace-down; }
+    Mod+Shift+K     { move-window-up-or-to-workspace-up; }
+    Mod+Shift+L     { consume-or-expel-window-right; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+    // move-column-to-workspaceにするとFocusしているWindowが属するColumn全てが動く
+    Mod+Shift+1 { move-window-to-workspace 1; }
+    Mod+Shift+2 { move-window-to-workspace 2; }
+    Mod+Shift+3 { move-window-to-workspace 3; }
+    Mod+Shift+4 { move-window-to-workspace 4; }
+    Mod+Shift+5 { move-window-to-workspace 5; }
+    Mod+Shift+6 { move-window-to-workspace 6; }
+    Mod+Shift+7 { move-window-to-workspace 7; }
+    Mod+Shift+8 { move-window-to-workspace 8; }
+    Mod+Shift+9 { move-window-to-workspace 9; }
+
+    Mod+D { switch-preset-column-width; }
+    Mod+Shift+D { switch-preset-window-height; }
+    Mod+Ctrl+D { reset-window-height; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+Ctrl+F { expand-column-to-available-width; }
+
+    Mod+C { center-column; }
+    Mod+Ctrl+C { center-visible-columns; }
+
+    // Finer width adjustments.
+    // This command can also:
+    // * set width in pixels: "1000"
+    // * adjust width in pixels: "-5" or "+5"
+    // * set width as a percentage of screen width: "25%"
+    // * adjust width as a percentage of screen width: "-10%" or "+10%"
+    // Pixel sizes use logical, or scaled, pixels. I.e. on an output with scale 2.0,
+    // set-column-width "100" will make the column occupy 200 physical screen pixels.
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+
+    // Finer height adjustments when in column with other windows.
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // Move the focused window between the floating and the tiling layout.
+    Mod+T       { toggle-window-floating; }
+    Mod+Shift+T { switch-focus-between-floating-and-tiling; }
+
+    // Applications such as remote-desktop clients and software KVM switches may
+    // request that niri stops processing the keyboard shortcuts defined here
+    // so they may, for example, forward the key presses as-is to a remote machine.
+    // It's a good idea to bind an escape hatch to toggle the inhibitor,
+    // so a buggy application can't hold your session hostage.
+    //
+    // The allow-inhibiting=false property can be applied to other binds as well,
+    // which ensures niri always processes them, even when an inhibitor is active.
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+
+    // The quit action will show a confirmation dialog to avoid accidental exits.
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
+
+    // Powers off the monitors. To turn them back on, do any input like
+    // moving the mouse or pressing any other key.
+    Mod+Shift+P { power-off-monitors; }
+}

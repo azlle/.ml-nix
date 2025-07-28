@@ -6,6 +6,7 @@
       networkmanager.enable = false;
       useDHCP = false;
       nameservers = [ "8.8.8.8" ];
+      extraHosts = "127.0.0.1 suki-kira.com";
 
       firewall.enable = false;
 
@@ -20,7 +21,9 @@
 
               ct state established,related accept
 
-              tcp dport 22 accept
+              tcp dport { 22, 47984, 47989, 47990, 48010 } accept
+              udp dport 47998-48000 accept
+              udp dport 8000-8010 accept
 
               ip protocol icmp accept
               ip6 nexthdr icmpv6 accept

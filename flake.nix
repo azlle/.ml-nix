@@ -18,6 +18,10 @@
     };
 
     catppuccin.url = "github:catppuccin/nix";
+
+    blender-bin.url = "github:edolstra/nix-warez?dir=blender";
+
+    niri.url = "github:sodiboo/niri-flake";
   };
 
   outputs =
@@ -28,13 +32,23 @@
       home-manager,
       lanzaboote,
       catppuccin,
+      blender-bin,
+      niri,
       ...
     }@inputs: {
 
     nixosConfigurations = {
       necrofantasia = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { hostType = "necrofantasia"; };
+        pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+          overlays = [ niri.overlays.niri ];
+        };
+        specialArgs = {
+          hostType = "necrofantasia";
+          inherit inputs;
+        };
         modules = [
           ./modules
           ./machines/ga503_hardware.nix
@@ -56,12 +70,17 @@
           lanzaboote.nixosModules.lanzaboote
 
           catppuccin.nixosModules.catppuccin
+
+          niri.nixosModules.niri
         ];
       };
 
       cosmicmind = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { hostType = "cosmicmind"; };
+        specialArgs = {
+          hostType = "cosmicmind";
+          inherit inputs;
+        };
         modules = [
           ./modules
           ./machines/intelvm_hardware.nix
@@ -76,6 +95,8 @@
           }
 
           lanzaboote.nixosModules.lanzaboote
+
+          catppuccin.nixosModules.catppuccin
         ];
       };
     };

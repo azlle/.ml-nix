@@ -2,73 +2,24 @@
 { config, lib, pkgs, ... }:
 
 {
-  services.xserver = {
-    enable = true;
+  programs.niri.enable = true;
+  programs.niri.package = pkgs.niri-unstable;
 
-    displayManager.lightdm = {
+  services = {
+    hypridle.enable = true;
+    displayManager.ly.enable = false;
+    greetd = {
       enable = true;
-      background = ../../artworks/nix-wallpaper-simple-dark-gray_bottom_ngomixed.png;
-    };
-
-    windowManager.qtile = {
-      enable = true;
-      extraPackages = python3Packages: with python3Packages; [
-        qtile-extras
-      ];
-    };
-
-    xkb = {
-      layout = "jp,gb";
-      model = "jp106";
-    };
-  };
-
-  services.picom = {
-    enable = true;
-
-    backend = "glx";
-    vSync = true;
-    fade = true;
-    fadeSteps = [ (0.03) (0.03) ];
-
-    shadow = true;
-    shadowOffsets = [ (-7) (-7) ];
-    shadowExclude = [
-      "class_g = 'Polybar'" "name = 'polybar'"
-      "class_g = 'Dunst'"
-    ];
-    wintypes = {
-      menu = { shadow = false; };
-    };
-
-    settings = {
-      shadow-radius = 7;
-      corner-radius = 20;
-      rounded-corners-exclude = [ 
-        "class_g = 'Polybar'" "name = 'polybar'"
-        "class_g = 'Dunst'"
-      ];
-      blur = {
-        method = "dual_kawase";
-        strength = 1;
+      settings = {
+        default_session = {
+          command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd niri-session";
+          user = "greeter";
+        };
       };
-      blur-background = [
-        "class_g = 'Dunst'"
-      ];
-      blur-background-exclude = [
-        "class_g != 'Dunst'"
-      ];
     };
   };
-  
-  programs.xwayland.enable = false;
-  boot.plymouth.enable = true;
 
-  services.libinput.enable = true;
-  services.libinput.touchpad = {
-    tapping = true;
-    naturalScrolling = true;
-  };
+  niri-flake.cache.enable = true;
 
   programs.dconf.enable = true;
 
@@ -77,10 +28,18 @@
   };
 
   environment.systemPackages = with pkgs; [
-    rofi
-    feh
-    polybar
-    xclip
+    greetd.tuigreet
+    waybar
+    eww
+    xwayland-satellite
+    glib # niriswitcherにgdbusが必要
+    niriswitcher
+    rofi-wayland
+    swww
+    wl-clipboard
+    brightnessctl
+    cliphist
+    xdg-utils
     gnome-themes-extra
     adwaita-icon-theme
   ];

@@ -1,16 +1,11 @@
 # cfg.nix
-{ ... }:
+{ config, ... }:
 
 {
   xdg.configFile = {
-    "qtile/config.py".source = ./qtile_config.py;
-    "qtile/autostart.sh".source = ./qtile_autostart.sh;
-    "qtile/volume.sh".source = ./qtile_volume.sh;
-    "polybar/config.ini".source = ./polybar_config.ini;
-  };
-
-  home.file = {
-    ".local/share/rofi/themes/rounded-yellow-dark.rasi".source = ./rounded-yellow-dark.rasi;
-    ".local/share/rofi/themes/rounded-template.rasi".source = ./rounded-template.rasi;
+    "niri/config.kdl".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/hm_modules/.config/niri_config.kdl";
+    "niri/zephyrus.xkb".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/hm_modules/.config/niri_zephyrus.xkb";
+    "niriswitcher/config.toml".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/hm_modules/.config/niris_config.toml";
+    "rofi/config.rasi".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/hm_modules/.config/rofi_config.rasi";
   };
 }

@@ -6,6 +6,7 @@
     enable = true;
 
     settings = {
+      shell-integration = "fish";
       theme = "catppuccin-mocha";
       font-size = 14;
       font-family = "HackGen Console NF";
