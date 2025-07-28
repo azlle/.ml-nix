@@ -120,7 +120,7 @@ layout {
     struts {
         // left 64
         // right 64
-        // top 64
+        top 32 // ewwの領域調整
         // bottom 64
     }
 }
@@ -132,7 +132,9 @@ layout {
 // |_______| |___| |___|___|___|__| |___| |_______|___|   
                                                        
 
-spawn-at-startup "waybar"
+// spawn-at-startup "waybar"
+spawn-at-startup "eww" "daemon"
+spawn-at-startup "eww" "open" "bar"
 spawn-at-startup "niriswitcher"
 spawn-at-startup "swww-daemon"
 spawn-at-startup "swww" "img" "~/Pictures/eeshta_wallpaper.png"
