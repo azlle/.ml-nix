@@ -215,6 +215,7 @@ window-rule {
     draw-border-with-background false
     geometry-corner-radius 20
     clip-to-geometry true
+    open-focused false
 }
 
 // 東方のリサイズ
@@ -233,7 +234,6 @@ window-rule {
 window-rule {
     match app-id="steam" title=r#"^notificationtoasts_\d+_desktop$"#
     default-floating-position x=0 y=0 relative-to="bottom-right"
-    open-focused false
     geometry-corner-radius 0
     border {
       off

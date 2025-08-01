@@ -4,9 +4,9 @@
 {
   programs.niri.enable = true;
   programs.niri.package = pkgs.niri-unstable;
+  niri-flake.cache.enable = true;
 
   services = {
-    hypridle.enable = true;
     displayManager.ly.enable = false;
     greetd = {
       enable = true;
@@ -18,8 +18,6 @@
       };
     };
   };
-
-  niri-flake.cache.enable = true;
 
   programs.dconf.enable = true;
 
