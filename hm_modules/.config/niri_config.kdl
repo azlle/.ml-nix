@@ -14,7 +14,8 @@
 input {
     keyboard {
         xkb {
-            layout "jp"
+            layout "us"
+            variant "intl"
             // file "~/.config/niri/zephyrus.xkb"
         }
     }
@@ -120,7 +121,7 @@ layout {
     struts {
         // left 64
         // right 64
-        top 32 // ewwの領域調整
+        top 31 // ewwの領域調整
         // bottom 64
     }
 }
@@ -218,7 +219,7 @@ window-rule {
 
 // 東方のリサイズ
 window-rule {
-    match app-id="th07.exe"
+    match app-id=r"^th.*\.exe$"
     open-floating true
     min-width 1600
     min-height 1200

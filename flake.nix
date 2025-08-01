@@ -22,6 +22,11 @@
     blender-bin.url = "github:edolstra/nix-warez?dir=blender";
 
     niri.url = "github:sodiboo/niri-flake";
+
+    aagl = {
+      url = "github:ezKEa/aagl-gtk-on-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -34,6 +39,7 @@
       catppuccin,
       blender-bin,
       niri,
+      aagl,
       ...
     }@inputs: {
 
@@ -56,6 +62,7 @@
           nixos-hardware.nixosModules.asus-zephyrus-ga503
 
           home-manager.nixosModules.home-manager
+
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
@@ -72,6 +79,11 @@
           catppuccin.nixosModules.catppuccin
 
           niri.nixosModules.niri
+
+          {
+            imports = [ aagl.nixosModules.default ];
+            programs.sleepy-launcher.enable = true;
+          }
         ];
       };
 

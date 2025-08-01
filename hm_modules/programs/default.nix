@@ -5,9 +5,8 @@
   imports = [
     ./ghostty.nix
     ./mako.nix
-    ./mpv.nix
     ./nvim.nix
-    ./yazi.nix
+    ./yazi_n_opener.nix
     ./yt-dlp.nix
   ];
 }

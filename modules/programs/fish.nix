@@ -35,6 +35,18 @@
         and WINEPREFIX="/home/eeshta/.winetouhou/TH07" LANG="ja_JP.UTF-8" wine "./custom.exe"
         cd -
       end
+
+      function th11
+        cd "/home/eeshta/.winetouhou/TH11/drive_c/Program Files/上海アリス幻樂団/東方地霊殿/"
+        and WINEPREFIX="/home/eeshta/.winetouhou/TH11" LANG="ja_JP.UTF-8" wine "./vpatch.exe"
+        cd -
+      end
+
+      function th11c
+        cd "/home/eeshta/.winetouhou/TH11/drive_c/Program Files/上海アリス幻樂団/東方地霊殿/"
+        and WINEPREFIX="/home/eeshta/.winetouhou/TH11" LANG="ja_JP.UTF-8" wine "./custom.exe"
+        cd -
+      end
     '';
 
     shellAbbrs = {

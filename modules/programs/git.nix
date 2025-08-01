@@ -8,8 +8,11 @@
       user.name = "Azlle";
       user.email = "moxmo2@pm.me";
 
-      core.editor = "nano";
+      core.editor = "nvim";
       core.autocrlf = "input";
+
+      merge.ff = "false";
+      pull.ff = "only";
     };
   };
 }
