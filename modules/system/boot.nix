@@ -4,7 +4,6 @@
 {
   boot = {
     kernelPackages = pkgs.linuxPackages_zen;
-    kernelParams = [ "mem_sleep_default=deep" ]; # for sleep
     loader = {
       systemd-boot.enable = lib.mkForce false;
       efi = {
@@ -21,12 +20,6 @@
       pkiBundle = "/var/lib/sbctl";
     };
   };
-
-  # for sleep
-  services.logind.extraConfig = ''
-    HandleSuspendKey=suspend
-  '';
-  powerManagement.enable = true;
 
   environment.systemPackages = with pkgs; [ sbctl ];
 }
