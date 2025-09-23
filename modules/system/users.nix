@@ -18,17 +18,22 @@
       vesktop
       obsidian
       zoom-us
+      parsec-bin
 
       # ゆーてぃりてぃ
       unzip
       unrar
       gh
+      htop
+      tmux
 
       # 主に東方向け
       wineWowPackages.waylandFull
       winetricks
 
       # Minecraftのヤツ
+      temurin-jre-bin
+
       (prismlauncher.override {
         jdks = [
           temurin-jre-bin-8
@@ -53,5 +58,11 @@
     # Mozilla組
     firefox.enable = true;
     thunderbird.enable = true;
+  };
+
+  services.locate = {
+    enable = true;
+    package = pkgs.plocate;
+    interval = "daily";
   };
 }

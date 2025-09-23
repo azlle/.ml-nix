@@ -23,6 +23,8 @@
 
               tcp dport 22 accept
 
+              # tcp dport 28989 accept
+
               # Sunshine
               tcp dport { 47984, 47989, 47990, 48010 } accept
               udp dport 47998-48000 accept
