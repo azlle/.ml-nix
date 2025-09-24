@@ -3,8 +3,8 @@
 
 {
   imports = [
-    ./ghostty.nix
     ./mako.nix
+    ./nnn.nix
     ./nvim.nix
     ./hypridle.nix
     ./yazi_n_opener.nix

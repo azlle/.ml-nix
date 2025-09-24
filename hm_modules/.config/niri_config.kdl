@@ -139,7 +139,7 @@ spawn-at-startup "niriswitcher"
 spawn-at-startup "swww-daemon"
 spawn-at-startup "swww" "img" "~/Pictures/eeshta_wallpaper.png"
 spawn-at-startup "hypridle"
-spawn-at-startup "xwayland-satellite"
+// spawn-at-startup "xwayland-satellite" v25.08からniriに統合されておりspawnが必要ではなくなった
 spawn-at-startup "fcitx5" "-d" "--replace"
 spawn-at-startup "steam"
 spawn-at-startup "vesktop"
@@ -260,7 +260,7 @@ window-rule {
 
 binds {
     // 追加で設定したモノなど
-    Mod+Y { spawn "ghostty" "-e" "fish" "-c" "yazi"; }
+    Mod+Y { spawn "foot" "-e" "fish" "-c" "yazi"; }
     Mod+Shift+S { screenshot; }
     Mod+Ctrl+S { screenshot-window; }
 
@@ -282,7 +282,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
-    Mod+Return hotkey-overlay-title="Open a Terminal: ghostty" { spawn "ghostty"; }
+    Mod+Return hotkey-overlay-title="Open a Terminal: foot" { spawn "foot"; }
     Mod+R hotkey-overlay-title="Run an Application: rofi" { spawn "rofi" "-show" "drun"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
