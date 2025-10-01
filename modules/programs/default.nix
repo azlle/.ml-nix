@@ -6,5 +6,6 @@
     ./git.nix
     ./obs.nix
     ./steam.nix
+    ./virt.nix
   ];
 }
