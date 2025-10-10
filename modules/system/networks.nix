@@ -8,42 +8,30 @@
       nameservers = [ "8.8.8.8" ];
       extraHosts = "127.0.0.1 suki-kira.com";
 
-      firewall.enable = false;
-
-      nftables = {
+      firewall = {
         enable = true;
-        ruleset = ''
-          table inet filter {
-            chain input {
-              type filter hook input priority 0; policy drop;
 
-              iif lo accept
+        allowPing = true;
+        checkReversePath = "loose";
 
-              ct state established,related accept
+        allowedTCPPorts = [
+          22
+          47984
+          47989
+          47990
+          48010
+        ];
 
-              tcp dport 22 accept
+        allowedUDPPortRanges = [
+          { from = 47998; to = 48000; }
+          { from = 8000; to = 8010; }
+        ];
 
-              # tcp dport 28989 accept
-
-              # Sunshine
-              tcp dport { 47984, 47989, 47990, 48010 } accept
-              udp dport 47998-48000 accept
-              udp dport 8000-8010 accept
-
-              ip protocol icmp accept
-              ip6 nexthdr icmpv6 accept
-            }
-
-            chain forward{
-              type filter hook forward priority 0; policy drop;
-            }
-
-            chain output {
-              type filter hook output priority 0; policy accept;
-            }
-          }
-        '';
+        # virbr0 for QEMU, VIRT
+        trustedInterfaces = [ "virbr0" ];
       };
+
+      nftables.enable = false;
     }
 
     (mkIf (hostType == "necrofantasia") {

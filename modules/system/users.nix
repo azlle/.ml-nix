@@ -19,6 +19,7 @@
       obsidian
       zoom-us
       parsec-bin
+      bitwarden-desktop
 
       # ゆーてぃりてぃ
       unzip
