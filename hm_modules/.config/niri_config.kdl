@@ -140,7 +140,7 @@ spawn-at-startup "swww-daemon"
 spawn-at-startup "swww" "img" "~/Pictures/eeshta_wallpaper.png"
 spawn-at-startup "hypridle"
 // spawn-at-startup "xwayland-satellite" v25.08からniriに統合されておりspawnが必要ではなくなった
-spawn-at-startup "fcitx5" "-d" "--replace"
+spawn-at-startup "fcitx5"
 spawn-at-startup "steam"
 spawn-at-startup "vesktop"
 spawn-at-startup "thunderbird"

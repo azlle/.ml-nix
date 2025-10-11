@@ -20,9 +20,7 @@
       nvidiaSettings = true;
     };
 
-    boot.kernelParams = [
-      "nvidia-drm.modeset=1"
-    ];
+    boot.kernelParams = [ "nvidia-drm.modeset=1" ];
 
     hardware.graphics.enable = true;
   };
