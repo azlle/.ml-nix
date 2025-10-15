@@ -22,6 +22,7 @@
       bitwarden-desktop
 
       # ゆーてぃりてぃ
+      btrfs-progs
       unzip
       unrar
       gh
