@@ -14,4 +14,6 @@
     ./videodrivers.nix
     ./xserver.nix
   ];
+
+  miyana.hotspot.enable = true;
 }
