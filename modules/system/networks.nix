@@ -18,7 +18,7 @@
           enable = true;
           allowPing = true;
           checkReversePath = "loose";
-          allowedTCPPorts = [ 22 47984 47989 47990 48010 ];
+          allowedTCPPorts = [ 22 28989 47984 47989 47990 48010 ];
           allowedUDPPortRanges = [
             { from = 47998; to = 48000; }
             { from = 8000; to = 8010; }
@@ -109,6 +109,13 @@
         dhcp-option = [ "3,192.168.14.1" "6,192.168.14.1" ];
         server = [ "8.8.8.8" "8.8.4.4" ];
         address = [ "/suki-kira.com/0.0.0.0" ];
+
+        dhcp-host = [
+          "bc:10:7b:81:b3:f6,192.168.14.10,galaxy"
+          "58:73:d8:2a:38:be,192.168.14.11,ipad"
+          "00:0c:4a:1b:cd:fb,192.168.14.12,boox"
+          "d4:3a:2c:6e:b4:e4,192.168.14.13,watch"
+        ];
       };
     };
     

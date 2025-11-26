@@ -84,11 +84,14 @@
       npwh = "nix profile wipe-history";
       nsgc = "nix store gc";
       nedg = "sudo nix-env --delete-generations +3 --profile /nix/var/nix/profiles/system";
+      dlp = "nix run nixpkgs/nixpkgs-unstable#yt-dlp --";
 
       #git
       gst = "git status";
       gcm = "git commit -m";
       gl = "git log --graph --date=iso --pretty='format:%C(yellow)%h %C(cyan)%ad %C(green)%an%Creset%x09%s %C(red)%d%Creset'";
+      mountmelchior = "sudo mount -o noatime,ssd,discard=async,space_cache=v2 UUID=154ee557-cfa5-44a3-82e8-75edbcc83f8b /mnt/melchior";
+      mountcasper = "sudo mount UUID=cdcd5523-f5b6-49ab-b7ee-289cdebf6474 /mnt/casper/";
     };
   };
 }

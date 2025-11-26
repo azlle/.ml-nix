@@ -3,16 +3,24 @@
 
 {
   virtualisation = {
-    libvirtd.enable = true;
+    libvirtd = {
+      enable = true;
+      qemu.vhostUserPackages = with pkgs; [ virtiofsd ];
+    };
+    
+    # USBデバイスをVMに転送
     spiceUSBRedirection.enable = true;
+    
+    docker = {
+      enable = true;
+      autoPrune.enable = false;
+    };
   };
-
+  
   programs.virt-manager.enable = true;
-
-  users.users.eeshta.extraGroups = [ "libvirtd" "kvm" ];
-
-  users.users.eeshta.packages = [ pkgs.qemu_kvm ];
-
-# 忘れずにsudo virsh net-start defaultと
-  # sudo virsh net-autostart defaultを実行しておく
+  
+  users.users.eeshta.extraGroups = [ 
+    "libvirtd"
+    "docker"
+  ];
 }

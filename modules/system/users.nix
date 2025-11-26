@@ -34,7 +34,8 @@
       winetricks
 
       # Minecraftのヤツ
-      temurin-jre-bin
+      # temurin-jre-bin
+      # temurin-jre-bin-17
 
       (prismlauncher.override {
         jdks = [
@@ -51,6 +52,19 @@
       inputs.blender-bin.packages.x86_64-linux.blender_4_1
     ];
   };
+
+  users.users.miyqna = {
+    isSystemUser = true;
+    group = "miyqna";
+    home = "/rsync_ukezara";
+    createHome = true;
+      
+    openssh.authorizedKeys.keys = [
+      ''command="${pkgs.rsync}/bin/rsync --server --daemon .",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDNH969c3dF/fQwTaiG7eLc17CwA8o2e8V8I5/pWQVfp root@minecraft''
+    ];
+  };
+
+  users.groups.miyqna = {};
 
   programs = {
     # Thunar組
