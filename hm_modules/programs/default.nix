@@ -9,5 +9,6 @@
     ./hypridle.nix
     ./yazi_n_opener.nix
     ./yt-dlp.nix
+    ./zsh.nix
   ];
 }

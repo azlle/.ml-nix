@@ -12,7 +12,7 @@
     interactiveShellInit = ''
       set fish_greeting
       if command -v keychain > /dev/null
-        eval (keychain --eval --quiet nix-git_ed25519)
+        eval (keychain --eval --quiet nix2berg nix-git_ed25519)
       end
 
       function y
