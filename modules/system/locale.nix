@@ -7,7 +7,7 @@
   console.keyMap = "jp106";
 
   i18n = {
-    defaultLocale = "en_GB.UTF-8";
+    defaultLocale = "ja_JP.UTF-8";
     extraLocaleSettings = {
       LC_ADDRESS = "ja_JP.UTF-8";
       LC_IDENTIFICATION = "ja_JP.UTF-8";
@@ -17,7 +17,7 @@
       LC_NUMERIC = "ja_JP.UTF-8";
       LC_PAPER = "ja_JP.UTF-8";
       LC_TELEPHONE = "ja_JP.UTF-8";
-      LC_TIME = "ja_JP.UTF-8";
+      LC_TIME = "en_GB.UTF-8";
     };
 
     inputMethod = {
