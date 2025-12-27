@@ -3,12 +3,13 @@
 
 {
   imports = [
-    ./lf.nix
+    ./foot.nix
+    ./git.nix
+    ./hypridle.nix
     ./mako.nix
     ./nvim.nix
-    ./hypridle.nix
+    ./obs.nix
     ./yazi_n_opener.nix
     ./yt-dlp.nix
-    ./zsh.nix
   ];
 }

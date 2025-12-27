@@ -4,8 +4,6 @@
 {
   programs.foot = {
     enable = true;
-    theme = "catppuccin-mocha";
-    enableFishIntegration = true;
 
     settings = {
       main = {
@@ -17,4 +15,7 @@
       };
     };
   };
+
+  catppuccin.foot.enable = true;
+  catppuccin.foot.flavor = "mocha";
 }
