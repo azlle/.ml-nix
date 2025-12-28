@@ -1,4 +1,4 @@
-# de.nix
+# manager.nix
 { config, lib, pkgs, ... }:
 
 {

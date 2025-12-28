@@ -5,6 +5,7 @@
     ./boot.nix
     ./fonts.nix
     ./locale.nix
+    ./manager.nix
     ./mounts.nix
     ./networks.nix
     ./nix.nix
