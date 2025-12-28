@@ -2,7 +2,7 @@
 { config, lib, pkgs, ... }: with lib;
 {
   options = {
-    miyana.hotspot.enable = mkEnableOption "Enable Hotspot: ml_haukanruri";
+    haukanRuri.enable = mkEnableOption "Enable Hotspot: ml_haukanruri";
   };
   
   config = {
@@ -28,7 +28,7 @@
       }
       
       # 通常モード（無線接続）
-      (mkIf (!config.miyana.hotspot.enable) {
+      (mkIf (!config.haukanRuri.enable) {
         wireless = {
           enable = true;
           networks."Buffalo-A-DF70".pskRaw = "***REMOVED***";
@@ -44,7 +44,7 @@
       })
       
       # ホットスポットモード（有線→無線配信）
-      (mkIf config.miyana.hotspot.enable {
+      (mkIf config.haukanRuri.enable {
         wireless.enable = false;
         
         # 有線インターフェース（インターネット側）
@@ -83,7 +83,7 @@
     ];
     
     # ホットスポットサービス
-    services.hostapd = mkIf config.miyana.hotspot.enable {
+    services.hostapd = mkIf config.haukanRuri.enable {
       enable = true;
       radios.wlp4s0 = {
         band = "2g";
@@ -100,7 +100,7 @@
       };
     };
     
-    services.dnsmasq = mkIf config.miyana.hotspot.enable {
+    services.dnsmasq = mkIf config.haukanRuri.enable {
       enable = true;
       settings = {
         interface = "wlp4s0";
@@ -119,7 +119,7 @@
       };
     };
     
-    boot.kernel.sysctl = mkIf config.miyana.hotspot.enable {
+    boot.kernel.sysctl = mkIf config.haukanRuri.enable {
       "net.ipv4.ip_forward" = 1;
     };
   };
