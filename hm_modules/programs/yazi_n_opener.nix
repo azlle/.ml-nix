@@ -63,7 +63,6 @@
     fzf = {
       enable = true;
       enableFishIntegration = true;
-      defaultCommand = "plocate ''";
     };
 
     zoxide = {

@@ -22,12 +22,7 @@
       bitwarden-desktop
 
       # ゆーてぃりてぃ
-      btrfs-progs
-      unzip
-      unrar
-      gh
-      htop
-      tmux
+      unzip unrar gh htop tmux
 
       # 主に東方向け
       wineWowPackages.waylandFull
@@ -39,32 +34,15 @@
 
       (prismlauncher.override {
         jdks = [
-          temurin-jre-bin-8
-          temurin-jre-bin-17
-          temurin-jre-bin
+          temurin-jre-bin-8 temurin-jre-bin-17 temurin-jre-bin
         ];
       })
 
       # 作業系など
-      unityhub
-      vrc-get
-      gimp3
+      unityhub vrc-get gimp3
       inputs.blender-bin.packages.x86_64-linux.blender_4_1
     ];
   };
-
-  users.users.miyqna = {
-    isSystemUser = true;
-    group = "miyqna";
-    home = "/rsync_ukezara";
-    createHome = true;
-      
-    openssh.authorizedKeys.keys = [
-      ''command="${pkgs.rsync}/bin/rsync --server --daemon .",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDNH969c3dF/fQwTaiG7eLc17CwA8o2e8V8I5/pWQVfp root@minecraft''
-    ];
-  };
-
-  users.groups.miyqna = {};
 
   programs = {
     # Thunar組
@@ -74,11 +52,5 @@
     # Mozilla組
     firefox.enable = true;
     thunderbird.enable = true;
-  };
-
-  services.locate = {
-    enable = true;
-    package = pkgs.plocate;
-    interval = "daily";
   };
 }
