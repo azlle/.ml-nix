@@ -31,14 +31,17 @@
       (mkIf (!config.haukanRuri.enable) {
         wireless = {
           enable = true;
-          networks."Buffalo-A-DF70".pskRaw = "***REMOVED***";
+          networks."mel_wpa3" = {
+            authProtocols = [ "SAE" ];
+            psk = "***REMOVED***";
+          };
         };
         interfaces.wlp4s0.ipv4.addresses = [{
-          address = "192.168.1.178";
+          address = "192.168.11.78";
           prefixLength = 24;
         }];
         defaultGateway = {
-          address = "192.168.1.1";
+          address = "192.168.11.1";
           interface = "wlp4s0";
         };
       })
@@ -51,7 +54,7 @@
         interfaces.enp3s0 = {
           useDHCP = false;
           ipv4.addresses = [{
-            address = "192.168.1.178";
+            address = "192.168.11.78";
             prefixLength = 24;
           }];
         };
@@ -66,7 +69,7 @@
         };
         
         defaultGateway = {
-          address = "192.168.1.1";
+          address = "192.168.11.1";
           interface = "enp3s0";
         };
         

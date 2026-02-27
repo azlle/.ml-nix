@@ -8,7 +8,7 @@
   ];
 
   fileSystems."/mnt/balthazar" = {
-    device = "//192.168.1.59/data";
+    device = "//192.168.11.9/data";
     fsType = "cifs";
     options = [
       "credentials=/etc/nixos/smb.balthazar"
