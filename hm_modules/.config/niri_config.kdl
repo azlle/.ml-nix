@@ -136,8 +136,8 @@ layout {
 spawn-at-startup "eww" "daemon"
 spawn-at-startup "eww" "open" "bar"
 spawn-at-startup "niriswitcher"
-spawn-at-startup "swww-daemon"
-spawn-at-startup "swww" "img" "~/Pictures/eeshta_wallpaper.png"
+spawn-at-startup "awww-daemon"
+spawn-at-startup "awww" "img" "~/Pictures/eeshta_wallpaper.png"
 spawn-at-startup "hypridle"
 // spawn-at-startup "xwayland-satellite" v25.08からniriに統合されておりspawnが必要ではなくなった
 spawn-at-startup "fcitx5"
@@ -205,7 +205,7 @@ prefer-no-csd
 
 // Overviewの背景に設定
 layer-rule {
-    match namespace="^swww-daemon$"
+    match namespace="^awww-daemon$"
     place-within-backdrop true
 }
 
