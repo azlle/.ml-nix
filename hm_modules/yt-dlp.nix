@@ -1,25 +1,4 @@
 # yt-dlp.nix
-# { ... }:
-
-# {
-#   programs.yt-dlp = {
-#     enable = false;
-#     extraConfig = ''
-#       # --cookies-from-browser firefox
-#       --output "~/Videos/%(extractor_key)s/%(uploader_id)s/%(timestamp>%Y-%m-%d_%H-%M)s_%(title)s_%(id)s.%(ext)s"
-#     '';
-#   };
-# 
-#   xdg.configFile."yt-dlp/config".text = ''
-#     --cookies-from-browser firefox
-#     -f "bv*+ba/b"
-#     -o "/mnt/melchior/Videos/%(extractor_key)s/%(uploader_id)s/%(timestamp>%Y-%m-%d_%H-%M)s_%(title)s_%(id)s.%(ext)s"
-#     --embed-thumbnail
-#     --merge-output-format mkv
-#   '';
-# }
-
-# yt-dlp.nix
 { pkgs, lib, ... }:
 
 let
@@ -54,7 +33,7 @@ in
 
   xdg.configFile."yt-dlp/config".text = ''
     -o "$HOME/ydl_dest/%(extractor_key)s/%(uploader_id)s/%(timestamp>%Y-%m-%d_%H-%M)s_%(title)s_%(id)s.%(ext)s"
-    --cookies-from-browser firefox
+    --cookies-from-browser firefox:/mnt/c/Users/Eeshta/AppData/Roaming/Mozilla/Firefox/Profiles/907uf8a4.default-nightly
     --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:150.0) Gecko/20100101 Firefox/150.0"
     --embed-thumbnail
     --embed-metadata
@@ -63,4 +42,3 @@ in
     --max-sleep-interval 10
   '';
 }
-

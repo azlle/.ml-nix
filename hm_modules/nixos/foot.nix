@@ -7,7 +7,7 @@
 
     settings = {
       main = {
-        font = "HackGen Console NF:size=14";
+        font = "Moralerspace Neon HW:size=14";
         pad = "20x20";
       };
       colors = {

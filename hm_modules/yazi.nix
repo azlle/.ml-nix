@@ -5,6 +5,7 @@
   programs.yazi = {
     enable = true;
     shellWrapperName = "y";
+    enableZshIntegration = true;
 
     settings = {
       mgr = {
@@ -13,13 +14,13 @@
       };
 
       opener = {
-        helix = [{ run = "hx \"$@\""; block = true; }];
-        mpv = [{ run = "mpv \"$@\""; block = true; }];
-        imv = [{ run = "imv \"$@\""; block = true; }];
+        emacs = [{ run = "emacs \"$@\""; block = true; }];
+        mpv   = [{ run = "mpv \"$@\""; block = true; }];
+        imv   = [{ run = "imv \"$@\""; block = true; }];
       };
 
       open.rules = [
-        { mime = "text/*"; use = "helix"; }
+        { mime = "text/*"; use = "emacs"; }
         { mime = "video/*"; use = "mpv"; }
         { mime = "image/*"; use = "imv"; }
       ];
@@ -30,7 +31,7 @@
       require("bunny"):setup({
         hops = {
           { key = "n", path = "/nix/store", desc = "Nix store" },
-          { key = ".", path = "~/.dotfiles_deb", desc = "dotfiles" },
+          { key = ".", path = "~/.nix_ml", desc = "dotfiles" },
           { key = "u", path = "/mnt/f/Users/Eeshta", desc = "%USERDATA%" },
           { key = "a", path = "/mnt/c/Users/Eeshta/AppData", desc = "%APPDATA%" },
           -- key and path attributes are required, desc is optional
@@ -63,32 +64,5 @@
     fzf.enable = true;
     zathura.enable = true;
     zoxide.enable = true;
-  };
-
-  # 1. mpv-unwrapped のビルドオプションを上書きする
-  nixpkgs.overlays = [
-    (final: prev: {
-      mpv-unwrapped = prev.mpv-unwrapped.override {
-        waylandSupport = true;
-      };
-    })
-  ];
-
-  programs.mpv = {
-    enable = true;
-
-    scripts = with pkgs.mpvScripts; [
-      uosc
-      thumbfast
-    ];
-
-    config = {
-      vo = "gpu"; 
-      gpu-context = "wayland";
-      hwdec = "auto";
-
-      keep-open = true;
-      save-position-on-quit = true;
-    };
   };
 }
