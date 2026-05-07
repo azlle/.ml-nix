@@ -1,0 +1,44 @@
+shell = "zsh"
+
+[templates]
+defer = "{{ hooks | get: \"pre\" | nl }}{% for file in files %}zsh-defer source \"{{ file }}\"\n{% endfor %}{{ hooks | get: \"post\" | nl }}"
+[plugins.zsh-defer]
+github = "romkatv/zsh-defer"
+
+[plugins.powerlevel10k]
+github = "romkatv/powerlevel10k"
+[plugins.powerlevel10k-config]
+local = "~/.config/zsh/p10k-config"
+# source = ".p10k.zsh"
+
+[plugins.fast-syntax-highlighting]
+github = "zdharma-continuum/fast-syntax-highlighting"
+apply = ["defer"]
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+apply = ["defer"]
+
+[plugins.zsh-history-substring-search]
+github = "zsh-users/zsh-history-substring-search"
+apply = ["defer"]
+
+[plugins.fzf-tab]
+github = "Aloxaf/fzf-tab"
+apply = ["defer"]
+
+[plugins.fzf-tab.hooks]
+post = """
+zsh-defer -c '
+if [[ "$TERM" == "eat-"* ]] || [[ "$INSIDE_EMACS" == *eat* ]]; then
+  disable-fzf-tab
+fi
+'
+"""
+
+[plugins.zsh-abbr]
+github = "olets/zsh-abbr"
+apply = ["defer"]
+
+[plugins.zsh-abbr.hooks]
+post = "source ~/.config/zsh/zsh-abbr/abbr.zsh" # 読み込まれない側をdeferしちゃえばいいらしい
