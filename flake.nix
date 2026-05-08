@@ -36,6 +36,10 @@
     nix-cachyos-kernel = {
       url = "github:xddxdd/nix-cachyos-kernel/release";
     };
+
+    millennium = {
+      url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
+    };
   };
 
   outputs = {
@@ -51,6 +55,7 @@
     aagl,
     bunny-yazi,
     nix-cachyos-kernel,
+    millennium,
     ...
   }@inputs:
 
@@ -63,6 +68,7 @@
           emacs-overlay.overlays.default
           niri.overlays.niri
           nix-cachyos-kernel.overlays.pinned
+          millennium.overlays.default
         ];
       };
       commonSpecialArgs  = { inherit inputs; };
