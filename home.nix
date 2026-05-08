@@ -2,8 +2,24 @@
 { config, pkgs, ... }:
 
 {
-  imports = [
-    ./hm_modules
+  imports = [ ./hm_modules ];
+
+  programs.home-manager.enable = true;
+
+  home = {
+    inherit username;
+    homeDirectory = "/home/${username}";
+    stateVersion = "24.11";
+    shell.enableShellIntegration = false;
+  };
+
+  nix = lib.mkIf (hostname == "sumizomenosakura") {
+    package = pkgs.nixVersions.stable;
+  };
+
+  home.sessionPath = lib.mkIf (hostname == "sumizomenosakura") [
+    "$HOME/.nix-profile/bin"
+    "/nix/var/nix/profiles/default/bin"
   ];
 
   home = rec {
