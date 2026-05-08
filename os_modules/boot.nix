@@ -3,7 +3,8 @@
 
 {
   boot = {
-    kernelPackages = pkgs.linuxPackages_zen;
+    kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v3;
+
     loader = {
       systemd-boot.enable = lib.mkForce false;
       efi = {
@@ -14,11 +15,18 @@
 
     # nix shell nixpkgs#sbctl -> sudo sbctl create-keys -> rebuild -> reboot
     # BIOS: Secure Boot Enable -> Reset to Setup Mode -> Save & Exit
-    # sudo sbctl enroll-keys --microsoft -> reboot -> bootctl status 
+    # sudo sbctl enroll-keys --microsoft -> reboot -> bootctl status
     lanzaboote = {
       enable = true;
       pkiBundle = "/var/lib/sbctl";
     };
+
+    kernelParams = [
+      "amd_pstate=active"    # AMD P-State EPP driver (Zen3+)
+      "nvidia-drm.modeset=1" # NVIDIA KMS (required for Wayland)
+      "preempt=full"         # full preemption (no-op on CachyOS BORE)
+      "threadirqs"           # threaded IRQs (reduces audio latency)
+    ];
   };
 
   environment.systemPackages = with pkgs; [ sbctl ];

@@ -27,21 +27,78 @@
       url = "github:ezKEa/aagl-gtk-on-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    bunny-yazi = {
+      url = "github:stelcodes/bunny.yazi";
+      flake = false;
+    };
+
+    nix-cachyos-kernel = {
+      url = "github:xddxdd/nix-cachyos-kernel/release";
+    };
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      nixos-hardware,
-      home-manager,
-      lanzaboote,
-      catppuccin,
-      blender-bin,
-      niri,
-      aagl,
-      ...
-    }@inputs: {
+  outputs = {
+    self,
+    nixpkgs,
+    nixos-hardware,
+    home-manager,
+    lanzaboote,
+    emacs-overlay,
+    catppuccin,
+    blender-bin,
+    niri,
+    aagl,
+    bunny-yazi,
+    nix-cachyos-kernel,
+    ...
+  }@inputs:
+
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        overlays = [
+          emacs-overlay.overlays.default
+          niri.overlays.niri
+          nix-cachyos-kernel.overlays.pinned
+        ];
+      };
+      commonSpecialArgs  = { inherit inputs; };
+      commonHmModules  = [
+        ./home.nix
+        catppuccin.homeModules.catppuccin
+      ];
+
+      mkHost = { hostname, extraModules ? [], users }:
+        nixpkgs.lib.nixosSystem {
+          inherit system pkgs;
+          specialArgs = commonSpecialArgs // { inherit hostname; };
+          modules = [
+            ./os_modules
+            lanzaboote.nixosModules.lanzaboote
+            catppuccin.nixosModules.catppuccin
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = commonSpecialArgs // { inherit hostname; };
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users = nixpkgs.lib.mapAttrs (username: userCfg: {
+                imports = commonHmModules ++ (userCfg.hmModules or []);
+                _module.args.username = username;
+              }) users;
+            }
+          ] ++ extraModules;
+        };
+
+      mkHome = { hostname, username, hmModules ? [] }:
+        home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          extraSpecialArgs = commonSpecialArgs // { inherit hostname username; };
+          modules = commonHmModules ++ hmModules;
+        };
+    in {
 
     nixosConfigurations = {
       necrofantasia = nixpkgs.lib.nixosSystem {
