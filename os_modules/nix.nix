@@ -18,7 +18,7 @@
     };
 
     gc = {
-      automatic = true;
+      automatic = false;
       persistent = true;
       dates = "Sun 02:00";
       options = "--delete-older-than 7d";

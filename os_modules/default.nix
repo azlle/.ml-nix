@@ -8,6 +8,7 @@
     ./manager.nix
     ./mounts.nix
     ./networks.nix
+    ./nh.nix
     ./nix.nix
     ./powers.nix
     ./ssh.nix
