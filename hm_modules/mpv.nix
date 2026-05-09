@@ -1,5 +1,5 @@
 # mpv.nix
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 {
   programs.mpv = {

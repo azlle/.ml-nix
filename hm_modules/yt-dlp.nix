@@ -1,8 +1,8 @@
 # yt-dlp.nix
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 let
-  yt-dlp-ejs = pkgs.python3Packages.yt-dlp-ejs.overrideAttrs (finalAttrs: oldAttrs: {
+  yt-dlp-ejs = pkgs.python3Packages.yt-dlp-ejs.overrideAttrs (finalAttrs: {
     version = "0.8.0";
     src = pkgs.fetchFromGitHub {
       owner = "yt-dlp";

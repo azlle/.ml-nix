@@ -1,5 +1,5 @@
 # powers.nix
-{ config, lib, pkgs, hostname, ... }:
+{ lib, hostname, ... }:
 
 {
   services.tlp = lib.mkIf (hostname == "necrofantasia") {

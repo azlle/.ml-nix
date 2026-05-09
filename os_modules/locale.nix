@@ -1,5 +1,5 @@
 # locale.nix
-{ config, lib, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   time.timeZone = "Asia/Tokyo";

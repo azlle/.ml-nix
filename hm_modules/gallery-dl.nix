@@ -1,9 +1,9 @@
 # gallery-dl.nix
 # Dear13ro.に気をつけろ
-{ pkgs, config, lib, ... }:
+{ pkgs, ... }:
 
 let
-  gallery-dl = pkgs.gallery-dl.overrideAttrs (finalAttrs: oldAttrs: {
+  gallery-dl = pkgs.gallery-dl.overrideAttrs (finalAttrs: {
     version = "1.31.10";
     # https://github.com/mikf/gallery-dl/discussions/9304
     src = pkgs.fetchFromCodeberg {

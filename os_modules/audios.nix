@@ -1,5 +1,5 @@
 # audios.nix
-{ config, lib, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   services.pulseaudio.enable = false;

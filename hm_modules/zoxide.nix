@@ -1,5 +1,5 @@
 # zoxide.nix
-{ pkgs, ... }:
+_:
 
 {
   programs.zoxide = {

@@ -1,5 +1,5 @@
 # users.nix
-{ config, lib, pkgs, inputs, ... }:
+{ pkgs, inputs, ... }:
 
 {
   users.users.eeshta = {

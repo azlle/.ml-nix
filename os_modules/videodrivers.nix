@@ -1,5 +1,5 @@
-# videodrives.nix
-{ config, lib, pkgs, hostname, ... }:
+# videodrivers.nix
+{ lib, hostname, ... }:
 
 {
   config = lib.mkIf (hostname == "necrofantasia") {

@@ -1,4 +1,5 @@
-{ config, lib, pkgs, ... }:
+# emacs.nix
+{ config, pkgs, ... }:
 
 {
   home.file.".emacs.d" = {

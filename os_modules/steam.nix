@@ -1,5 +1,5 @@
 # steam.nix
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 
 {
   programs.steam = {

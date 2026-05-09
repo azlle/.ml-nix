@@ -1,5 +1,5 @@
 # mako.nix
-{ ... }:
+_:
 
 {
   services.mako = {
@@ -16,18 +16,18 @@
       border-size = 3;
       border-radius = 20;
       progress-color = "#dcb898";
-      
+
       font = "Noto Sans CJK JP 10";
-      
+
       icon-path = "";
       max-icon-size = 64;
-      
+
       max-visible = 5;
       sort = "-time";
-      
+
       default-timeout = 5000;
       ignore-timeout = false;
-      
+
       layer = "overlay";
     };
 

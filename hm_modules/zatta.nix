@@ -1,5 +1,5 @@
 # zatta.nix
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 
 {
   home.packages = with pkgs; [

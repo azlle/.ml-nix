@@ -1,5 +1,5 @@
 # foot.nix
-{ pkgs, config, ... }:
+_:
 
 {
   programs.foot = {

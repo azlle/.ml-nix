@@ -1,5 +1,5 @@
 # yazi.nix
-{ pkgs, inputs, ... }:
+{ inputs, ... }:
 
 {
   programs.yazi = {

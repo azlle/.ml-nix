@@ -1,5 +1,5 @@
 # git.nix
-{ pkgs, config, ... }:
+_:
 
 {
   programs.git = {

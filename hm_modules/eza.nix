@@ -1,5 +1,5 @@
 # eza.nix
-{ ... }:
+_:
 
 {
   programs.eza = {

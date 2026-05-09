@@ -1,5 +1,5 @@
 # ssh.nix
-{ config, lib, pkgs, ... }:
+_:
 
 {
   # Some programs need SUID wrappers, can be configured further or are

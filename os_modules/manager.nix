@@ -1,9 +1,15 @@
 # manager.nix
-{ config, lib, pkgs, ... }:
+{ pkgs, ... }:
 
 {
-  programs.niri.enable = true;
-  programs.niri.package = pkgs.niri-unstable;
+  programs = {
+    niri = {
+      enable = true;
+      package = pkgs.niri-unstable;
+    };
+    dconf.enable = true;
+  };
+
   niri-flake.cache.enable = true;
 
   services = {
@@ -18,8 +24,6 @@
       };
     };
   };
-
-  programs.dconf.enable = true;
 
   environment.variables = {
     GTK_THEME = "Adwaita:dark";

@@ -1,5 +1,5 @@
 # hypridle.nix
-{ pkgs, ... }:
+_:
 
 {
   services.hypridle = {
@@ -15,4 +15,3 @@
     };
   };
 }
-
