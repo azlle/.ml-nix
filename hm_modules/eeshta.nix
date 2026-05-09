@@ -1,15 +1,34 @@
-# home.nix
-{ config, pkgs, ... }:
+# eeshta.nix
+{
+  pkgs,
+  lib,
+  username,
+  hostname,
+  homeDirectory,
+  stateVersion,
+  ...
+}:
 
 {
-  imports = [ ./hm_modules ];
+  imports = [
+    ./.config
+    ./emacs.nix
+    ./eza.nix
+    ./fonts.nix
+    ./gallery-dl.nix
+    ./git.nix
+    ./mpv.nix
+    ./yazi.nix
+    ./yt-dlp.nix
+    ./zatta.nix
+    ./zoxide.nix
+    ./zsh.nix
+  ];
 
   programs.home-manager.enable = true;
 
   home = {
-    inherit username;
-    homeDirectory = "/home/${username}";
-    stateVersion = "24.11";
+    inherit username homeDirectory stateVersion;
     shell.enableShellIntegration = false;
   };
 
@@ -31,11 +50,11 @@
   home.file = {
     "eeshta_wallpaper.png" = {
       target = "Pictures/eeshta_wallpaper.png";
-      source = ./artworks/nix-wallpaper-simple-dark-gray_mellomixed.png;
+      source = ../artworks/nix-wallpaper-simple-dark-gray_mellomixed.png;
     };
     "eeshta_icon.png" = {
       target = "Pictures/eeshta_icon.png";
-      source = ./artworks/IMG_4900_foricon.png;
+      source = ../artworks/IMG_4900_foricon.png;
     };
   };
 }
