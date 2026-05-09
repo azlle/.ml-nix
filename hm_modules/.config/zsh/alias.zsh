@@ -1,6 +1,6 @@
 # evade glob
 local noglob_cmds=(
-  nix home-manager
+  nix nixos-rebuild home-manager
   git curl wget rsync
   yt-dlp gallery-dl
 )
