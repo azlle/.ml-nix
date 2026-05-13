@@ -4,33 +4,46 @@
   inputs = {
     #nix flake init -t templates#fullでFlakeの全構文が見れます
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     lanzaboote = {
       url = "github:nix-community/lanzaboote/v1.0.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     emacs-overlay.url = "github:nix-community/emacs-overlay";
+
     catppuccin.url = "github:catppuccin/nix";
+
     blender-bin.url = "github:edolstra/nix-warez?dir=blender";
+
     niri.url = "github:sodiboo/niri-flake";
+
     aagl = {
       url = "github:ezKEa/aagl-gtk-on-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     bunny-yazi = {
       url = "github:stelcodes/bunny.yazi";
       flake = false;
     };
+
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+
     millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
+
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     ml-secrets = {
       url = "git+ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git?shallow=1";
       flake = false;
