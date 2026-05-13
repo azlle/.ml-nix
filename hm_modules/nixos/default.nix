@@ -7,5 +7,6 @@
     ./hypridle.nix
     ./mako.nix
     ./obs.nix
+    ./zen-browser.nix
   ];
 }

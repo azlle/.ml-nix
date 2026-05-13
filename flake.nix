@@ -48,6 +48,14 @@
       url = "git+ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git?shallow=1";
       flake = false;
     };
+
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        home-manager.follows = "home-manager";
+      };
+    };
   };
 
   outputs = {
@@ -66,6 +74,7 @@
     millennium,
     sops-nix,
     ml-secrets,
+    zen-browser,
     ...
   }@inputs:
 
@@ -141,6 +150,7 @@
         hostname = "necrofantasia";
         extraHomeModules = [
           ./hm_modules/nixos
+          zen-browser.homeModules.twilight
         ];
         extraModules = [
           ./machines/ga503_hardware.nix
