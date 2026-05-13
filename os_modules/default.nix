@@ -14,6 +14,7 @@
     ./nix.nix
     ./powers.nix
     ./ssh.nix
+    ./sops.nix
     ./steam.nix
     ./users.nix
     ./videodrivers.nix

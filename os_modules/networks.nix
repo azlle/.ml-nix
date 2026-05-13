@@ -32,9 +32,10 @@
       (mkIf (!config.haukanRuri.enable) {
         wireless = {
           enable = true;
+          secretsFile = config.sops.secrets."wireless/password".path;
           networks."mel_wpa3" = {
-            authProtocols = [ "SAE" ];
-            pskRaw = "***REMOVED***";
+            authProtocols = [ "SAE" "WPA-PSK" ];
+            pskRaw = "ext:mel_wpa3";
           };
         };
         interfaces.wlp4s0.ipv4.addresses = [{
@@ -97,8 +98,7 @@
           ssid = "ml_haukanruri";
           authentication = {
             mode = "wpa2-sha256";
-            wpaPassword = "***REMOVED***";
-            # wpaPasswordFile = "/home/eeshta/.dotfiles/credentials/hkrr_pswd";
+            wpaPasswordFile = config.sops.secrets."wireless/hkrr_password".path;
           };
         };
       };

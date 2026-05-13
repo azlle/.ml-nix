@@ -554,6 +554,23 @@
         "type": "github"
       }
     },
+    "ml-secrets": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778691886,
+        "narHash": "sha256-lb/buweVflAHKQMOIdWsCPESRm6XDtFA1RMo3rqf6h8=",
+        "ref": "refs/heads/main",
+        "rev": "0623836e0cefe185143ad363cf328b2fc208602f",
+        "shallow": true,
+        "type": "git",
+        "url": "ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git"
+      },
+      "original": {
+        "shallow": true,
+        "type": "git",
+        "url": "ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git"
+      }
+    },
     "niri": {
       "inputs": {
         "niri-stable": "niri-stable",
@@ -875,10 +892,12 @@
         "home-manager": "home-manager",
         "lanzaboote": "lanzaboote",
         "millennium": "millennium",
+        "ml-secrets": "ml-secrets",
         "niri": "niri",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
         "nixos-hardware": "nixos-hardware",
-        "nixpkgs": "nixpkgs_8"
+        "nixpkgs": "nixpkgs_8",
+        "sops-nix": "sops-nix"
       }
     },
     "rust-overlay": {
@@ -917,6 +936,26 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1777944972,
+        "narHash": "sha256-VfGRo1qTBKOe3s2gOv8LSoA6Fk19PvBlwQ1ECN0Evn8=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "c591bf665727040c6cc5cb409079acb22dcce33c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
         "type": "github"
       }
     },

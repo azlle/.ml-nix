@@ -27,6 +27,14 @@
     };
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
     millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    ml-secrets = {
+      url = "git+ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git?shallow=1";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -43,6 +51,8 @@
     bunny-yazi,
     nix-cachyos-kernel,
     millennium,
+    sops-nix,
+    ml-secrets,
     ...
   }@inputs:
 
@@ -86,6 +96,7 @@
                   ++ extraHomeModules;
               };
             }
+            sops-nix.nixosModules.sops
           ] ++ extraModules;
         };
 

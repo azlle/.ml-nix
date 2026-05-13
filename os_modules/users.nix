@@ -1,10 +1,10 @@
 # users.nix
-{ pkgs, inputs, ... }:
+{ config, inputs, pkgs, ... }:
 
 {
   users.users.eeshta = {
     isNormalUser = true;
-    hashedPassword = "***REMOVED***";
+    hashedPasswordFile = config.sops.secrets."users/password/eeshta".path;
     description = "eeshta";
     shell = pkgs.zsh;
     ignoreShellProgramCheck = true;
