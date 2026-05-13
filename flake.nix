@@ -56,6 +56,10 @@
         home-manager.follows = "home-manager";
       };
     };
+
+    nixcord = {
+      url = "github:FlameFlag/nixcord";
+    };
   };
 
   outputs = {
@@ -75,6 +79,7 @@
     sops-nix,
     ml-secrets,
     zen-browser,
+    nixcord,
     ...
   }@inputs:
 
@@ -151,6 +156,7 @@
         extraHomeModules = [
           ./hm_modules/nixos
           zen-browser.homeModules.twilight
+          nixcord.homeModules.nixcord
         ];
         extraModules = [
           ./machines/ga503_hardware.nix

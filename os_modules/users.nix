@@ -15,7 +15,6 @@
     extraGroups = [ "wheel" ];
     packages = with pkgs; [
       protonup-qt
-      vesktop
       obsidian
       zoom-us
       parsec-bin
