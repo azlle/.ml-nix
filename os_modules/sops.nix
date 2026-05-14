@@ -13,6 +13,7 @@ in
       "users/password/eeshta" = {
         neededForUsers = true;
       };
+
       "wireless/password" = {
         path = "/run/secrets/wireless.conf";
         owner = "wpa_supplicant";
@@ -26,12 +27,14 @@ in
         path = "${homeDirectory}/Pictures/eeshta_icon.png";
         owner = username; group = "users"; mode = "0644";
       };
+
       "eeshta_wallpaper" = {
         format = "binary";
         sopsFile = "${inputs.ml-secrets}/artworks/nix-wallpaper-simple-dark-gray_mellomixed.png.enc";
         path = "${homeDirectory}/Pictures/eeshta_wallpaper.png";
         owner = username; group = "users"; mode = "0644";
       };
+
       "pnnk_wallpaper" = {
         format = "binary";
         sopsFile = "${inputs.ml-secrets}/artworks/260224-rebapymmkb-HB8Wtt_a0AE4YWk.jpg.enc";
