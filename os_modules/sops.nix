@@ -17,6 +17,9 @@ in
         path = "/run/secrets/wireless.conf";
         owner = "wpa_supplicant";
       };
+
+      "wireless/hkrr_password" = {};
+
       "eeshta_icon" = {
         format = "binary";
         sopsFile = "${inputs.ml-secrets}/artworks/IMG_4900_foricon.png.enc";
