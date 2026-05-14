@@ -1,5 +1,5 @@
 # sops.nix
-{ inputs, ... }:
+{ inputs, username, homeDirectory, ... }:
 
 let
   ageKeyFile = "/var/lib/sops-nix/sops_mm";
@@ -16,6 +16,24 @@ in
       "wireless/password" = {
         path = "/run/secrets/wireless.conf";
         owner = "wpa_supplicant";
+      };
+      "eeshta_icon" = {
+        format = "binary";
+        sopsFile = "${inputs.ml-secrets}/artworks/IMG_4900_foricon.png.enc";
+        path = "${homeDirectory}/Pictures/eeshta_icon.png";
+        owner = username; group = "users"; mode = "0644";
+      };
+      "eeshta_wallpaper" = {
+        format = "binary";
+        sopsFile = "${inputs.ml-secrets}/artworks/nix-wallpaper-simple-dark-gray_mellomixed.png.enc";
+        path = "${homeDirectory}/Pictures/eeshta_wallpaper.png";
+        owner = username; group = "users"; mode = "0644";
+      };
+      "pnnk_wallpaper" = {
+        format = "binary";
+        sopsFile = "${inputs.ml-secrets}/artworks/260224-rebapymmkb-HB8Wtt_a0AE4YWk.jpg.enc";
+        path = "${homeDirectory}/Pictures/pnnk_wallpaper.png";
+        owner = username; group = "users"; mode = "0644";
       };
     };
   };
