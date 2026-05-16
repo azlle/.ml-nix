@@ -1,5 +1,6 @@
 # networks.nix
-{ config, lib, pkgs, ... }: with lib;
+{ config, lib, hostname, ... }: with lib;
+
 {
   options = {
     haukanRuri.enable = mkEnableOption "Enable Hotspot: ml_haukanruri";
@@ -11,7 +12,7 @@
       {
         networkmanager.enable = false;
         useDHCP = false;
-        hostName = "necrofantasia";
+        hostName = hostname;
         nameservers = [ "8.8.8.8" ];
         extraHosts = "127.0.0.1 suki-kira.com";
         firewall = {

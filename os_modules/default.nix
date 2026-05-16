@@ -1,4 +1,6 @@
 # default.nix
+{ stateVersion, ... }:
+
 {
   imports = [
     ./audios.nix
@@ -19,5 +21,5 @@
   ];
 
   haukanRuri.enable = true;
-  system.stateVersion = "24.11";
+  system.stateVersion = stateVersion;
 }

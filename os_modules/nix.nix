@@ -1,5 +1,5 @@
 # nix.nix
-{ config, pkgs, username, ... }:
+{ pkgs, username, ... }:
 
 {
   nix = {
@@ -14,6 +14,7 @@
       http-connections = 50;
       trusted-users = [
         "root"
+        "${username}"
       ];
     };
 
