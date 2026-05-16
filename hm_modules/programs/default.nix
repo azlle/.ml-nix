@@ -9,7 +9,7 @@
     ./mako.nix
     ./nvim.nix
     ./obs.nix
-    ./yazi_n_opener.nix
+    ./yazi.nix
     ./yt-dlp.nix
   ];
 }
