@@ -1,8 +1,8 @@
 # videodrives.nix
-{ config, lib, pkgs, hostType ? "necrofantasia", ... }:
+{ config, lib, pkgs, hostname, ... }:
 
 {
-  config = lib.mkIf (hostType == "necrofantasia") {
+  config = lib.mkIf (hostname == "necrofantasia") {
     services.xserver.videoDrivers = [ "amdgpu" "nvidia" ];
 
     hardware.nvidia = {

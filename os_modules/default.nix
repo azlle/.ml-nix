@@ -11,9 +11,12 @@
     ./nix.nix
     ./powers.nix
     ./ssh.nix
+    ./steam.nix
     ./users.nix
     ./videodrivers.nix
+    ./virt.nix
   ];
 
-  haukanRuri.enable = false;
+  haukanRuri.enable = true;
+  system.stateVersion = "24.11";
 }

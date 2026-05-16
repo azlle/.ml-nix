@@ -33,7 +33,7 @@
     glib # niriswitcherにgdbusが必要
     niriswitcher
     rofi
-    swww
+    awww
     wl-clipboard
     brightnessctl
     cliphist

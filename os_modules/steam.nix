@@ -9,7 +9,7 @@
     localNetworkGameTransfers.openFirewall = true;
   };
 
-   services.sunshine = {
+  services.sunshine = {
     enable = true;
     autoStart = true;
     capSysAdmin = true;

@@ -4,7 +4,7 @@
   options = {
     haukanRuri.enable = mkEnableOption "Enable Hotspot: ml_haukanruri";
   };
-  
+
   config = {
     networking = mkMerge [
       # 共通設定
@@ -26,14 +26,14 @@
           trustedInterfaces = [ "virbr0" ];
         };
       }
-      
+
       # 通常モード（無線接続）
       (mkIf (!config.haukanRuri.enable) {
         wireless = {
           enable = true;
           networks."mel_wpa3" = {
             authProtocols = [ "SAE" ];
-            psk = "***REMOVED***";
+            pskRaw = "***REMOVED***";
           };
         };
         interfaces.wlp4s0.ipv4.addresses = [{
@@ -45,11 +45,11 @@
           interface = "wlp4s0";
         };
       })
-      
+
       # ホットスポットモード（有線→無線配信）
       (mkIf config.haukanRuri.enable {
         wireless.enable = false;
-        
+
         # 有線インターフェース（インターネット側）
         interfaces.enp3s0 = {
           useDHCP = false;
@@ -58,7 +58,7 @@
             prefixLength = 24;
           }];
         };
-        
+
         # 無線インターフェース（ホットスポット側）
         interfaces.wlp4s0 = {
           useDHCP = false;
@@ -67,24 +67,24 @@
             prefixLength = 24;
           }];
         };
-        
+
         defaultGateway = {
           address = "192.168.11.1";
           interface = "enp3s0";
         };
-        
+
         # NAT設定
         nat = {
           enable = true;
           externalInterface = "enp3s0";
           internalInterfaces = [ "wlp4s0" ];
         };
-        
+
         # ファイアウォールでホットスポット通信を許可
         firewall.trustedInterfaces = [ "virbr0" "wlp4s0" ];
       })
     ];
-    
+
     # ホットスポットサービス
     services.hostapd = mkIf config.haukanRuri.enable {
       enable = true;
@@ -102,7 +102,7 @@
         };
       };
     };
-    
+
     services.dnsmasq = mkIf config.haukanRuri.enable {
       enable = true;
       settings = {
@@ -121,7 +121,7 @@
         ];
       };
     };
-    
+
     boot.kernel.sysctl = mkIf config.haukanRuri.enable {
       "net.ipv4.ip_forward" = 1;
     };

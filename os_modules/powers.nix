@@ -1,8 +1,8 @@
 # powers.nix
-{ config, lib, pkgs, hostType ? "necrofantasia", ... }:
+{ config, lib, pkgs, hostname, ... }:
 
 {
-  services.tlp = lib.mkIf (hostType == "necrofantasia") {
+  services.tlp = lib.mkIf (hostname == "necrofantasia") {
     enable = true;
     settings = {
       CPU_SCALING_GOVERNOR_ON_AC = "performance";
