@@ -76,7 +76,6 @@
     shellAbbrs = {
       la = "ls -ahl --group-directories-first";
       rmtrash = "rm -rf ~/.local/share/Trash/files/*";
-      nano = "nvim";
 
       #nix
       nrsfn = "sudo nixos-rebuild switch --flake ~/.dotfiles#necrofantasia";
