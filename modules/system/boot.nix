@@ -1,4 +1,4 @@
-# de.nix
+# boot.nix
 { config, lib, pkgs, ... }:
 
 {

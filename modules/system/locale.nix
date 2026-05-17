@@ -1,4 +1,4 @@
-# i18n.nix
+# locale.nix
 { config, lib, pkgs, ... }:
 
 {
