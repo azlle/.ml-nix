@@ -25,8 +25,6 @@
     ./zsh.nix
   ];
 
-  programs.home-manager.enable = true;
-
   home = {
     inherit username homeDirectory stateVersion;
     shell.enableShellIntegration = false;

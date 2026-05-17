@@ -2,7 +2,6 @@
   description = "A simple NixOS flake";
 
   inputs = {
-    #nix flake init -t templates#fullでFlakeの全構文が見れます
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
@@ -37,7 +36,7 @@
 
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
 
-    millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
+    millennium.url = "github:SteamClientHomebrew/Millennium/next?dir=packages/nix";
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -83,71 +82,71 @@
     ...
   }@inputs:
 
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = [
-          emacs-overlay.overlays.default
-          niri.overlays.niri
-          nix-cachyos-kernel.overlays.pinned
-          millennium.overlays.default
-        ];
+  let
+    system = "x86_64-linux";
+    pkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
+      overlays = [
+        emacs-overlay.overlays.default
+        niri.overlays.niri
+        nix-cachyos-kernel.overlays.pinned
+        millennium.overlays.default
+      ];
+    };
+
+    createNixosConfiguration =
+      {
+        username,
+        hostname,
+        homeDirectory ? "/home/${username}",
+        stateVersion ? "24.11",
+        extraHomeModules ? [],
+        extraModules ? [],
+      }:
+      nixpkgs.lib.nixosSystem {
+        inherit system pkgs;
+        specialArgs = { inherit inputs username hostname homeDirectory stateVersion; };
+        modules = [
+          ./os_modules
+          lanzaboote.nixosModules.lanzaboote
+          catppuccin.nixosModules.catppuccin
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              extraSpecialArgs = { inherit inputs username hostname homeDirectory stateVersion; };
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              users.${username}.imports =
+                [ ./hm_modules/${username}.nix catppuccin.homeModules.catppuccin ]
+                ++ extraHomeModules;
+            };
+          }
+          sops-nix.nixosModules.sops
+        ] ++ extraModules;
       };
 
-      createNixosConfiguration =
-        {
-          username,
-          hostname,
-          homeDirectory ? "/home/${username}",
-          stateVersion ? "24.11",
-          extraHomeModules ? [],
-          extraModules ? [],
-        }:
-        nixpkgs.lib.nixosSystem {
-          inherit system pkgs;
-          specialArgs = { inherit inputs username hostname homeDirectory stateVersion; };
-          modules = [
-            ./os_modules
-            lanzaboote.nixosModules.lanzaboote
-            catppuccin.nixosModules.catppuccin
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                extraSpecialArgs = { inherit inputs username hostname homeDirectory stateVersion; };
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${username}.imports =
-                  [ ./hm_modules/${username}.nix catppuccin.homeModules.catppuccin ]
-                  ++ extraHomeModules;
-              };
-            }
-            sops-nix.nixosModules.sops
-          ] ++ extraModules;
-        };
-
-      createHome =
-        {
-          username,
-          hostname,
-          homeDirectory ? "/home/${username}",
-          stateVersion ? "24.11",
-          extraHomeModules ? [],
-        }:
-        home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          extraSpecialArgs = { inherit inputs username homeDirectory hostname stateVersion; };
-          modules = [
-            ./hm_modules/${username}.nix
-            catppuccin.homeModules.catppuccin
-            {
-              home = { inherit username homeDirectory stateVersion; };
-              programs.home-manager.enable = true;
-            }
-          ] ++ extraHomeModules;
-        };
-    in {
+    createHome =
+      {
+        username,
+        hostname,
+        homeDirectory ? "/home/${username}",
+        stateVersion ? "24.11",
+        extraHomeModules ? [],
+      }:
+      home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = { inherit inputs username homeDirectory hostname stateVersion; };
+        modules = [
+          ./hm_modules/${username}.nix
+          catppuccin.homeModules.catppuccin
+          {
+            home = { inherit username homeDirectory stateVersion; };
+            programs.home-manager.enable = true;
+          }
+        ] ++ extraHomeModules;
+      };
+  in {
 
     nixosConfigurations = {
       necrofantasia = createNixosConfiguration {
@@ -160,13 +159,12 @@
         ];
         extraModules = [
           ./machines/ga503_hardware.nix
-
           nixos-hardware.nixosModules.asus-zephyrus-ga503
           niri.nixosModules.niri
-          { imports = [ aagl.nixosModules.default ];
-            programs.sleepy-launcher.enable = true; }
+          aagl.nixosModules.default
         ];
       };
+    };
 
     homeConfigurations."sumizomenosakura" = createHome {
       username = "miyu";

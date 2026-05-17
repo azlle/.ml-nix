@@ -38,6 +38,8 @@
   };
 
   programs = {
+    sleepy-launcher.enable = true;
+
     # Thunar組
     thunar.enable = true;
     xfconf.enable = true;
