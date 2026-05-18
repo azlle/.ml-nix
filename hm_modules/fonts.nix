@@ -15,10 +15,14 @@
   fonts.fontconfig = {
     enable = true;
     defaultFonts = {
-      serif     = [ "Noto Serif CJK JP" ];
+      serif = [ "Noto Serif CJK JP" ];
       sansSerif = [ "Noto Sans CJK JP" ];
-      monospace = [ "Moralerspace Neon HW" "Symbols Nerd Font Mono" "Noto Color Emoji" ];
-      emoji     = [ "Noto Color Emoji" ];
+      monospace = [
+        "Moralerspace Neon HW"
+        "Symbols Nerd Font Mono"
+        "Noto Color Emoji"
+      ];
+      emoji = [ "Noto Color Emoji" ];
     };
   };
 }

@@ -1,5 +1,10 @@
 # users.nix
-{ config, inputs, pkgs, ... }:
+{
+  config,
+  inputs,
+  pkgs,
+  ...
+}:
 
 {
   users.users.eeshta = {
@@ -28,11 +33,17 @@
       # temurin-jre-bin-17
 
       (prismlauncher.override {
-        jdks = [ temurin-jre-bin-8 temurin-jre-bin-17 temurin-jre-bin ];
+        jdks = [
+          temurin-jre-bin-8
+          temurin-jre-bin-17
+          temurin-jre-bin
+        ];
       })
 
       # 作業系など
-      unityhub vrc-get gimp3
+      unityhub
+      vrc-get
+      gimp3
       inputs.blender-bin.packages.x86_64-linux.blender_4_1
     ];
   };

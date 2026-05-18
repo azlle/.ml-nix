@@ -16,7 +16,7 @@ let
 in
 
 {
-  home.packages = [gallery-dl];
+  home.packages = [ gallery-dl ];
 
   xdg.configFile."gallery-dl/config.json".text = ''
     {

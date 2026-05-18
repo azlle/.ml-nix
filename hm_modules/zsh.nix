@@ -1,12 +1,21 @@
 # zsh.nix
-{ pkgs, config, lib, ... }: with lib;
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
+with lib;
 
 {
   xdg.configFile."zsh" = {
     source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nix_ml/hm_modules/.config/zsh";
   };
 
-  home.packages = with pkgs; [ sheldon keychain ];
+  home.packages = with pkgs; [
+    sheldon
+    keychain
+  ];
 
   programs.zsh = {
     enable = true;

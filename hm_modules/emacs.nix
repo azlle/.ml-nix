@@ -15,8 +15,11 @@
       # extraEmacsPackages = epkgs: [];
     })
 
-    pkgs.wl-clipboard pkgs.skkDictionaries.l
-    pkgs.ffmpeg pkgs.vips
-    pkgs.adwaita-icon-theme pkgs.adwaita-icon-theme-legacy
+    pkgs.wl-clipboard
+    pkgs.skkDictionaries.l
+    pkgs.ffmpeg
+    pkgs.vips
+    pkgs.adwaita-icon-theme
+    pkgs.adwaita-icon-theme-legacy
   ];
 }

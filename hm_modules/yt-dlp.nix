@@ -13,19 +13,21 @@ let
     };
   });
 
-  yt-dlp = pkgs.yt-dlp.overrideAttrs (finalAttrs: oldAttrs: {
-    version = "2026.03.17";
-    src = pkgs.fetchFromGitHub {
-      owner = "yt-dlp";
-      repo = "yt-dlp";
-      rev = finalAttrs.version;
-      # hash = lib.fakeHash;
-      hash = "sha256-A4LUCuKCjpVAOJ8jNoYaC3mRCiKH0/wtcsle0YfZyTA=";
-    };
-    propagatedBuildInputs = map (dep:
-      if dep.pname or "" == "yt-dlp-ejs" then yt-dlp-ejs else dep
-    ) oldAttrs.propagatedBuildInputs;
-  });
+  yt-dlp = pkgs.yt-dlp.overrideAttrs (
+    finalAttrs: oldAttrs: {
+      version = "2026.03.17";
+      src = pkgs.fetchFromGitHub {
+        owner = "yt-dlp";
+        repo = "yt-dlp";
+        rev = finalAttrs.version;
+        # hash = lib.fakeHash;
+        hash = "sha256-A4LUCuKCjpVAOJ8jNoYaC3mRCiKH0/wtcsle0YfZyTA=";
+      };
+      propagatedBuildInputs = map (
+        dep: if dep.pname or "" == "yt-dlp-ejs" then yt-dlp-ejs else dep
+      ) oldAttrs.propagatedBuildInputs;
+    }
+  );
 in
 
 {

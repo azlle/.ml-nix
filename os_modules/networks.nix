@@ -1,5 +1,11 @@
 # networks.nix
-{ config, lib, hostname, ... }: with lib;
+{
+  config,
+  lib,
+  hostname,
+  ...
+}:
+with lib;
 
 {
   options = {
@@ -19,10 +25,23 @@
           enable = true;
           allowPing = true;
           checkReversePath = "loose";
-          allowedTCPPorts = [ 22 28989 47984 47989 47990 48010 ];
+          allowedTCPPorts = [
+            22
+            28989
+            47984
+            47989
+            47990
+            48010
+          ];
           allowedUDPPortRanges = [
-            { from = 47998; to = 48000; }
-            { from = 8000; to = 8010; }
+            {
+              from = 47998;
+              to = 48000;
+            }
+            {
+              from = 8000;
+              to = 8010;
+            }
           ];
           trustedInterfaces = [ "virbr0" ];
         };
@@ -34,14 +53,19 @@
           enable = true;
           secretsFile = config.sops.secrets."wireless/password".path;
           networks."mel_wpa3" = {
-            authProtocols = [ "SAE" "WPA-PSK" ];
+            authProtocols = [
+              "SAE"
+              "WPA-PSK"
+            ];
             pskRaw = "ext:mel_wpa3";
           };
         };
-        interfaces.wlp4s0.ipv4.addresses = [{
-          address = "192.168.11.78";
-          prefixLength = 24;
-        }];
+        interfaces.wlp4s0.ipv4.addresses = [
+          {
+            address = "192.168.11.78";
+            prefixLength = 24;
+          }
+        ];
         defaultGateway = {
           address = "192.168.11.1";
           interface = "wlp4s0";
@@ -55,19 +79,23 @@
         # 有線インターフェース（インターネット側）
         interfaces.enp3s0 = {
           useDHCP = false;
-          ipv4.addresses = [{
-            address = "192.168.11.78";
-            prefixLength = 24;
-          }];
+          ipv4.addresses = [
+            {
+              address = "192.168.11.78";
+              prefixLength = 24;
+            }
+          ];
         };
 
         # 無線インターフェース（ホットスポット側）
         interfaces.wlp4s0 = {
           useDHCP = false;
-          ipv4.addresses = [{
-            address = "192.168.14.1";
-            prefixLength = 24;
-          }];
+          ipv4.addresses = [
+            {
+              address = "192.168.14.1";
+              prefixLength = 24;
+            }
+          ];
         };
 
         defaultGateway = {
@@ -83,7 +111,10 @@
         };
 
         # ファイアウォールでホットスポット通信を許可
-        firewall.trustedInterfaces = [ "virbr0" "wlp4s0" ];
+        firewall.trustedInterfaces = [
+          "virbr0"
+          "wlp4s0"
+        ];
       })
     ];
 
@@ -110,8 +141,14 @@
         interface = "wlp4s0";
         bind-interfaces = true;
         dhcp-range = [ "192.168.14.10,192.168.14.30,24h" ];
-        dhcp-option = [ "3,192.168.14.1" "6,192.168.14.1" ];
-        server = [ "8.8.8.8" "8.8.4.4" ];
+        dhcp-option = [
+          "3,192.168.14.1"
+          "6,192.168.14.1"
+        ];
+        server = [
+          "8.8.8.8"
+          "8.8.4.4"
+        ];
         address = [ "/suki-kira.com/0.0.0.0" ];
 
         dhcp-host = [

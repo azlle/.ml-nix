@@ -14,15 +14,39 @@
       };
 
       opener = {
-        emacs = [{ run = "emacs \"$@\""; block = true; }];
-        mpv   = [{ run = "mpv \"$@\""; block = true; }];
-        imv   = [{ run = "imv \"$@\""; block = true; }];
+        emacs = [
+          {
+            run = "emacs \"$@\"";
+            block = true;
+          }
+        ];
+        mpv = [
+          {
+            run = "mpv \"$@\"";
+            block = true;
+          }
+        ];
+        imv = [
+          {
+            run = "imv \"$@\"";
+            block = true;
+          }
+        ];
       };
 
       open.rules = [
-        { mime = "text/*"; use = "emacs"; }
-        { mime = "video/*"; use = "mpv"; }
-        { mime = "image/*"; use = "imv"; }
+        {
+          mime = "text/*";
+          use = "emacs";
+        }
+        {
+          mime = "video/*";
+          use = "mpv";
+        }
+        {
+          mime = "image/*";
+          use = "imv";
+        }
       ];
     };
 

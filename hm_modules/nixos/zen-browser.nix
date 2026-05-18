@@ -6,48 +6,52 @@
     enable = true;
     setAsDefaultBrowser = true;
 
-    policies = let
-      mkExtensionSettings = builtins.mapAttrs (_: pluginId: {
-        install_url = "https://addons.mozilla.org/firefox/downloads/latest/${pluginId}/latest.xpi";
-        installation_mode = "force_installed";
-      });
-    in {
-      AutofillAddressEnabled = true;
-      AutofillCreditCardEnabled = false;
-      DisableAppUpdate = true;
-      DisableFeedbackCommands = true;
-      DisableFirefoxStudies = true;
-      DisablePocket = true;
-      DisableTelemetry = true;
-      DontCheckDefaultBrowser = true;
-      NoDefaultBookmarks = true;
-      OfferToSaveLogins = false;
-      EnableTrackingProtection = {
-        Value = true;
-        Locked = true;
-        Cryptomining = true;
-        Fingerprinting = true;
-      };
-      Preferences = {
-        "browser.startup.homepage" = {
-          Value = "chrome://browser/content/aboutDialog.xhtml";
-          Status = "locked";
+    policies =
+      let
+        mkExtensionSettings = builtins.mapAttrs (
+          _: pluginId: {
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/${pluginId}/latest.xpi";
+            installation_mode = "force_installed";
+          }
+        );
+      in
+      {
+        AutofillAddressEnabled = true;
+        AutofillCreditCardEnabled = false;
+        DisableAppUpdate = true;
+        DisableFeedbackCommands = true;
+        DisableFirefoxStudies = true;
+        DisablePocket = true;
+        DisableTelemetry = true;
+        DontCheckDefaultBrowser = true;
+        NoDefaultBookmarks = true;
+        OfferToSaveLogins = false;
+        EnableTrackingProtection = {
+          Value = true;
+          Locked = true;
+          Cryptomining = true;
+          Fingerprinting = true;
         };
-        "browser.tabs.warnOnClose" = {
-          Value = false;
-          Status = "locked"; # User cannot change this
+        Preferences = {
+          "browser.startup.homepage" = {
+            Value = "chrome://browser/content/aboutDialog.xhtml";
+            Status = "locked";
+          };
+          "browser.tabs.warnOnClose" = {
+            Value = false;
+            Status = "locked"; # User cannot change this
+          };
+        };
+        ExtensionSettings = mkExtensionSettings {
+          "{446900e4-71c2-419f-a6a7-df9c091e268b}" = "bitwarden-password-manager";
+          "uBlock0@raymondhill.net" = "ublock-origin";
+          "jid0-RvYT2rGWfM8q5yWxIxAHYAeo5Qg@jetpack" = "duplicate-tabs-closer";
+          "{12cf650b-1822-40aa-bff0-996df6948878}" = "cookies-txt";
+          "{e63ff88d-6742-4e81-9544-87f60f0d0c00}" = "twitch-chat-danmaku";
+          "{9350bc42-47fb-4598-ae0f-825e3dd9ceba}" = "absolute-enable-right-click";
+          "simple-translate@sienori" = "simple-translate";
         };
       };
-      ExtensionSettings = mkExtensionSettings {
-        "{446900e4-71c2-419f-a6a7-df9c091e268b}" = "bitwarden-password-manager";
-        "uBlock0@raymondhill.net" = "ublock-origin";
-        "jid0-RvYT2rGWfM8q5yWxIxAHYAeo5Qg@jetpack" = "duplicate-tabs-closer";
-        "{12cf650b-1822-40aa-bff0-996df6948878}" = "cookies-txt";
-        "{e63ff88d-6742-4e81-9544-87f60f0d0c00}" = "twitch-chat-danmaku";
-        "{9350bc42-47fb-4598-ae0f-825e3dd9ceba}" = "absolute-enable-right-click";
-        "simple-translate@sienori" = "simple-translate";
-      };
-    };
 
     profiles = {
       default = {
@@ -62,12 +66,19 @@
           engines = {
             mynixos = {
               name = "My NixOS";
-              urls = [ {
-                template = "https://mynixos.com/search?q={searchTerms}";
-                params = [ { name = "query"; value = "searchTerms"; } ];
-              } ];
+              urls = [
+                {
+                  template = "https://mynixos.com/search?q={searchTerms}";
+                  params = [
+                    {
+                      name = "query";
+                      value = "searchTerms";
+                    }
+                  ];
+                }
+              ];
               icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-              definedAliases = ["!nx"];
+              definedAliases = [ "!nx" ];
             };
           };
         };

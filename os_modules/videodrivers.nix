@@ -3,7 +3,10 @@
 
 {
   config = lib.mkIf (hostname == "necrofantasia") {
-    services.xserver.videoDrivers = [ "amdgpu" "nvidia" ];
+    services.xserver.videoDrivers = [
+      "amdgpu"
+      "nvidia"
+    ];
 
     hardware.nvidia = {
       modesetting.enable = true;
