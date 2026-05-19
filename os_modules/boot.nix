@@ -1,5 +1,10 @@
 # boot.nix
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   boot = {
@@ -21,6 +26,13 @@
       pkiBundle = "/var/lib/sbctl";
     };
 
+    supportedFilesystems = [ "zfs" ];
+
+    zfs = {
+      package = config.boot.kernelPackages.zfs_cachyos;
+      forceImportRoot = false;
+    };
+
     kernelParams = [
       "amd_pstate=active"    # AMD P-State EPP driver (Zen3+)
       "nvidia-drm.modeset=1" # NVIDIA KMS (required for Wayland)
@@ -29,5 +41,6 @@
     ];
   };
 
+  networking.hostId = "a53b4ec5";
   environment.systemPackages = with pkgs; [ sbctl ];
 }
