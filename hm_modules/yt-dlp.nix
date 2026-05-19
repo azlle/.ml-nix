@@ -1,5 +1,5 @@
 # yt-dlp.nix
-{ pkgs, ... }:
+{ pkgs, username, ... }:
 
 let
   yt-dlp-ejs = pkgs.python3Packages.yt-dlp-ejs.overrideAttrs (finalAttrs: {
@@ -28,6 +28,14 @@ let
       ) oldAttrs.propagatedBuildInputs;
     }
   );
+
+  cookiesFromBrowser =
+    if username == "eeshta" then
+      "firefox"
+    else if username == "miyu" then
+      "firefox:/mnt/c/Users/Eeshta/AppData/Roaming/Mozilla/Firefox/Profiles/907uf8a4.default-nightly"
+    else
+      "firefox";
 in
 
 {
