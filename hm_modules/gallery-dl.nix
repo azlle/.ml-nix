@@ -1,18 +1,20 @@
 # gallery-dl.nix
 # Dear13ro.に気をつけろ
-{ pkgs, config, lib, username, ... }:
+{ pkgs, username, ... }:
 
 let
-  gallery-dl = pkgs.gallery-dl.overrideAttrs (finalAttrs: oldAttrs: {
-    version = "1.31.10";
-    # https://github.com/mikf/gallery-dl/discussions/9304
-    src = pkgs.fetchFromCodeberg {
-      owner = "mikf";
-      repo = "gallery-dl";
-      rev = "v${finalAttrs.version}";
-      hash = "sha256-npt9jbBBHgjURmayhNgkSTQZYLC1aysDR83dLOm2Z/s=";
-    };
-  });
+  gallery-dl = pkgs.gallery-dl.overrideAttrs (
+    finalAttrs: _oldAttrs: {
+      version = "1.31.10";
+      # https://github.com/mikf/gallery-dl/discussions/9304
+      src = pkgs.fetchFromCodeberg {
+        owner = "mikf";
+        repo = "gallery-dl";
+        rev = "v${finalAttrs.version}";
+        hash = "sha256-npt9jbBBHgjURmayhNgkSTQZYLC1aysDR83dLOm2Z/s=";
+      };
+    }
+  );
 
   cookiesFromBrowser =
     if username == "eeshta" then
