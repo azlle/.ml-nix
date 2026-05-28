@@ -1,9 +1,9 @@
 # gallery-dl.nix
 # Dear13ro.に気をつけろ
-{ pkgs, ... }:
+{ pkgs, config, lib, username, ... }:
 
 let
-  gallery-dl = pkgs.gallery-dl.overrideAttrs (finalAttrs: {
+  gallery-dl = pkgs.gallery-dl.overrideAttrs (finalAttrs: oldAttrs: {
     version = "1.31.10";
     # https://github.com/mikf/gallery-dl/discussions/9304
     src = pkgs.fetchFromCodeberg {
@@ -13,37 +13,57 @@ let
       hash = "sha256-npt9jbBBHgjURmayhNgkSTQZYLC1aysDR83dLOm2Z/s=";
     };
   });
+
+  cookiesFromBrowser =
+    if username == "eeshta" then
+      [
+        "firefox"
+      ]
+    else if username == "miyu" then
+      [
+        "firefox"
+        "/mnt/c/Users/Eeshta/AppData/Roaming/Mozilla/Firefox/Profiles/907uf8a4.default-nightly"
+      ]
+    else
+      [
+        "firefox"
+      ];
 in
 
 {
-  home.packages = [ gallery-dl ];
+  programs.gallery-dl = {
+    enable = true;
+    package = gallery-dl;
 
-  xdg.configFile."gallery-dl/config.json".text = ''
-    {
-      "cache": {
-        "file": "~/.config/gallery-dl/cache.sqlite3"
-      },
+    settings = {
+      cache.file = "~/.config/gallery-dl/cache.sqlite3";
 
-      "extractor": {
-        "pixiv": {
-          "directory": [
-            "{category}",
-            "{user[id]}_{user[account]}",
-            "{series[id]}_{series[title]}",
+      extractor = {
+        cookies = cookiesFromBrowser;
+        fallback = false;
+
+        pixiv = {
+          directory = [
+            "{category}"
+            "{user[id]}_{user[account]}"
+            "{series[id]}_{series[title]}"
             "{num_series:>03}.{title}"
-          ],
-          "filename": "{date:%y%m%d}-{user[account]}-{id}_p{num}.{extension}",
-          "refresh-token": "***REMOVED***",
-          "cookies": {
-            "PHPSESSID": "***REMOVED***"
-          }
-        },
+          ];
+          filename = "{date:%y%m%d}-{user[account]}-{id}_p{num}.{extension}";
+        };
 
-        "twitter": {
-          "directory": ["{category}"],
-          "filename": "{date:%y%m%d}-{author[name]}-{filename}.{extension}"
-        }
-      }
-    }
-  '';
+        twitter = {
+          conversations = true;
+          directory = [
+            "{category}"
+          ];
+          filename = "{date:%y%m%d}-{author[name]}-{filename}.{extension}";
+          replies = "self";
+          size = [
+            "orig"
+          ];
+        };
+      };
+    };
+  };
 }

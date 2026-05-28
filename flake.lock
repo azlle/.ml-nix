@@ -366,10 +366,10 @@
     "ml-secrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1778730625,
-        "narHash": "sha256-WbuihQ+OphBjVzEHXG3nDbJ46aPrmQgDpG9E6A30lZo=",
+        "lastModified": 1779895650,
+        "narHash": "sha256-1TXHZdoMHQPvRvV8y1PV63RUDj+53hoCXjbcUYtk04M=",
         "ref": "refs/heads/main",
-        "rev": "4b9d54c850c31c33cf72344124d8aaea4a7b2733",
+        "rev": "70d36c9b94ff557ec8ffd6cb7507341c789a3665",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git"

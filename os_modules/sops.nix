@@ -15,6 +15,11 @@ in
     age.keyFile = ageKeyFile;
     defaultSopsFile = "${inputs.ml-secrets}/secret.yaml";
     secrets = {
+      "gallery-dl" = {
+        path = "/etc/gallery-dl.conf";
+        owner = username;
+      };
+
       "users/password/eeshta" = {
         neededForUsers = true;
       };
