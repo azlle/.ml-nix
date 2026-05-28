@@ -36,8 +36,7 @@ in
         sopsFile = "${inputs.ml-secrets}/artworks/IMG_4900_foricon.png.enc";
         path = "${homeDirectory}/Pictures/eeshta_icon.png";
         owner = username;
-        group = "users";
-        mode = "0644";
+        mode = "0444";
       };
 
       "eeshta_wallpaper" = {
@@ -45,8 +44,7 @@ in
         sopsFile = "${inputs.ml-secrets}/artworks/nix-wallpaper-simple-dark-gray_mellomixed.png.enc";
         path = "${homeDirectory}/Pictures/eeshta_wallpaper.png";
         owner = username;
-        group = "users";
-        mode = "0644";
+        mode = "0444";
       };
 
       "pnnk_wallpaper" = {
@@ -54,8 +52,7 @@ in
         sopsFile = "${inputs.ml-secrets}/artworks/260224-rebapymmkb-HB8Wtt_a0AE4YWk.jpg.enc";
         path = "${homeDirectory}/Pictures/pnnk_wallpaper.png";
         owner = username;
-        group = "users";
-        mode = "0644";
+        mode = "0444";
       };
     };
   };
