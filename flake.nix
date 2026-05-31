@@ -133,6 +133,7 @@
             ./os_modules
             lanzaboote.nixosModules.lanzaboote
             catppuccin.nixosModules.catppuccin
+            sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             {
               home-manager = {
@@ -154,7 +155,6 @@
                 ++ extraHomeModules;
               };
             }
-            sops-nix.nixosModules.sops
           ]
           ++ extraModules;
         };
