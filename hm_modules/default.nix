@@ -10,6 +10,7 @@
     ./gallery-dl.nix
     ./git.nix
     ./mpv.nix
+    ./nvim.nix
     ./yazi.nix
     ./yt-dlp.nix
     ./zatta.nix

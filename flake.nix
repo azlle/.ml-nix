@@ -64,6 +64,11 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -83,6 +88,7 @@
       zen-browser,
       nixcord,
       treefmt-nix,
+      nixvim,
       ...
     }@inputs:
 
@@ -151,6 +157,7 @@
                 users.${username}.imports = [
                   ./hm_modules/${username}.nix
                   catppuccin.homeModules.catppuccin
+                  nixvim.homeModules.nixvim
                 ]
                 ++ extraHomeModules;
               };
@@ -181,6 +188,7 @@
           modules = [
             ./hm_modules/${username}.nix
             catppuccin.homeModules.catppuccin
+            nixvim.homeModules.nixvim
             {
               home = { inherit username homeDirectory stateVersion; };
               programs.home-manager.enable = true;
