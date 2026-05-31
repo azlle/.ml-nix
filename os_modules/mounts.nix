@@ -8,7 +8,7 @@
   ];
 
   fileSystems."/mnt/yamaxanadu" = {
-    device = "//192.168.11.11/main";
+    device = "//192.168.11.96/main";
     fsType = "cifs";
     options = [
       "credentials=/etc/nixos/smb.yamaxanadu"
