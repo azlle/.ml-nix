@@ -112,11 +112,19 @@
       require("countchars")
     '';
 
+    globals = {
+      mapleader = " ";
+      maplocalleader = " ";
+    };
+
     keymaps = [
+      { mode = "i"; key = "jk"; action = "<ESC>"; }
+      { mode = ["n" "v"]; key = "gh"; action = "^"; }
+      { mode = ["n" "v"]; key = "gl"; action = "$"; }
       {
-        mode = "i";
-        key = "jk";
-        action = "<ESC>";
+        mode = "n";
+        key = "<leader>b";
+        action = "<cmd>lua Snacks.picker.buffers()<CR>";
       }
     ];
   };
