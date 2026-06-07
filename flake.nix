@@ -56,19 +56,14 @@
       };
     };
 
-    nixcord = {
-      url = "github:FlameFlag/nixcord";
-    };
+    nixcord.url = "github:FlameFlag/nixcord";
 
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixvim = {
-      url = "github:nix-community/nixvim";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixvim.url = "github:nix-community/nixvim";
   };
 
   outputs =
