@@ -1,5 +1,5 @@
 # mounts.nix
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   environment.systemPackages = with pkgs; [
@@ -11,7 +11,7 @@
     device = "//192.168.11.96/main";
     fsType = "cifs";
     options = [
-      "credentials=/etc/nixos/smb.yamaxanadu"
+      "credentials=${config.sops.secrets."smb/yamaxanadu".path}"
       "uid=1000"
       "gid=100"
       "iocharset=utf8"

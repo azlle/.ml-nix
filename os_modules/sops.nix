@@ -20,6 +20,8 @@ in
         owner = username;
       };
 
+      "smb/yamaxanadu" = { };
+
       "users/password/eeshta" = {
         neededForUsers = true;
       };
