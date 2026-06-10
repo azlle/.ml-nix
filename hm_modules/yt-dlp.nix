@@ -14,12 +14,12 @@ let
 
   yt-dlp = pkgs.yt-dlp.overrideAttrs (
     finalAttrs: oldAttrs: {
-      version = "2026.03.17";
+      version = "2026.06.09";
       src = pkgs.fetchFromGitHub {
         owner = "yt-dlp";
         repo = "yt-dlp";
         rev = finalAttrs.version;
-        hash = "sha256-A4LUCuKCjpVAOJ8jNoYaC3mRCiKH0/wtcsle0YfZyTA=";
+        hash = "sha256-ykqTDPzKKIWRGSQmw2esCRKyYqDZKXRYDeba888tkDU=";
       };
       propagatedBuildInputs = map (
         dep: if dep.pname or "" == "yt-dlp-ejs" then yt-dlp-ejs else dep

@@ -5,13 +5,13 @@
 let
   gallery-dl = pkgs.gallery-dl.overrideAttrs (
     finalAttrs: _oldAttrs: {
-      version = "1.31.10";
+      version = "1.32.2";
       # https://github.com/mikf/gallery-dl/discussions/9304
       src = pkgs.fetchFromCodeberg {
         owner = "mikf";
         repo = "gallery-dl";
         rev = "v${finalAttrs.version}";
-        hash = "sha256-npt9jbBBHgjURmayhNgkSTQZYLC1aysDR83dLOm2Z/s=";
+        hash = "sha256-NN9JpRK8UmnAyp7WrC2dg24P0jT2d+uBruYvyDVK4fQ=";
       };
     }
   );
