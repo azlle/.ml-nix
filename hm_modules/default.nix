@@ -1,9 +1,6 @@
-# eeshta.nix
+# default.nix
 {
-  pkgs,
-  lib,
   username,
-  hostname,
   homeDirectory,
   stateVersion,
   ...
@@ -12,6 +9,7 @@
 {
   imports = [
     ./.config
+    ./nixos
     ./nixvim
     ./emacs.nix
     ./eza.nix
@@ -30,13 +28,4 @@
     inherit username homeDirectory stateVersion;
     shell.enableShellIntegration = false;
   };
-
-  nix = lib.mkIf (hostname == "sumizomenosakura") {
-    package = pkgs.nixVersions.stable;
-  };
-
-  home.sessionPath = lib.mkIf (hostname == "sumizomenosakura") [
-    "$HOME/.nix-profile/bin"
-    "/nix/var/nix/profiles/default/bin"
-  ];
 }

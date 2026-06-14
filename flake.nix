@@ -132,6 +132,7 @@
           };
           modules = [
             ./os_modules
+            ./hosts/${hostname}/hardware-configuration.nix
             lanzaboote.nixosModules.lanzaboote
             catppuccin.nixosModules.catppuccin
             sops-nix.nixosModules.sops
@@ -150,7 +151,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 users.${username}.imports = [
-                  ./hm_modules/${username}.nix
+                  ./hosts/${hostname}/${username}.nix
                   catppuccin.homeModules.catppuccin
                   nixvim.homeModules.nixvim
                 ]
@@ -181,7 +182,7 @@
               ;
           };
           modules = [
-            ./hm_modules/${username}.nix
+            ./hosts/${hostname}/${username}.nix
             catppuccin.homeModules.catppuccin
             nixvim.homeModules.nixvim
             {
@@ -202,12 +203,10 @@
           username = "eeshta";
           hostname = "necrofantasia";
           extraHomeModules = [
-            ./hm_modules/nixos
             zen-browser.homeModules.twilight
             nixcord.homeModules.nixcord
           ];
           extraModules = [
-            ./machines/ga503_hardware.nix
             nixos-hardware.nixosModules.asus-zephyrus-ga503
             niri.nixosModules.niri
             aagl.nixosModules.default
