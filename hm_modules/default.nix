@@ -17,6 +17,7 @@
     ./gallery-dl.nix
     ./git.nix
     ./mpv.nix
+    ./nh.nix
     ./yazi.nix
     ./yt-dlp.nix
     ./zatta.nix
