@@ -13,6 +13,7 @@
     ./nh.nix
     ./nix.nix
     ./powers.nix
+    ./sql.nix
     ./ssh.nix
     ./sops.nix
     ./steam.nix
