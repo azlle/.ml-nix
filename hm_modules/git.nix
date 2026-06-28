@@ -11,7 +11,7 @@ _:
         email = "moxmo2@pm.me";
       };
       core = {
-        editor = "emacs";
+        editor = "emacs -nw";
         autocrlf = "input";
         filemode = "false";
         quotepath = "false";
