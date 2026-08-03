@@ -39,10 +39,9 @@
         ];
       })
 
-      # 作業系など
-      unityhub
-      vrc-get
-      gimp3
+      # unityhub
+      # vrc-get
+      # gimp3
       inputs.blender-bin.packages.x86_64-linux.blender_4_1
 
       steamcmd
