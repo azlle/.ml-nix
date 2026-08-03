@@ -12,7 +12,7 @@
       CPU_BOOST_ON_BAT = 0;
 
       START_CHARGE_THRESH_BAT0 = 20; # 40 and below it starts to charge
-      STOP_CHARGE_THRESH_BAT0 = 60; # 80 and above it stops charging
+      STOP_CHARGE_THRESH_BAT0 = 80; # 80 and above it stops charging
     };
   };
 }
