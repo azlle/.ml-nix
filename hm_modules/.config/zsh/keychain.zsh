@@ -4,6 +4,8 @@ ssh_keys=(
     deb2git
     nix2nasu
     deb2nasu
+    nix2nvr
+    deb2nvr
 )
 
 KEYCHAIN_SH="$HOME/.keychain/$(hostname -s)-sh"
