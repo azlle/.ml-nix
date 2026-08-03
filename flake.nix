@@ -226,8 +226,8 @@
           ++ extraHomeModules;
         };
     in
-    {
 
+    {
       formatter.${system} = treefmtEval.config.build.wrapper;
       checks.${system}.formatting = treefmtEval.config.build.check self;
 
