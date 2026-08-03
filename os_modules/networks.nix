@@ -13,10 +13,11 @@ with lib;
   };
 
   config = {
+    services.tailscale.enable = true;
     networking = mkMerge [
-      # 共通設定
       {
         networkmanager.enable = false;
+        nftables.enable = true;
         useDHCP = false;
         hostName = hostname;
         nameservers = [ "8.8.8.8" ];
@@ -26,24 +27,17 @@ with lib;
           allowPing = true;
           checkReversePath = "loose";
           allowedTCPPorts = [
-            22
-            28989
-            47984
-            47989
-            47990
-            48010
+            config.services.tailscale.port
           ];
-          allowedUDPPortRanges = [
-            {
-              from = 47998;
-              to = 48000;
-            }
-            {
-              from = 8000;
-              to = 8010;
-            }
+          allowedUDPPorts = [
+            config.services.tailscale.port
           ];
-          trustedInterfaces = [ "virbr0" ];
+          allowedUDPPortRanges = [ ];
+          trustedInterfaces = [
+            "docker0"
+            "virbr0"
+            config.services.tailscale.interfaceName
+          ];
         };
       }
 
@@ -52,12 +46,12 @@ with lib;
         wireless = {
           enable = true;
           secretsFile = config.sops.secrets."wireless/password".path;
-          networks."mel_wpa3" = {
+          networks."mrr_primary" = {
             authProtocols = [
               "SAE"
               "WPA-PSK"
             ];
-            pskRaw = "ext:mel_wpa3";
+            pskRaw = "ext:mrr_primary";
           };
         };
         interfaces.wlp4s0.ipv4.addresses = [
@@ -72,11 +66,9 @@ with lib;
         };
       })
 
-      # ホットスポットモード（有線→無線配信）
       (mkIf config.haukanRuri.enable {
         wireless.enable = false;
 
-        # 有線インターフェース（インターネット側）
         interfaces.enp3s0 = {
           useDHCP = false;
           ipv4.addresses = [
@@ -87,7 +79,6 @@ with lib;
           ];
         };
 
-        # 無線インターフェース（ホットスポット側）
         interfaces.wlp4s0 = {
           useDHCP = false;
           ipv4.addresses = [
@@ -103,14 +94,12 @@ with lib;
           interface = "enp3s0";
         };
 
-        # NAT設定
         nat = {
           enable = true;
           externalInterface = "enp3s0";
           internalInterfaces = [ "wlp4s0" ];
         };
 
-        # ファイアウォールでホットスポット通信を許可
         firewall.trustedInterfaces = [
           "virbr0"
           "wlp4s0"
@@ -118,7 +107,6 @@ with lib;
       })
     ];
 
-    # ホットスポットサービス
     services.hostapd = mkIf config.haukanRuri.enable {
       enable = true;
       radios.wlp4s0 = {
