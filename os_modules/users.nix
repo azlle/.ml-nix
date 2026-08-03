@@ -26,18 +26,10 @@
     ];
     extraGroups = [ "wheel" ];
     packages = with pkgs; [
-      obsidian
-      zoom-us
-      parsec-bin
-      bitwarden-desktop
       protonup-rs
 
       wineWow64Packages.waylandFull
       winetricks
-
-      # Minecraftのヤツ
-      # temurin-jre-bin
-      # temurin-jre-bin-17
 
       (prismlauncher.override {
         jdks = [
@@ -60,11 +52,9 @@
   programs = {
     honkers-railway-launcher.enable = true;
 
-    # Thunar組
     thunar.enable = true;
     xfconf.enable = true;
 
-    # Mozilla組
     firefox.enable = true;
     thunderbird.enable = true;
   };
