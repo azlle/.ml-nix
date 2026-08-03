@@ -18,6 +18,7 @@
     ./git.nix
     ./mpv.nix
     ./nh.nix
+    ./ssh.nix
     ./yazi.nix
     ./yt-dlp.nix
     ./zatta.nix

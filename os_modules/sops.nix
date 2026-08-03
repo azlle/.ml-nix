@@ -33,6 +33,14 @@ in
 
       "wireless/hkrr_password" = { };
 
+      "cloudflared/git-tunnel" = {
+        path = "/run/secrets/cloudflared-git-tunnel-credentials.json";
+      };
+
+      "forgejo/cf-access-service-token" = {
+        owner = username;
+      };
+
       "eeshta_icon" = {
         format = "binary";
         sopsFile = "${inputs.ml-secrets}/artworks/IMG_4900_foricon.png.enc";
