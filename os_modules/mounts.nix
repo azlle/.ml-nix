@@ -3,8 +3,10 @@
 
 {
   environment.systemPackages = with pkgs; [
-    cifs-utils
     btrfs-progs
+    cifs-utils
+    exfatprogs
+    gptfdisk
   ];
 
   fileSystems."/mnt/yamaxanadu" = {
