@@ -260,7 +260,7 @@ window-rule {
 
 binds {
     // 追加で設定したモノなど
-    Mod+Y { spawn "foot" "-e" "fish" "-c" "yazi"; }
+    Mod+Y { spawn "wezterm" "start" "-e" "zsh" "-c" "yazi"; }
     Mod+Shift+S { screenshot; }
     Mod+Ctrl+S { screenshot-window; }
 
@@ -282,7 +282,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
-    Mod+Return hotkey-overlay-title="Open a Terminal: foot" { spawn "foot"; }
+    Mod+Return hotkey-overlay-title="Open a Terminal: foot" { spawn "wezterm" "start"; }
     Mod+R hotkey-overlay-title="Run an Application: rofi" { spawn "rofi" "-show" "drun"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 

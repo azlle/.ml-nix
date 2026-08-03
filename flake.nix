@@ -64,6 +64,8 @@
     };
 
     nixvim.url = "github:nix-community/nixvim";
+
+    wezterm.url = "github:wezterm/wezterm?dir=nix";
   };
 
   outputs =

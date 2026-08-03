@@ -9,6 +9,7 @@
     ./mako.nix
     ./nixcord.nix
     ./obs.nix
+    ./wezterm.nix
     ./zen-browser.nix
   ];
 }
