@@ -49,7 +49,7 @@
     };
 
     ml-secrets = {
-      url = "git+ssh://git@ssh.upd.dev/Azlle/.nix_ml-secrets.git?shallow=1";
+      url = "git+ssh://git@git-ssh.melocy.cc/azlle/.ml-secrets.git?shallow=1";
       flake = false;
     };
 
