@@ -1,5 +1,5 @@
 # nvim.nix
-{ config, ... }:
+{ config, pkgs, ... }:
 
 {
   programs.nixvim = {
@@ -39,9 +39,10 @@
           highlight.enable = true;
           indent.enable = true;
         };
-        grammerPackages = with config.plugins.treesitter.package.builtGrammars; [
+        grammarPackages = (with config.programs.nixvim.plugins.treesitter.package.builtGrammars; [
           nix
-          org
+        ]) ++ [
+          pkgs.tree-sitter-grammars.tree-sitter-org
         ];
       };
       snacks = {
