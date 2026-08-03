@@ -3,20 +3,22 @@
 
 {
   home.packages = with pkgs; [
-    unar
-    libarchive
-    xz
-    zstd
-    gh
-    rsync
-    openssh
-    zellij
-    htop
-    curl
-    bat
-    ffmpeg
     age
-    ssh-to-age
+    bat
+    btop
+    claude-code
+    curl
+    ffmpeg
+    gh
+    htop
+    libarchive
+    openssh
+    rsync
     sops
+    ssh-to-age
+    unar
+    xz
+    zellij
+    zstd
   ];
 }
