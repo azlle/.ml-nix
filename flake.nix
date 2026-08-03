@@ -18,6 +18,11 @@
 
     emacs-overlay.url = "github:nix-community/emacs-overlay";
 
+    ml-twist = {
+      url = "git+https://git.melocy.cc/azlle/.ml-twist";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     catppuccin.url = "github:catppuccin/nix";
 
     blender-bin.url = "github:edolstra/nix-warez?dir=blender";
@@ -76,6 +81,7 @@
       home-manager,
       lanzaboote,
       emacs-overlay,
+      ml-twist,
       catppuccin,
       niri,
       aagl,
@@ -179,6 +185,7 @@
                   ./hosts/${hostname}/${username}.nix
                   catppuccin.homeModules.catppuccin
                   nixvim.homeModules.nixvim
+                  ml-twist.homeModules.twist
                 ]
                 ++ extraHomeModules;
               };
