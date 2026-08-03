@@ -112,6 +112,28 @@
         };
       };
 
+      nixSettings =
+        {
+          extraSettings ? { },
+        }:
+        {
+          package = pkgs.nixVersions.stable;
+          settings = {
+            extra-substituters = [
+              "https://nix-community.cachix.org"
+              "https://attic.xuyh0120.win/lantian"
+              "https://wezterm.cachix.org"
+            ];
+            extra-trusted-public-keys = [
+              "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+              "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+              "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
+            ];
+            warn-dirty = false;
+            http-connections = 50;
+          } // extraSettings;
+        };
+
       createNixosConfiguration =
         {
           username,
@@ -130,6 +152,7 @@
               hostname
               homeDirectory
               stateVersion
+              nixSettings
               ;
           };
           modules = [
@@ -181,6 +204,7 @@
               homeDirectory
               hostname
               stateVersion
+              nixSettings
               ;
           };
           modules = [
@@ -227,10 +251,12 @@
     extra-substituters = [
       "https://nix-community.cachix.org"   # emacs-overlay et al.
       "https://attic.xuyh0120.win/lantian" # nix-cachyos-kernel (Hydra CI)
+      "https://wezterm.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+      "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
     ];
   };
 }

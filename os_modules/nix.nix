@@ -1,28 +1,18 @@
 # nix.nix
-{ pkgs, username, ... }:
+{ nixSettings, username, ... }:
 
 {
-  nix = {
-    package = pkgs.nixVersions.stable;
-    settings = {
+  nix = nixSettings {
+    extraSettings = {
+      auto-optimise-store = true;
       experimental-features = [
         "nix-command"
         "flakes"
       ];
-      auto-optimise-store = true;
-      warn-dirty = false;
-      http-connections = 50;
       trusted-users = [
         "root"
         "${username}"
       ];
-    };
-
-    gc = {
-      automatic = false;
-      persistent = true;
-      dates = "Sun 02:00";
-      options = "--delete-older-than 7d";
     };
   };
 }

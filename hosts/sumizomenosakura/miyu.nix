@@ -1,6 +1,6 @@
 # eeshta.nix
 {
-  pkgs,
+  nixSettings,
   ...
 }:
 
@@ -9,8 +9,8 @@
     ../../hm_modules
   ];
 
-  nix = {
-    package = pkgs.nixVersions.stable;
+  nix = nixSettings {
+    extraSettings = {};
   };
 
   home.sessionPath = [
