@@ -58,7 +58,7 @@
   };
 
   programs = {
-    sleepy-launcher.enable = true;
+    honkers-railway-launcher.enable = true;
 
     # Thunar組
     thunar.enable = true;
