@@ -7,6 +7,12 @@
 }:
 
 {
+  nixpkgs.overlays = [
+    (_final: prev: {
+      steam-run = prev.steam-run-free;
+    })
+  ];
+
   users.users.eeshta = {
     isNormalUser = true;
     hashedPasswordFile = config.sops.secrets."users/password/eeshta".path;
@@ -45,6 +51,8 @@
       vrc-get
       gimp3
       inputs.blender-bin.packages.x86_64-linux.blender_4_1
+
+      steamcmd
     ];
   };
 
