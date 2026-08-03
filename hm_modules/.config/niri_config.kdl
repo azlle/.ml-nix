@@ -15,7 +15,7 @@ input {
     keyboard {
         xkb {
             layout "jp"
-            // file "~/.config/niri/zephyrus.xkb"
+            file "~/.config/niri/zephyrus.xkb"
         }
     }
 
