@@ -55,7 +55,7 @@
       require("bunny"):setup({
         hops = {
           { key = "n", path = "/nix/store", desc = "Nix store" },
-          { key = ".", path = "~/.nix_ml", desc = "dotfiles" },
+          { key = ".", path = "~/.ml-nix", desc = "dotfiles" },
           { key = "u", path = "/mnt/f/Users/Eeshta", desc = "%USERDATA%" },
           { key = "a", path = "/mnt/c/Users/Eeshta/AppData", desc = "%APPDATA%" },
           -- key and path attributes are required, desc is optional

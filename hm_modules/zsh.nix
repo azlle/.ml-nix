@@ -9,7 +9,7 @@ with lib;
 
 {
   xdg.configFile."zsh" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nix_ml/hm_modules/.config/zsh";
+    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.ml-nix/hm_modules/.config/zsh";
   };
 
   home.packages = with pkgs; [

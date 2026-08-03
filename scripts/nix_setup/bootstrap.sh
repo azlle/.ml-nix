@@ -15,11 +15,11 @@ trusted-users = root $USER
 EOF
 
 echo "Cloning dotfiles repository..."
-git clone https://codeberg.org/Azlle/.nix_ml.git "$HOME/.nix_ml"
+git clone https://codeberg.org/Azlle/.ml-nix.git "$HOME/.ml-nix"
 
 echo "Registering install.sh to run on next login..."
 tee -a "$HOME/.bashrc" > /dev/null << EOF
-bash "$HOME/.nix_ml/scripts/nix_setup/install.sh"
+bash "$HOME/.ml-nix/scripts/nix_setup/install.sh"
 EOF
 
 echo ""

@@ -33,7 +33,7 @@ while true; do
 done
 
 echo "Applying Home Manager configuration..."
-nix run home-manager/master -- switch --flake "$HOME/.nix_ml#${hostname}" \
+nix run home-manager/master -- switch --flake "$HOME/.ml-nix#${hostname}" \
   --option substituters "\
     https://cache.nixos.org \
     https://nix-community.cachix.org" \
@@ -48,7 +48,7 @@ echo "Setting Zsh as default shell..."
 sudo usermod -s "$(which zsh)" "$USER"
 
 echo "Removing auto-run entry from .bashrc..."
-sed -i '/\.nix_ml\/scripts\/nix_setup\/install\.sh/d' "$HOME/.bashrc"
+sed -i '/\.ml-nix\/scripts\/nix_setup\/install\.sh/d' "$HOME/.bashrc"
 
 echo ""
 echo "- Setup Complete! Rebooting in 3 seconds..."

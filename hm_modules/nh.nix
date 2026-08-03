@@ -4,6 +4,6 @@
 {
   programs.nh = {
     enable = true;
-    flake = "${homeDirectory}/.nix_ml";
+    flake = "${homeDirectory}/.ml-nix";
   };
 }
