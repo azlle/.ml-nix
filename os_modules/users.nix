@@ -26,11 +26,11 @@
     ];
     extraGroups = [ "wheel" ];
     packages = with pkgs; [
-      protonup-qt
       obsidian
       zoom-us
       parsec-bin
       bitwarden-desktop
+      protonup-rs
 
       wineWow64Packages.waylandFull
       winetricks
