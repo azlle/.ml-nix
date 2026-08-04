@@ -11,6 +11,7 @@
     ./.config
     ./nixos
     ./nixvim
+    ./catppuccin.nix
     ./emacs.nix
     ./eza.nix
     ./fonts.nix

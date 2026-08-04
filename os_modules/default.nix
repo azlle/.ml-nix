@@ -5,6 +5,7 @@
   imports = [
     ./audios.nix
     ./boot.nix
+    ./catppuccin.nix
     ./fonts.nix
     ./locale.nix
     ./manager.nix
