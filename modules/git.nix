@@ -10,9 +10,12 @@ delib.module {
           username,
           config,
           lib,
+          pkgs,
           ...
         }:
         {
+          home.packages = [ pkgs.git-vrc ];
+
           programs.git = {
             enable = true;
 
@@ -29,6 +32,13 @@ delib.module {
               };
               merge.ff = false;
               pull.ff = "only";
+
+              # requires running `git vrc install --attributes` inside each repo to set up .gitattributes.
+              filter.vrc = {
+                clean = "git vrc clean --file %f";
+                smudge = "git vrc smudge --file %f";
+                required = true;
+              };
             };
 
             signing.format = null;

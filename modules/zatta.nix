@@ -23,6 +23,7 @@ delib.module {
             sops
             ssh-to-age
             unar
+            vrc-get
             xz
             zellij
             zstd

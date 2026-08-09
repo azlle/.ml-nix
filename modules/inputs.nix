@@ -28,6 +28,7 @@ delib.module {
       inputs.niri.overlays.niri
       inputs.nix-cachyos-kernel.overlays.pinned
       inputs.millennium.overlays.default
+      (final: prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
     ];
   }
   // lib.optionalAttrs useHomeManagerModule {
@@ -53,6 +54,7 @@ delib.module {
             inputs.niri.overlays.niri
             inputs.nix-cachyos-kernel.overlays.pinned
             inputs.millennium.overlays.default
+            (final: prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
           ];
         }
       )
