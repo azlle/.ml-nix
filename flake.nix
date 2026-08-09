@@ -17,7 +17,7 @@
     };
 
     ml-twist = {
-      url = "git+https://git.melocy.cc/azlle/.ml-twist";
+      url = "git+https://github.com/Azlle/.ml-twist";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -47,7 +47,7 @@
     };
 
     ml-secrets = {
-      url = "git+ssh://git@git-ssh.melocy.cc/azlle/.ml-secrets.git?shallow=1";
+      url = "git+ssh://git@github.com/Azlle/.ml-secrets.git?shallow=1";
       flake = false;
     };
 

@@ -1,0 +1,30 @@
+#+TITLE: .ml-nix
+#+AUTHOR: Azlle
+#+OPTIONS: toc:nil
+
+❄️ Nix configuration for NixOS and Debian-based distributions (including WSL2).
+
+* セットアップ
+
+** 1. 必須パッケージをインストール
+Debianにはデフォルトで ~curl~ が入っていないらしい *wow*
+#+begin_src bash
+sudo apt update && sudo apt install -y curl xz-utils git
+#+end_src
+
+** 2. Nixのセットアップ
+[[https://github.com/NixOS/nix-installer][nix-installer]] を使ってNixをインストールし、そのまま同一シェル内でHome Manager構成を適用する。
+#+begin_src bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Azlle/.ml-nix/main/scripts/nix-setup.sh)"
+#+end_src
+nix-installerはsystemd経由でnix-daemonを起動するため再起動は不要で、1回のセッションで完結する。
+
+デフォルトシェルが ~zsh~ に変更されるので、完了後にログインし直すと ~zsh~ 環境で起動する。
+
+以下のようなAbbreviationsが登録されている:
+|-------+---------------------------------------------|
+| abbr  | 展開後                                       |
+|-------+---------------------------------------------|
+| ~nhh~ | ~nh home switch -c eeshta@sumizomenosakura~ |
+| ~nst~ | ~nix store gc && nix store optimise~         |
+|-------+---------------------------------------------|

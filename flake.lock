@@ -562,12 +562,12 @@
         "rev": "92223bdda4685142394815b643462991b84c0816",
         "shallow": true,
         "type": "git",
-        "url": "ssh://git@git-ssh.melocy.cc/azlle/.ml-secrets.git"
+        "url": "ssh://git@github.com/Azlle/.ml-secrets.git"
       },
       "original": {
         "shallow": true,
         "type": "git",
-        "url": "ssh://git@git-ssh.melocy.cc/azlle/.ml-secrets.git"
+        "url": "ssh://git@github.com/Azlle/.ml-secrets.git"
       }
     },
     "ml-twist": {
@@ -591,11 +591,11 @@
         "rev": "29d3d27486f0211f9a2d9eade815dbf444af2820",
         "revCount": 6,
         "type": "git",
-        "url": "https://git.melocy.cc/azlle/.ml-twist"
+        "url": "https://github.com/Azlle/.ml-twist"
       },
       "original": {
         "type": "git",
-        "url": "https://git.melocy.cc/azlle/.ml-twist"
+        "url": "https://github.com/Azlle/.ml-twist"
       }
     },
     "niri": {
