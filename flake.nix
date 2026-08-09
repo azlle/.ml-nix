@@ -16,8 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    emacs-overlay.url = "github:nix-community/emacs-overlay";
-
     ml-twist = {
       url = "git+https://git.melocy.cc/azlle/.ml-twist";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -71,27 +69,23 @@
     nixvim.url = "github:nix-community/nixvim";
 
     wezterm.url = "github:wezterm/wezterm?dir=nix";
+
+    denix = {
+      url = "github:yunfachi/denix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs =
     {
       self,
       nixpkgs,
-      nixos-hardware,
-      home-manager,
-      lanzaboote,
-      emacs-overlay,
-      ml-twist,
-      catppuccin,
       niri,
-      aagl,
       nix-cachyos-kernel,
       millennium,
-      sops-nix,
-      zen-browser,
-      nixcord,
       treefmt-nix,
-      nixvim,
+      denix,
       ...
     }@inputs:
 
@@ -101,7 +95,6 @@
         inherit system;
         config.allowUnfree = true;
         overlays = [
-          emacs-overlay.overlays.default
           niri.overlays.niri
           nix-cachyos-kernel.overlays.pinned
           millennium.overlays.default
@@ -110,7 +103,7 @@
 
       treefmtEval = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
-        settings.global.excludes = [ "machines/*" ];
+        settings.global.excludes = [ "hosts/necrofantasia/hardware-configuration.nix" ];
         programs = {
           nixfmt.enable = true;
           statix.enable = true;
@@ -137,93 +130,35 @@
             ];
             warn-dirty = false;
             http-connections = 50;
-          } // extraSettings;
+          }
+          // extraSettings;
         };
 
-      createNixosConfiguration =
-        {
-          username,
-          hostname,
-          homeDirectory ? "/home/${username}",
-          stateVersion ? "24.11",
-          extraHomeModules ? [ ],
-          extraModules ? [ ],
-        }:
-        nixpkgs.lib.nixosSystem {
-          inherit system pkgs;
+      mkConfigurations =
+        moduleSystem:
+        denix.lib.configurations {
+          inherit moduleSystem;
+          extensions = [
+            (denix.lib.extensions.base.withConfig {
+              hosts.extraSubmodules = [
+                {
+                  options.wsl = denix.lib.options.boolOption false;
+                  options.stateVersion = denix.lib.options.allowNull (denix.lib.options.strOption null);
+                }
+              ];
+            })
+            denix.lib.extensions.args
+          ];
+          paths = [
+            ./modules
+            ./hosts
+          ];
+          exclude = [
+            ./hosts/necrofantasia/hardware-configuration.nix
+          ];
           specialArgs = {
-            inherit
-              inputs
-              username
-              hostname
-              homeDirectory
-              stateVersion
-              nixSettings
-              ;
+            inherit inputs nixSettings moduleSystem;
           };
-          modules = [
-            ./os_modules
-            ./hosts/${hostname}/hardware-configuration.nix
-            lanzaboote.nixosModules.lanzaboote
-            catppuccin.nixosModules.catppuccin
-            sops-nix.nixosModules.sops
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                extraSpecialArgs = {
-                  inherit
-                    inputs
-                    username
-                    hostname
-                    homeDirectory
-                    stateVersion
-                    ;
-                };
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${username}.imports = [
-                  ./hosts/${hostname}/${username}.nix
-                  catppuccin.homeModules.catppuccin
-                  nixvim.homeModules.nixvim
-                  ml-twist.homeModules.twist
-                ]
-                ++ extraHomeModules;
-              };
-            }
-          ]
-          ++ extraModules;
-        };
-
-      createHome =
-        {
-          username,
-          hostname,
-          homeDirectory ? "/home/${username}",
-          stateVersion ? "24.11",
-          extraHomeModules ? [ ],
-        }:
-        home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          extraSpecialArgs = {
-            inherit
-              inputs
-              username
-              homeDirectory
-              hostname
-              stateVersion
-              nixSettings
-              ;
-          };
-          modules = [
-            ./hosts/${hostname}/${username}.nix
-            catppuccin.homeModules.catppuccin
-            nixvim.homeModules.nixvim
-            {
-              home = { inherit username homeDirectory stateVersion; };
-              programs.home-manager.enable = true;
-            }
-          ]
-          ++ extraHomeModules;
         };
     in
 
@@ -231,32 +166,15 @@
       formatter.${system} = treefmtEval.config.build.wrapper;
       checks.${system}.formatting = treefmtEval.config.build.check self;
 
-      nixosConfigurations = {
-        necrofantasia = createNixosConfiguration {
-          username = "eeshta";
-          hostname = "necrofantasia";
-          extraHomeModules = [
-            zen-browser.homeModules.twilight
-            nixcord.homeModules.nixcord
-          ];
-          extraModules = [
-            nixos-hardware.nixosModules.asus-zephyrus-ga503
-            niri.nixosModules.niri
-            aagl.nixosModules.default
-          ];
-        };
-      };
-
-      homeConfigurations."sumizomenosakura" = createHome {
-        username = "miyu";
-        hostname = "sumizomenosakura";
-        extraHomeModules = [ ];
-      };
+      nixosConfigurations = nixpkgs.lib.filterAttrs (name: _: name != "sumizomenosakura") (
+        mkConfigurations "nixos"
+      );
+      homeConfigurations = mkConfigurations "home";
     };
 
   nixConfig = {
     extra-substituters = [
-      "https://nix-community.cachix.org"   # emacs-overlay et al.
+      "https://nix-community.cachix.org" # niri et al.
       "https://attic.xuyh0120.win/lantian" # nix-cachyos-kernel (Hydra CI)
       "https://wezterm.cachix.org"
     ];
