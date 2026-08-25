@@ -65,6 +65,8 @@ delib.module {
             firefox.enable = true;
             thunderbird.enable = true;
           };
+
+          hardware.bluetooth.enable = true;
         }
       )
     ];
