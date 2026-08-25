@@ -47,6 +47,11 @@ delib.module {
                     FORGEJO__security__INSTALL_LOCK = "true";
                     FORGEJO__session__COOKIE_SECURE = "true";
                     FORGEJO__database__DB_TYPE = "sqlite3";
+
+                    FORGEJO__cron_0X2E_git_gc_repos__ENABLED = "true";
+                    FORGEJO__cron_0X2E_git_gc_repos__RUN_AT_START = "false";
+                    FORGEJO__cron_0X2E_git_gc_repos__SCHEDULE = "0 23 * * 6";
+                    FORGEJO__cron_0X2E_git_gc_repos__TIMEOUT = "25m";
                   };
                   ports = [
                     "127.0.0.1:${toString forgejoHttpPort}:3000"
@@ -99,7 +104,7 @@ delib.module {
             description = "Daily Forgejo backup";
             wantedBy = [ "timers.target" ];
             timerConfig = {
-              OnCalendar = "00:00";
+              OnCalendar = "23:30";
               Persistent = true;
             };
           };
