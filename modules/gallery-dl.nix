@@ -11,13 +11,13 @@ delib.module {
         let
           gallery-dl = pkgs.gallery-dl.overrideAttrs (
             finalAttrs: _oldAttrs: {
-              version = "1.32.2";
+              version = "1.32.9";
               # https://github.com/mikf/gallery-dl/discussions/9304
               src = pkgs.fetchFromCodeberg {
                 owner = "mikf";
                 repo = "gallery-dl";
                 rev = "v${finalAttrs.version}";
-                hash = "sha256-NN9JpRK8UmnAyp7WrC2dg24P0jT2d+uBruYvyDVK4fQ=";
+                hash = "sha256-3Bva0VQ75mA6B8HsW7zieeXRgRw5DJ6wuASiV3/UiFY=";
               };
             }
           );
