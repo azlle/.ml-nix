@@ -14,6 +14,13 @@ nixos_hosts := "necrofantasia plainasia"
 # Live ISO のデフォルト nix.conf は保証がないので明示的に付ける。
 nix_flakes := "--extra-experimental-features \"nix-command flakes\""
 
+# インストール済みシステムでは modules/nix.nix (nixSettings) がこれを常に設定するが、
+# Live ISO 上の素の nix はまだこの flake の設定下で動いていないので知らない。
+# 特に nix-cachyos-kernel (attic.xuyh0120.win/lantian) が無いと、cachyos の
+# LTO付きカーネルをソースから毎回ビルドする羽目になり、時間・容量・メモリを大量に
+# 消費する (LTO のリンク工程は特にメモリを食う)。disko-install 等ではこれを明示する。
+nix_substituters := "--option extra-substituters \"https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org\" --option extra-trusted-public-keys \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0=\""
+
 # 引数なしで叩いたらレシピ一覧を出す
 default:
     @just --list
@@ -75,7 +82,7 @@ mounts host:
 # 破壊的操作を含むので disko-install の前に必ず読むこと。
 # disko が生成するパーティショニングスクリプトを表示する
 disko-script host:
-    nix {{nix_flakes}} build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
+    nix {{nix_flakes}} {{nix_substituters}} build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
       -o result-disko-{{host}}
     @echo "--- result-disko-{{host}} ---"
     @cat result-disko-{{host}}
@@ -120,7 +127,7 @@ disko-install host device:
     # せず入力の取得だけなので、Live ISO の tmpfs をほぼ消費しない)。
     echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
     nix {{nix_flakes}} flake archive
-    sudo nix {{nix_flakes}} run 'github:nix-community/disko/latest#disko-install' -- \
+    sudo nix {{nix_flakes}} {{nix_substituters}} run 'github:nix-community/disko/latest#disko-install' -- \
       --flake ".#{{host}}" --disk main "{{device}}"
 
 # ---------------------------------------------------------------- 保守
