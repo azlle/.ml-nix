@@ -9,6 +9,11 @@
 # NixOS として構成されるホスト (sumizomenosakura は WSL / home-manager のみ)
 nixos_hosts := "necrofantasia plainasia"
 
+# disko系レシピはインストール済みシステムだけでなく Live ISO 上でも動く前提。
+# インストール済み側は modules/nix.nix で experimental-features が有効だが、
+# Live ISO のデフォルト nix.conf は保証がないので明示的に付ける。
+nix_flakes := "--extra-experimental-features \"nix-command flakes\""
+
 # 引数なしで叩いたらレシピ一覧を出す
 default:
     @just --list
@@ -70,7 +75,7 @@ mounts host:
 # 破壊的操作を含むので disko-install の前に必ず読むこと。
 # disko が生成するパーティショニングスクリプトを表示する
 disko-script host:
-    nix build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
+    nix {{nix_flakes}} build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
       -o result-disko-{{host}}
     @echo "--- result-disko-{{host}} ---"
     @cat result-disko-{{host}}
@@ -100,8 +105,51 @@ disko-install host device:
     readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
     read -rp "続行するには 'yes' と入力: " reply
     [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
-    sudo nix run 'github:nix-community/disko/latest#disko-install' -- \
+    # sudo すると SSH_AUTH_SOCK/$HOME がリセットされ、root は git+ssh な
+    # inputs (ml-secrets) を fetch できず認証エラーになる。sudo する前に
+    # 自分の権限で inputs だけ fetch しておく (flake check ではなく archive: ビルドは
+    # せず入力の取得だけなので、Live ISO の tmpfs をほぼ消費しない)。
+    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
+    nix {{nix_flakes}} flake archive
+    sudo nix {{nix_flakes}} run 'github:nix-community/disko/latest#disko-install' -- \
       --flake ".#{{host}}" --disk main "{{device}}"
+
+# disko-install はパーティショニングとビルドを1コマンドにまとめているため、ビルド
+# サンドボックスが Live ISO の tmpfs (/tmp) 上で動く。RAM が少ないターゲットだと
+# "No space left on device" で詰まることがある
+# (https://discourse.nixos.org/t/error-installing-with-disko-no-space-left/61124)。
+# こちらは disko (パーティショニングのみ) → /tmp を対象ディスクへ bind mount →
+# nixos-install、と手動で分割することで /tmp を実ディスクへ逃がす。
+# device の扱いは disko-install と同じ (by-id 必須、確認プロンプトあり)。
+disko-install-lowmem host device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -e "{{device}}" ]; then
+      echo "エラー: {{device}} が存在しない。\`just disks\` で確認すること。" >&2
+      exit 1
+    fi
+    case "{{device}}" in
+      /dev/disk/by-id/*) ;;
+      *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
+    esac
+    echo "!!! {{device}} 上の全データを破棄して {{host}} をインストールします !!!"
+    readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
+    read -rp "続行するには 'yes' と入力: " reply
+    [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
+
+    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
+    nix {{nix_flakes}} flake archive
+
+    echo "--- disko: パーティショニング・フォーマット・マウントのみ ---"
+    sudo nix {{nix_flakes}} run github:nix-community/disko -- \
+      --flake ".#{{host}}" --mode destroy,format,mount --yes-wipe-all-disks
+
+    echo "--- /tmp を実ディスク (/mnt) 側へ退避 ---"
+    sudo mkdir -p /mnt/tmp
+    sudo mount --bind /mnt/tmp /tmp
+
+    echo "--- nixos-install ---"
+    sudo nixos-install --flake ".#{{host}}"
 
 # ---------------------------------------------------------------- 保守
 
