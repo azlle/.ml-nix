@@ -89,6 +89,15 @@ disks:
 # device はデフォルト値を持たせていないので `just disko-install` だけでは何も起きない。
 # 必ず /dev/disk/by-id/... の安定パスを指定すること (/dev/sdX は起動ごとに変わる)。
 # 事前に `just disko-script <host>` でスクリプトを読むこと。
+#
+# Live ISO の / は overlay+tmpfs (実体は /nix/.rw-store) で、デフォルトのサイズ
+# 上限が小さいと "No space left on device" で落ちることがある
+# (https://discourse.nixos.org/t/error-installing-with-disko-no-space-left/61124)。
+# その場合は先に上限を上げてから再実行する (既存データは保持される安全な操作):
+#   sudo mount -o remount,size=<物理RAMに近い値> /nix/.rw-store
+#
+# 素の `disko --flake` は --arg/--argstr でのデバイス上書きが効かない (flake モード
+# 未対応、実測で確認済み) ため、disko-install の `--disk NAME DEVICE` に一本化する。
 # !!! 危険 !!! 指定ディスクを全消去して NixOS をインストールする
 disko-install host device:
     #!/usr/bin/env bash
@@ -113,43 +122,6 @@ disko-install host device:
     nix {{nix_flakes}} flake archive
     sudo nix {{nix_flakes}} run 'github:nix-community/disko/latest#disko-install' -- \
       --flake ".#{{host}}" --disk main "{{device}}"
-
-# disko-install はパーティショニングとビルドを1コマンドにまとめているため、ビルド
-# サンドボックスが Live ISO の tmpfs (/tmp) 上で動く。RAM が少ないターゲットだと
-# "No space left on device" で詰まることがある
-# (https://discourse.nixos.org/t/error-installing-with-disko-no-space-left/61124)。
-# こちらは disko (パーティショニングのみ) → /tmp を対象ディスクへ bind mount →
-# nixos-install、と手動で分割することで /tmp を実ディスクへ逃がす。
-# device の扱いは disko-install と同じ (by-id 必須、確認プロンプトあり)。
-disko-install-lowmem host device:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -e "{{device}}" ]; then
-      echo "エラー: {{device}} が存在しない。\`just disks\` で確認すること。" >&2
-      exit 1
-    fi
-    case "{{device}}" in
-      /dev/disk/by-id/*) ;;
-      *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
-    esac
-    echo "!!! {{device}} 上の全データを破棄して {{host}} をインストールします !!!"
-    readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
-    read -rp "続行するには 'yes' と入力: " reply
-    [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
-
-    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
-    nix {{nix_flakes}} flake archive
-
-    echo "--- disko: パーティショニング・フォーマット・マウントのみ ---"
-    sudo nix {{nix_flakes}} run github:nix-community/disko -- \
-      --flake ".#{{host}}" --mode destroy,format,mount --yes-wipe-all-disks
-
-    echo "--- /tmp を実ディスク (/mnt) 側へ退避 ---"
-    sudo mkdir -p /mnt/tmp
-    sudo mount --bind /mnt/tmp /tmp
-
-    echo "--- nixos-install ---"
-    sudo nixos-install --flake ".#{{host}}"
 
 # ---------------------------------------------------------------- 保守
 
