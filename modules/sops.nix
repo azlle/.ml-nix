@@ -3,10 +3,12 @@
   delib,
   inputs,
   lib,
+  hostname,
   ...
 }:
 let
-  ageKeyFile = "/var/lib/sops-nix/sops_mm";
+  # .sops.yaml の &age-<hostname> 命名規則と揃える。ホストごとに別ファイル・別鍵。
+  ageKeyFile = "/var/lib/sops-nix/age-${hostname}";
   defaultSopsFile = "${inputs.ml-secrets}/secret.yaml";
 in
 delib.module {
@@ -22,6 +24,11 @@ delib.module {
         in
         {
           sops = {
+            # sops.age.sshKeyPaths (ホストのSSHホスト鍵から都度導出) も試したが、
+            # home-manager-eeshta.service は root ではなく eeshta 権限で動くため
+            # /etc/ssh/ssh_host_ed25519_key (root:root 0600) を読めず home側の
+            # secrets が復号できなくなる。結局そちらにもファイルへ保存した鍵が要る
+            # ので、両方の scope で同じ鍵ファイルを共有するこの方式の方が単純。
             age.keyFile = ageKeyFile;
             inherit defaultSopsFile;
             secrets = {
@@ -31,15 +38,12 @@ delib.module {
                 neededForUsers = true;
               };
 
-              "wireless/password" = {
-                path = "/run/secrets/wireless.conf";
-                owner = "wpa_supplicant";
-              };
+              # wireless/* は wpa_supplicant ユーザーを所有者に取るため、無線を
+              # 有効にしているホストでしか宣言できない。
+              # → hosts/necrofantasia/networking.nix 側で宣言する。
 
-              "wireless/hkrr_password" = { };
-
-              "cloudflared/git-tunnel" = {
-                path = "/run/secrets/cloudflared-git-tunnel-credentials.json";
+              "cloudflared/melocy-edge" = {
+                path = "/run/secrets/cloudflared-melocy-edge-credentials.json";
               };
 
               "eeshta_icon" = {
