@@ -75,6 +75,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -103,7 +108,8 @@
 
       treefmtEval = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
-        settings.global.excludes = [ "hosts/necrofantasia/hardware-configuration.nix" ];
+        # nixos-generate-config の生成物なので整形対象から外す
+        settings.global.excludes = [ "hosts/*/parts/hardware-configuration.nix" ];
         programs = {
           nixfmt.enable = true;
           statix.enable = true;
@@ -153,9 +159,20 @@
             ./modules
             ./hosts
           ];
-          exclude = [
-            ./hosts/necrofantasia/hardware-configuration.nix
-          ];
+          # `hosts/<name>/parts/` は素の NixOS モジュール置き場。denix の再帰スキャンに
+          # 拾われると「全ホストに適用されるモジュール」として扱われてしまう
+          # (ホスト固有の IP や PCI バス ID が他ホストにも及び、値が衝突する) ため、
+          # ディレクトリごとスキャン対象から外し、各ホストが自分の `nixos.imports`
+          # で明示的に読む。
+          #
+          # ここを手書きのリストにすると、ファイルを足すたびに1行追加が必要な上、
+          # 忘れても衝突相手がいなければ eval が通ってしまい気づけない。
+          # ホスト一覧から導出して、追加時に何も書き足さなくて済むようにする。
+          # parts/ を持たないホスト (WSL の sumizomenosakura など) もあるので、
+          # 実在するものだけを渡す。存在しないパスを fileset に渡すと落ちる。
+          exclude = builtins.filter builtins.pathExists (
+            map (host: ./hosts + "/${host}/parts") (builtins.attrNames (builtins.readDir ./hosts))
+          );
           specialArgs = {
             inherit inputs nixSettings moduleSystem;
           };

@@ -17,6 +17,7 @@ delib.module {
             ffmpeg
             gh
             htop
+            just
             libarchive
             openssh
             rsync

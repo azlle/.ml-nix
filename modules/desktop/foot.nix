@@ -1,9 +1,11 @@
-# modules/foot.nix
+# modules/desktop/foot.nix
 { delib, ... }:
 delib.module {
-  name = "foot";
+  name = "desktop.foot";
 
-  home.always = {
+  options = delib.singleCascadeEnableOption;
+
+  home.ifEnabled = {
     programs.foot = {
       enable = true;
 

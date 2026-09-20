@@ -11,12 +11,7 @@ delib.module {
   name = "inputs";
 
   nixos.always = {
-    imports = [
-      # only one NixOS host exists.
-      inputs.nixos-hardware.nixosModules.asus-zephyrus-ga503
-    ]
-    # lib.mkIf can't hide `home-manager.*` when the option doesn't exist.
-    ++ lib.optional useHomeManagerModule (
+    imports = lib.optional useHomeManagerModule (
       { moduleSystem, ... }:
       {
         home-manager.extraSpecialArgs = { inherit useHomeManagerModule moduleSystem; };
@@ -26,9 +21,10 @@ delib.module {
     nixpkgs.config.allowUnfree = true;
     nixpkgs.overlays = [
       inputs.niri.overlays.niri
+      (import ../pkgs/niri-libdisplay-info-overlay.nix)
       inputs.nix-cachyos-kernel.overlays.pinned
       inputs.millennium.overlays.default
-      (final: prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
+      (final: _prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
     ];
   }
   // lib.optionalAttrs useHomeManagerModule {
@@ -52,9 +48,10 @@ delib.module {
           nixpkgs.config.allowUnfree = true;
           nixpkgs.overlays = [
             inputs.niri.overlays.niri
+            (import ../pkgs/niri-libdisplay-info-overlay.nix)
             inputs.nix-cachyos-kernel.overlays.pinned
             inputs.millennium.overlays.default
-            (final: prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
+            (final: _prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
           ];
         }
       )

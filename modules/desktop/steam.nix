@@ -1,9 +1,11 @@
-# modules/steam.nix
+# modules/desktop/steam.nix
 { delib, ... }:
 delib.module {
-  name = "steam";
+  name = "desktop.steam";
 
-  nixos.always = {
+  options = delib.singleCascadeEnableOption;
+
+  nixos.ifEnabled = {
     programs.steam = {
       enable = true;
       # package = pkgs.millennium-steam;

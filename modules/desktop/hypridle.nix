@@ -1,9 +1,11 @@
-# modules/hypridle.nix
+# modules/desktop/hypridle.nix
 { delib, ... }:
 delib.module {
-  name = "hypridle";
+  name = "desktop.hypridle";
 
-  home.always = {
+  options = delib.singleCascadeEnableOption;
+
+  home.ifEnabled = {
     services.hypridle = {
       enable = true;
       settings = {

@@ -1,9 +1,11 @@
-# modules/mako.nix
+# modules/desktop/mako.nix
 { delib, ... }:
 delib.module {
-  name = "mako";
+  name = "desktop.mako";
 
-  home.always = {
+  options = delib.singleCascadeEnableOption;
+
+  home.ifEnabled = {
     services.mako = {
       enable = true;
       settings = {
