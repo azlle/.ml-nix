@@ -18,7 +18,8 @@ nix_flakes := "--extra-experimental-features \"nix-command flakes\""
 # Live ISO 上の素の nix はまだこの flake の設定下で動いていないので知らない。
 # 特に nix-cachyos-kernel (attic.xuyh0120.win/lantian) が無いと、cachyos の
 # LTO付きカーネルをソースから毎回ビルドする羽目になり、時間・容量・メモリを大量に
-# 消費する (LTO のリンク工程は特にメモリを食う)。disko-install 等ではこれを明示する。
+# 消費する (LTO のリンク工程は特にメモリを食う)。disko-partition/install ではこれを
+# 明示する。
 nix_substituters := "--option extra-substituters \"https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org\" --option extra-trusted-public-keys \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0=\""
 
 # 引数なしで叩いたらレシピ一覧を出す
@@ -79,7 +80,7 @@ mounts host:
 
 # ---------------------------------------------------------------- disko
 
-# 破壊的操作を含むので disko-install の前に必ず読むこと。
+# 破壊的操作を含むので disko-partition の前に必ず読むこと。
 # disko が生成するパーティショニングスクリプトを表示する
 disko-script host:
     nix {{nix_flakes}} {{nix_substituters}} build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
@@ -93,54 +94,23 @@ disks:
     @echo
     ls -l /dev/disk/by-id/
 
-# device はデフォルト値を持たせていないので `just disko-install` だけでは何も起きない。
-# 必ず /dev/disk/by-id/... の安定パスを指定すること (/dev/sdX は起動ごとに変わる)。
-# 事前に `just disko-script <host>` でスクリプトを読むこと。
+# device はデフォルト値を持たせていないので `just disko-partition` だけでは何も
+# 起きない。必ず /dev/disk/by-id/... の安定パスを指定すること
+# (/dev/sdX は起動ごとに変わる)。事前に `just disko-script <host>` でスクリプトを
+# 読むこと。
 #
-# disko-install はパーティショニングより先にシステム全体をビルドするため、実ディスクが
-# まだ無い段階で Live ISO の tmpfs 上にフルのクロージャを構築しようとする。RAM が
-# 潤沢でも (32GB でも) OOM Killer に落とされることがある
+# diskoプロジェクト自身の一括バイナリ (disko#disko-install) は使わない。あれは
+# パーティショニングより先にシステム全体をビルドするため、実ディスクがまだ無い段階で
+# Live ISO の tmpfs 上にフルのクロージャを構築しようとして、RAM が潤沢でも (32GB でも)
+# OOM Killer に落とされることがある
 # (https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
-# その場合は `just disko-install-split` (パーティショニングとビルドを分離する版) を
-# 使うこと。
+# 代わりにパーティショニング (このレシピ) とビルド (`just install`) を分離し、
+# ビルド開始前に実ディスク側の swap 等が使える状態にしてから進む。
 #
 # 素の `disko --flake` は --arg/--argstr でのデバイス上書きが効かない (flake モード
-# 未対応、実測で確認済み) ため、disko-install の `--disk NAME DEVICE` に一本化する。
-# !!! 危険 !!! 指定ディスクを全消去して NixOS をインストールする
-disko-install host device:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -e "{{device}}" ]; then
-      echo "エラー: {{device}} が存在しない。\`just disks\` で確認すること。" >&2
-      exit 1
-    fi
-    case "{{device}}" in
-      /dev/disk/by-id/*) ;;
-      *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
-    esac
-    echo "!!! {{device}} 上の全データを破棄して {{host}} をインストールします !!!"
-    readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
-    read -rp "続行するには 'yes' と入力: " reply
-    [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
-    # sudo すると SSH_AUTH_SOCK/$HOME がリセットされ、root は git+ssh な
-    # inputs (ml-secrets) を fetch できず認証エラーになる。sudo する前に
-    # 自分の権限で inputs だけ fetch しておく (flake check ではなく archive: ビルドは
-    # せず入力の取得だけなので、Live ISO の tmpfs をほぼ消費しない)。
-    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
-    nix {{nix_flakes}} flake archive
-    sudo nix {{nix_flakes}} {{nix_substituters}} run 'github:nix-community/disko/latest#disko-install' -- \
-      --flake ".#{{host}}" --disk main "{{device}}"
-
-# disko-install の OOM 対策版、1/2。パーティショニングのみ行い、ビルドは
-# 意図的にここではしない (ビルド開始前に実ディスク側の swap 等が使える状態にしてから
-# `just nixos-install` に進むため。コミュニティで確認された回避策:
-# https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
-#
-# 素の `disko --flake` はデバイスの CLI 上書きが効かないため、hosts/<host>/parts/
-# disko.nix のプレースホルダーを実デバイスパスへ直接書き換える。成功したらそのまま
-# 残す (`just nixos-install` と、以後の rebuild の両方がこれを必要とするため)。
-# 失敗した時だけプレースホルダーに戻す。
-# device の扱いは disko-install と同じ (by-id 必須、確認プロンプトあり)。
+# 未対応、実測で確認済み) ため、hosts/<host>/parts/disko.nix のプレースホルダーを
+# 実デバイスパスへ直接書き換える。成功したらそのまま残す (`just install` と、以後の
+# rebuild の両方がこれを必要とするため)。失敗した時だけプレースホルダーに戻す。
 # !!! 危険 !!! 指定ディスクを全消去する
 disko-partition host device:
     #!/usr/bin/env bash
@@ -172,13 +142,12 @@ disko-partition host device:
     trap - ERR
     rm -f "$diskoFile.bak"
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
-    echo "次に \`just nixos-install {{host}}\` を実行すること。"
+    echo "次に \`just install {{host}}\` を実行すること。"
 
-# disko-install の OOM 対策版、2/2。事前に `just disko-partition <host> <device>` を
-# 実行しておくこと (disko / nixos-install どちらもデフォルトのマウントポイントが
-# /mnt で揃っているので、そのまま繋がる)。
-# ビルド・インストールを実行する
-disko-nixos-install host:
+# 事前に `just disko-partition <host> <device>` が必要 (disko / nixos-install
+# どちらもデフォルトのマウントポイントが /mnt で揃っているので、そのまま繋がる)。
+# 標準の nixos-install でビルド・インストールを実行する
+install host:
     #!/usr/bin/env bash
     set -euo pipefail
     diskoFile="hosts/{{host}}/parts/disko.nix"
