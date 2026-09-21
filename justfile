@@ -131,17 +131,18 @@ disko-install host device:
     sudo nix {{nix_flakes}} {{nix_substituters}} run 'github:nix-community/disko/latest#disko-install' -- \
       --flake ".#{{host}}" --disk main "{{device}}"
 
-# disko-install の OOM 対策版。パーティショニング (disko) とビルド (nixos-install) を
-# 分離して実行することで、ビルド開始前に実ディスク側の swap 等が使える状態にする
-# (コミュニティで確認された回避策: https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
+# disko-install の OOM 対策版、1/2。パーティショニングのみ行い、ビルドは
+# 意図的にここではしない (ビルド開始前に実ディスク側の swap 等が使える状態にしてから
+# `just nixos-install` に進むため。コミュニティで確認された回避策:
+# https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
 #
-# 素の `disko --flake` はデバイスの CLI 上書きが効かないため、この実行の間だけ
-# hosts/<host>/parts/disko.nix のプレースホルダーを実デバイスパスへ直接書き換える。
-# 成功したらそのまま残す (このマシンの以後の rebuild にも実パスが要るため)。
+# 素の `disko --flake` はデバイスの CLI 上書きが効かないため、hosts/<host>/parts/
+# disko.nix のプレースホルダーを実デバイスパスへ直接書き換える。成功したらそのまま
+# 残す (`just nixos-install` と、以後の rebuild の両方がこれを必要とするため)。
 # 失敗した時だけプレースホルダーに戻す。
 # device の扱いは disko-install と同じ (by-id 必須、確認プロンプトあり)。
-# !!! 危険 !!! 指定ディスクを全消去して NixOS をインストールする
-disko-install-split host device:
+# !!! 危険 !!! 指定ディスクを全消去する
+disko-partition host device:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ ! -e "{{device}}" ]; then
@@ -152,7 +153,7 @@ disko-install-split host device:
       /dev/disk/by-id/*) ;;
       *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
     esac
-    echo "!!! {{device}} 上の全データを破棄して {{host}} をインストールします !!!"
+    echo "!!! {{device}} 上の全データを破棄して {{host}} 用にパーティショニングします !!!"
     readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
     read -rp "続行するには 'yes' と入力: " reply
     [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
@@ -165,16 +166,28 @@ disko-install-split host device:
     trap 'mv -f "$diskoFile.bak" "$diskoFile"; echo "失敗したため $diskoFile をプレースホルダーに戻した" >&2' ERR
     sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|{{device}}|" "$diskoFile"
 
-    echo "--- 1/2: disko (パーティショニング・フォーマット・マウントのみ) ---"
     sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
       --mode destroy,format,mount --flake ".#{{host}}" --yes-wipe-all-disks
 
-    echo "--- 2/2: nixos-install (ここで初めてビルドが走る。対象ディスクは既にマウント済み) ---"
-    sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
-
     trap - ERR
     rm -f "$diskoFile.bak"
-    echo "成功。$diskoFile には実デバイスパスを書き込んだまま残してある (このマシンの以後の rebuild に必要)。"
+    echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
+    echo "次に \`just nixos-install {{host}}\` を実行すること。"
+
+# disko-install の OOM 対策版、2/2。事前に `just disko-partition <host> <device>` を
+# 実行しておくこと (disko / nixos-install どちらもデフォルトのマウントポイントが
+# /mnt で揃っているので、そのまま繋がる)。
+# ビルド・インストールを実行する
+disko-nixos-install host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
+      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
+      echo "先に \`just disko-partition {{host}} <device>\` を実行すること。" >&2
+      exit 1
+    fi
+    sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
 
 # ---------------------------------------------------------------- 保守
 
