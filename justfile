@@ -144,9 +144,13 @@ partition host device:
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
     echo "次に \`just install {{host}}\` を実行すること。"
 
-# 事前に `just partition <host> <device>` が必要 (disko.nix に実デバイスパスが
-# 入っている前提)。/mnt が未マウントなら (別セッション・再起動後の Live USB からの
-# 再開など) 自動で繋ぎ直してから進む。中身は壊さない。
+# disko.nix には既に実デバイスパスが入っている前提 (プレースホルダーのままなら
+# 先に partition が要る)。/mnt が既にマウント済みかどうかは自動判定しない
+# (「マウントされてるか」は分かっても「それが今の disko.nix の宣言と一致してるか」
+# は分からないため。disko の --mode mount 自体、既存パーティションをそのまま使う
+# だけで宣言との整合性は検証しない)。別セッション・再起動後で disko.nix を前回の
+# partition から変えていないなら先に `just mount <host>` を、パーティションサイズ
+# 等を変えたなら `just partition` からやり直すこと。この判断は人間がすること。
 # 標準の nixos-install でビルド・インストールを実行する
 install host:
     #!/usr/bin/env bash
@@ -157,13 +161,24 @@ install host:
       echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
       exit 1
     fi
-    if ! mountpoint -q /mnt; then
-      echo "--- /mnt が未マウント。disko で繋ぎ直す ---"
-      nix {{nix_flakes}} flake archive
-      sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
-        --mode mount --flake ".#{{host}}"
-    fi
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
+
+# 実行する前に、disko.nix が最後に partition した時から変わっていないことを
+# 自分で確認すること (このコマンド自体はそこを検証しない)。プレースホルダーの
+# ままなら先に partition が要る。既存のパーティション・データセットを壊さず
+# /mnt へ繋ぎ直すだけ
+mount host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
+      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
+      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
+      exit 1
+    fi
+    nix {{nix_flakes}} flake archive
+    sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
+      --mode mount --flake ".#{{host}}"
 
 # ---------------------------------------------------------------- 保守
 
