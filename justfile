@@ -144,6 +144,22 @@ partition host device:
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
     echo "次に \`just install {{host}}\` を実行すること。"
 
+# disko.nix には既に実デバイスパスが入っている前提 (プレースホルダーのままなら
+# 先に partition が要る)。既に partition 済み (中身は壊さない) のディスクを、
+# 別セッション (再起動後の Live USB など) から /mnt へ繋ぎ直すだけの非破壊的レシピ
+mount host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
+      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
+      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
+      exit 1
+    fi
+    nix {{nix_flakes}} flake archive
+    sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
+      --mode mount --flake ".#{{host}}"
+
 # 事前に `just partition <host> <device>` が必要 (disko / nixos-install
 # どちらもデフォルトのマウントポイントが /mnt で揃っているので、そのまま繋がる)。
 # 標準の nixos-install でビルド・インストールを実行する

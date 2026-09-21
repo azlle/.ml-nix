@@ -11,7 +11,12 @@
     supportedFilesystems = [ "zfs" ];
     zfs = {
       package = config.boot.kernelPackages.zfs_cachyos;
-      forceImportRoot = false;
+      # necrofantasia の boot.nix から流用した際の取り残し。necrofantasia は root が
+      # ZFS ではないので false でも無害だったが、plainasia は root 自体が rpool。
+      # インストール直後の初回起動時、プールがクリーンに export されていない状態
+      # (通常の手順で普通に起きる) だと -f 無しでは import を拒否され、
+      # "Failed to start Import ZFS pool" で emergency mode に落ちる。
+      forceImportRoot = true;
     };
 
     # ネイティブ暗号化なしを選んだため、Secure Boot (lanzaboote) の enroll 手順に
