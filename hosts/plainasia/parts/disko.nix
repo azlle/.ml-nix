@@ -26,7 +26,9 @@
         type = "gpt";
         partitions = {
           ESP = {
-            size = "1G";
+            # 1G だと systemd-boot のインストール中に実機で容量不足になった
+            # (カーネル+initrd+複数のboot entryで想定より嵩んだ)。余裕を見て2Gに。
+            size = "2G";
             type = "EF00";
             content = {
               type = "filesystem";
