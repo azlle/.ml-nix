@@ -18,7 +18,7 @@ nix_flakes := "--extra-experimental-features \"nix-command flakes\""
 # Live ISO 上の素の nix はまだこの flake の設定下で動いていないので知らない。
 # 特に nix-cachyos-kernel (attic.xuyh0120.win/lantian) が無いと、cachyos の
 # LTO付きカーネルをソースから毎回ビルドする羽目になり、時間・容量・メモリを大量に
-# 消費する (LTO のリンク工程は特にメモリを食う)。disko-partition/install ではこれを
+# 消費する (LTO のリンク工程は特にメモリを食う)。partition/install ではこれを
 # 明示する。
 nix_substituters := "--option extra-substituters \"https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org\" --option extra-trusted-public-keys \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0=\""
 
@@ -80,7 +80,7 @@ mounts host:
 
 # ---------------------------------------------------------------- disko
 
-# 破壊的操作を含むので disko-partition の前に必ず読むこと。
+# 破壊的操作を含むので partition の前に必ず読むこと。
 # disko が生成するパーティショニングスクリプトを表示する
 disko-script host:
     nix {{nix_flakes}} {{nix_substituters}} build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
@@ -94,7 +94,7 @@ disks:
     @echo
     ls -l /dev/disk/by-id/
 
-# device はデフォルト値を持たせていないので `just disko-partition` だけでは何も
+# device はデフォルト値を持たせていないので `just partition` だけでは何も
 # 起きない。必ず /dev/disk/by-id/... の安定パスを指定すること
 # (/dev/sdX は起動ごとに変わる)。事前に `just disko-script <host>` でスクリプトを
 # 読むこと。
@@ -112,7 +112,7 @@ disks:
 # 実デバイスパスへ直接書き換える。成功したらそのまま残す (`just install` と、以後の
 # rebuild の両方がこれを必要とするため)。失敗した時だけプレースホルダーに戻す。
 # !!! 危険 !!! 指定ディスクを全消去する
-disko-partition host device:
+partition host device:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ ! -e "{{device}}" ]; then
@@ -144,7 +144,7 @@ disko-partition host device:
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
     echo "次に \`just install {{host}}\` を実行すること。"
 
-# 事前に `just disko-partition <host> <device>` が必要 (disko / nixos-install
+# 事前に `just partition <host> <device>` が必要 (disko / nixos-install
 # どちらもデフォルトのマウントポイントが /mnt で揃っているので、そのまま繋がる)。
 # 標準の nixos-install でビルド・インストールを実行する
 install host:
@@ -153,7 +153,7 @@ install host:
     diskoFile="hosts/{{host}}/parts/disko.nix"
     if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
       echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
-      echo "先に \`just disko-partition {{host}} <device>\` を実行すること。" >&2
+      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
       exit 1
     fi
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
