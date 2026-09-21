@@ -97,11 +97,12 @@ disks:
 # 必ず /dev/disk/by-id/... の安定パスを指定すること (/dev/sdX は起動ごとに変わる)。
 # 事前に `just disko-script <host>` でスクリプトを読むこと。
 #
-# Live ISO の / は overlay+tmpfs (実体は /nix/.rw-store) で、デフォルトのサイズ
-# 上限が小さいと "No space left on device" で落ちることがある
-# (https://discourse.nixos.org/t/error-installing-with-disko-no-space-left/61124)。
-# その場合は先に上限を上げてから再実行する (既存データは保持される安全な操作):
-#   sudo mount -o remount,size=<物理RAMに近い値> /nix/.rw-store
+# disko-install はパーティショニングより先にシステム全体をビルドするため、実ディスクが
+# まだ無い段階で Live ISO の tmpfs 上にフルのクロージャを構築しようとする。RAM が
+# 潤沢でも (32GB でも) OOM Killer に落とされることがある
+# (https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
+# その場合は `just disko-install-split` (パーティショニングとビルドを分離する版) を
+# 使うこと。
 #
 # 素の `disko --flake` は --arg/--argstr でのデバイス上書きが効かない (flake モード
 # 未対応、実測で確認済み) ため、disko-install の `--disk NAME DEVICE` に一本化する。
@@ -129,6 +130,51 @@ disko-install host device:
     nix {{nix_flakes}} flake archive
     sudo nix {{nix_flakes}} {{nix_substituters}} run 'github:nix-community/disko/latest#disko-install' -- \
       --flake ".#{{host}}" --disk main "{{device}}"
+
+# disko-install の OOM 対策版。パーティショニング (disko) とビルド (nixos-install) を
+# 分離して実行することで、ビルド開始前に実ディスク側の swap 等が使える状態にする
+# (コミュニティで確認された回避策: https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
+#
+# 素の `disko --flake` はデバイスの CLI 上書きが効かないため、この実行の間だけ
+# hosts/<host>/parts/disko.nix のプレースホルダーを実デバイスパスへ直接書き換える。
+# 成功したらそのまま残す (このマシンの以後の rebuild にも実パスが要るため)。
+# 失敗した時だけプレースホルダーに戻す。
+# device の扱いは disko-install と同じ (by-id 必須、確認プロンプトあり)。
+# !!! 危険 !!! 指定ディスクを全消去して NixOS をインストールする
+disko-install-split host device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -e "{{device}}" ]; then
+      echo "エラー: {{device}} が存在しない。\`just disks\` で確認すること。" >&2
+      exit 1
+    fi
+    case "{{device}}" in
+      /dev/disk/by-id/*) ;;
+      *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
+    esac
+    echo "!!! {{device}} 上の全データを破棄して {{host}} をインストールします !!!"
+    readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
+    read -rp "続行するには 'yes' と入力: " reply
+    [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
+
+    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
+    nix {{nix_flakes}} flake archive
+
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    cp "$diskoFile" "$diskoFile.bak"
+    trap 'mv -f "$diskoFile.bak" "$diskoFile"; echo "失敗したため $diskoFile をプレースホルダーに戻した" >&2' ERR
+    sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|{{device}}|" "$diskoFile"
+
+    echo "--- 1/2: disko (パーティショニング・フォーマット・マウントのみ) ---"
+    sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
+      --mode destroy,format,mount --flake ".#{{host}}" --yes-wipe-all-disks
+
+    echo "--- 2/2: nixos-install (ここで初めてビルドが走る。対象ディスクは既にマウント済み) ---"
+    sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
+
+    trap - ERR
+    rm -f "$diskoFile.bak"
+    echo "成功。$diskoFile には実デバイスパスを書き込んだまま残してある (このマシンの以後の rebuild に必要)。"
 
 # ---------------------------------------------------------------- 保守
 
