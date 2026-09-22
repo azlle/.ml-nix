@@ -161,6 +161,15 @@ install host:
       echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
       exit 1
     fi
+    # modules/sops.nix の ageKeyFile = "/var/lib/sops-nix/age-${hostname}" 規約。
+    # ここが無いまま進めると setupSecrets が黙って失敗し (--graceful で installation
+    # finished! まで表示される)、起動後に気づく羽目になる。
+    ageKeyFile="/mnt/var/lib/sops-nix/age-{{host}}"
+    if [ ! -s "$ageKeyFile" ]; then
+      echo "エラー: $ageKeyFile が無い (またはサイズ0)。secrets が復号できないまま進む。" >&2
+      echo "age-keygen で {{host}} 用の鍵を作り、そこへ置いてから再実行すること。" >&2
+      exit 1
+    fi
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
 
 # 実行する前に、disko.nix が最後に partition した時から変わっていないことを
