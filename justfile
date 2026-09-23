@@ -81,7 +81,7 @@ list-mounts host:
 
 # ---------------------------------------------------------------- disko
 #
-# 作業順: disks → disko-script → partition → (再起動/再接続のたびに) mount →
+# 作業順: disks → partition (レイアウト確認込み) → (再起動/再接続のたびに) mount →
 # install → carry-over
 
 # disko.nix に実デバイスパスが入っているか (プレースホルダーのままでないか) を
@@ -111,18 +111,9 @@ disks:
     @echo
     ls -l /dev/disk/by-id/
 
-# 破壊的操作を含むので partition の前に必ず読むこと。
-# disko が生成するパーティショニングスクリプトを表示する
-disko-script host:
-    nix {{nix_flakes}} {{nix_substituters}} build ".#nixosConfigurations.{{host}}.config.system.build.diskoScript" \
-      -o result-disko-{{host}}
-    @echo "--- result-disko-{{host}} ---"
-    @cat result-disko-{{host}}
-
 # device はデフォルト値を持たせていないので `just partition` だけでは何も
 # 起きない。必ず /dev/disk/by-id/... の安定パスを指定すること
-# (/dev/sdX は起動ごとに変わる)。事前に `just disko-script <host>` でスクリプトを
-# 読むこと。
+# (/dev/sdX は起動ごとに変わる)。
 #
 # diskoプロジェクト自身の一括バイナリ (disko#disko-install) は使わない。あれは
 # パーティショニングより先にシステム全体をビルドするため、実ディスクがまだ無い段階で
@@ -133,9 +124,15 @@ disko-script host:
 # ビルド開始前に実ディスク側の swap 等が使える状態にしてから進む。
 #
 # 素の `disko --flake` は --arg/--argstr でのデバイス上書きが効かない (flake モード
-# 未対応、実測で確認済み) ため、hosts/<host>/parts/disko.nix のプレースホルダーを
-# 実デバイスパスへ直接書き換える。成功したらそのまま残す (`just install` と、以後の
-# rebuild の両方がこれを必要とするため)。失敗した時だけプレースホルダーに戻す。
+# 未対応、実測で確認済み) ため、確認プロンプトの前に hosts/<host>/parts/disko.nix の
+# プレースホルダーを実デバイスパスへ直接書き換え、その状態で評価した構成を見せる
+# (実際にどのデバイス・レイアウトになるかをそのまま確認できる)。'yes' で進めたら
+# そのまま残す (`just install` と、以後の rebuild の両方がこれを必要とするため)。
+# 'yes' 以外・失敗のどちらでもプレースホルダーに戻す。
+#
+# disko が生成する実際のシェルスクリプトは数百行あり (内部関数・UUID処理等を含む)、
+# tty で確認プロンプトの前に流すと肝心の情報が流れてしまう。そのため disko.nix
+# 自身の宣言 (パーティション/データセット構成) から要約を組み立てて見せる。
 # !!! 危険 !!! 指定ディスクを全消去する
 partition host device: _prefetch
     #!/usr/bin/env bash
@@ -148,20 +145,48 @@ partition host device: _prefetch
       /dev/disk/by-id/*) ;;
       *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
     esac
+
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    cp "$diskoFile" "$diskoFile.bak"
+    trap 'mv -f "$diskoFile.bak" "$diskoFile" 2>/dev/null; echo "$diskoFile をプレースホルダーに戻した" >&2' EXIT
+    sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|{{device}}|" "$diskoFile"
+
+    echo "--- {{host}} の disko レイアウト ({{device}}) ---"
+    nix {{nix_flakes}} eval --raw ".#nixosConfigurations.{{host}}.config.disko.devices" --apply '
+      d:
+      let
+        partSummary = p:
+          if (p.content.type or "") == "filesystem" then "-> ${p.content.mountpoint}"
+          else if (p.content.type or "") == "swap" then "-> swap"
+          else if (p.content.type or "") == "zfs" then "-> zfs pool ${p.content.pool}"
+          else "-> ${p.content.type or "?"}";
+        diskLines = k:
+          let disk = d.disk.${k}; in
+          [ "disk ${k}: ${disk.device}" ] ++
+          map (pk: "  ${pk}\t${disk.content.partitions.${pk}.size}\t${partSummary disk.content.partitions.${pk}}")
+            (builtins.attrNames disk.content.partitions);
+        dsMount = ds: if (ds.mountpoint or null) == null then "(none)" else ds.mountpoint;
+        isInternal = n: builtins.substring 0 2 n == "__";
+        zpoolLines = k:
+          [ "zpool ${k}" ] ++
+          map (dk: "  ${dk}\t-> ${dsMount d.zpool.${k}.datasets.${dk}}")
+            (builtins.filter (dk: !(isInternal dk)) (builtins.attrNames d.zpool.${k}.datasets));
+      in
+      builtins.concatStringsSep "\n" (
+        builtins.concatMap diskLines (builtins.attrNames d.disk or { })
+        ++ builtins.concatMap zpoolLines (builtins.attrNames d.zpool or { })
+      )
+    ' | column -t -s $'\t'
+    echo
     echo "!!! {{device}} 上の全データを破棄して {{host}} 用にパーティショニングします !!!"
     readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
     read -rp "続行するには 'yes' と入力: " reply
     [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
 
-    diskoFile="hosts/{{host}}/parts/disko.nix"
-    cp "$diskoFile" "$diskoFile.bak"
-    trap 'mv -f "$diskoFile.bak" "$diskoFile"; echo "失敗したため $diskoFile をプレースホルダーに戻した" >&2' ERR
-    sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|{{device}}|" "$diskoFile"
-
     sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
       --mode destroy,format,mount --flake ".#{{host}}" --yes-wipe-all-disks
 
-    trap - ERR
+    trap - EXIT
     rm -f "$diskoFile.bak"
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
     echo "次に \`just install {{host}}\` を実行すること。"
