@@ -194,6 +194,44 @@ mount host:
     sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
       --mode mount --flake ".#{{host}}"
 
+# 事前に partition (または mount) 済みで /mnt がマウントされていること。disko.nix に
+# 実デバイスパスが書き込まれた状態のままコピーされるが、それは意図通り (起動後の
+# rebuild にそのまま使う)。eeshta はこの時点でターゲット側にまだ存在しないことが
+# あるので、UID/GID は数値 (1000:100) で直接指定する。
+# Live ISO 上で clone した .ml-nix と ~/.ssh を丸ごと /mnt/home/eeshta へコピーし、
+# 再起動後に再 clone / 鍵の再生成をしなくて済むようにする
+carry-over host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
+      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
+      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
+      exit 1
+    fi
+    if ! mountpoint -q /mnt; then
+      echo "エラー: /mnt がマウントされていない。先に partition か mount を実行すること。" >&2
+      exit 1
+    fi
+
+    sudo mkdir -p /mnt/home/eeshta
+
+    echo "--- $(pwd) を /mnt/home/eeshta/.ml-nix へコピー ---"
+    sudo cp -r "$(pwd)" /mnt/home/eeshta/.ml-nix
+
+    if [ -d "$HOME/.ssh" ]; then
+      echo "--- $HOME/.ssh を /mnt/home/eeshta/.ssh へコピー ---"
+      sudo mkdir -p /mnt/home/eeshta/.ssh
+      sudo cp -r "$HOME/.ssh/." /mnt/home/eeshta/.ssh/
+      sudo chmod 700 /mnt/home/eeshta/.ssh
+      sudo find /mnt/home/eeshta/.ssh -maxdepth 1 -type f ! -name "*.pub" -exec chmod 600 {} +
+    else
+      echo "警告: $HOME/.ssh が無いのでSSH鍵はコピーしなかった。" >&2
+    fi
+
+    sudo chown -R 1000:100 /mnt/home/eeshta
+    echo "完了。/mnt/home/eeshta に .ml-nix と .ssh をコピーした。"
+
 # ---------------------------------------------------------------- 保守
 
 # --no-cache が要る: statix/deadnix が構文木を書き換えると nixfmt が再整形すべき
