@@ -55,19 +55,20 @@ dry host:
 show-enabled host:
     #!/usr/bin/env bash
     set -euo pipefail
+    errfile=$(mktemp)
+    trap 'rm -f "$errfile"' EXIT
     for a in host.type host.isPC host.isServer \
              desktop.enable containers.enable \
              containers.forgejo.enable containers.cloudflared.enable; do
       printf '%-34s = ' "$a"
       # nix は "Using saved setting ..." を stderr に出すので、成功時は捨てて
       # 整形を保ち、失敗したときだけ中身を見せる。
-      if out=$(nix eval ".#nixosConfigurations.{{host}}.config.myconfig.$a" 2>/tmp/.just-eval-err); then
+      if out=$(nix eval ".#nixosConfigurations.{{host}}.config.myconfig.$a" 2>"$errfile"); then
         echo "$out"
       else
-        echo "ERROR"; cat /tmp/.just-eval-err >&2
+        echo "ERROR"; cat "$errfile" >&2
       fi
     done
-    rm -f /tmp/.just-eval-err
 
 # 任意の設定値を評価する (例: just eval plainasia fileSystems)
 eval host attr:
