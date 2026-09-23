@@ -211,6 +211,9 @@ carry-over host: (_check-disko-ready host)
 
     echo "--- $(pwd) を /mnt/home/eeshta/.ml-nix へコピー ---"
     sudo cp -r "$(pwd)" /mnt/home/eeshta/.ml-nix
+    # disko-script が残す result-disko-* は Live ISO 自身の /nix/store を指す
+    # symlink で、再起動後は解決できない dangling link になるだけなので持ち込まない。
+    sudo find /mnt/home/eeshta/.ml-nix -maxdepth 1 -name 'result*' -type l -delete
 
     if [ -d "$HOME/.ssh" ]; then
       echo "--- $HOME/.ssh を /mnt/home/eeshta/.ssh へコピー ---"
