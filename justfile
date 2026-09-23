@@ -79,6 +79,36 @@ mounts host:
       --apply 'fs: builtins.attrNames fs'
 
 # ---------------------------------------------------------------- disko
+#
+# 作業順: disks → disko-script → partition → (再起動/再接続のたびに) mount →
+# install → carry-over
+
+# disko.nix に実デバイスパスが入っているか (プレースホルダーのままでないか) を
+# 確認する。install/mount/carry-over が個別に同じチェックを重複させていたのを
+# ここへ集約した。
+_check-disko-ready host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    diskoFile="hosts/{{host}}/parts/disko.nix"
+    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
+      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
+      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
+      exit 1
+    fi
+
+# sudo すると SSH_AUTH_SOCK/$HOME がリセットされ、root は git+ssh な inputs
+# (ml-secrets) を fetch できず認証エラーになる。sudo する前に自分の権限で
+# inputs だけ fetch しておく (ビルドはせず入力の取得だけ)。partition/install/mount
+# が個別にこれを実行していたのをここへ集約した。
+_prefetch:
+    @echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
+    nix {{nix_flakes}} flake archive
+
+# 対象ディスクを検討するための一覧 (by-id を使うこと)
+disks:
+    lsblk -o NAME,SIZE,MODEL,SERIAL
+    @echo
+    ls -l /dev/disk/by-id/
 
 # 破壊的操作を含むので partition の前に必ず読むこと。
 # disko が生成するパーティショニングスクリプトを表示する
@@ -87,12 +117,6 @@ disko-script host:
       -o result-disko-{{host}}
     @echo "--- result-disko-{{host}} ---"
     @cat result-disko-{{host}}
-
-# 対象ディスクを検討するための一覧 (by-id を使うこと)
-disks:
-    lsblk -o NAME,SIZE,MODEL,SERIAL
-    @echo
-    ls -l /dev/disk/by-id/
 
 # device はデフォルト値を持たせていないので `just partition` だけでは何も
 # 起きない。必ず /dev/disk/by-id/... の安定パスを指定すること
@@ -112,7 +136,7 @@ disks:
 # 実デバイスパスへ直接書き換える。成功したらそのまま残す (`just install` と、以後の
 # rebuild の両方がこれを必要とするため)。失敗した時だけプレースホルダーに戻す。
 # !!! 危険 !!! 指定ディスクを全消去する
-partition host device:
+partition host device: _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
     if [ ! -e "{{device}}" ]; then
@@ -128,9 +152,6 @@ partition host device:
     read -rp "続行するには 'yes' と入力: " reply
     [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
 
-    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
-    nix {{nix_flakes}} flake archive
-
     diskoFile="hosts/{{host}}/parts/disko.nix"
     cp "$diskoFile" "$diskoFile.bak"
     trap 'mv -f "$diskoFile.bak" "$diskoFile"; echo "失敗したため $diskoFile をプレースホルダーに戻した" >&2' ERR
@@ -144,23 +165,23 @@ partition host device:
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
     echo "次に \`just install {{host}}\` を実行すること。"
 
-# disko.nix には既に実デバイスパスが入っている前提 (プレースホルダーのままなら
-# 先に partition が要る)。/mnt が既にマウント済みかどうかは自動判定しない
-# (「マウントされてるか」は分かっても「それが今の disko.nix の宣言と一致してるか」
-# は分からないため。disko の --mode mount 自体、既存パーティションをそのまま使う
-# だけで宣言との整合性は検証しない)。別セッション・再起動後で disko.nix を前回の
-# partition から変えていないなら先に `just mount <host>` を、パーティションサイズ
-# 等を変えたなら `just partition` からやり直すこと。この判断は人間がすること。
+# 実行する前に、disko.nix が最後に partition した時から変わっていないことを
+# 自分で確認すること (このコマンド自体はそこを検証しない)。/mnt が既にマウント
+# 済みかどうかは自動判定しない (「マウントされてるか」は分かっても「それが今の
+# disko.nix の宣言と一致してるか」は分からないため。disko の --mode mount 自体、
+# 既存パーティションをそのまま使うだけで宣言との整合性は検証しない)。別セッション・
+# 再起動後で disko.nix を前回の partition から変えていないならこのレシピを、
+# パーティションサイズ等を変えたなら `just partition` からやり直すこと。この判断は
+# 人間がすること。
+# 既存のパーティション・データセットを壊さず /mnt へ繋ぎ直すだけ
+mount host: (_check-disko-ready host) _prefetch
+    sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
+      --mode mount --flake ".#{{host}}"
+
 # 標準の nixos-install でビルド・インストールを実行する
-install host:
+install host: (_check-disko-ready host) _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
-    diskoFile="hosts/{{host}}/parts/disko.nix"
-    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
-      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
-      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
-      exit 1
-    fi
     # modules/sops.nix の ageKeyFile = "/var/lib/sops-nix/age-${hostname}" 規約。
     # ここが無いまま進めると setupSecrets が黙って失敗し (--graceful で installation
     # finished! まで表示される)、起動後に気づく羽目になる。
@@ -170,29 +191,7 @@ install host:
       echo "age-keygen で {{host}} 用の鍵を作り、そこへ置いてから再実行すること。" >&2
       exit 1
     fi
-    # sudo すると SSH_AUTH_SOCK/$HOME がリセットされ、root は git+ssh な
-    # inputs (ml-secrets) を fetch できず認証エラーになる。sudo する前に
-    # 自分の権限で inputs だけ fetch しておく (ビルドはせず入力の取得だけ)。
-    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
-    nix {{nix_flakes}} flake archive
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
-
-# 実行する前に、disko.nix が最後に partition した時から変わっていないことを
-# 自分で確認すること (このコマンド自体はそこを検証しない)。プレースホルダーの
-# ままなら先に partition が要る。既存のパーティション・データセットを壊さず
-# /mnt へ繋ぎ直すだけ
-mount host:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    diskoFile="hosts/{{host}}/parts/disko.nix"
-    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
-      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
-      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
-      exit 1
-    fi
-    nix {{nix_flakes}} flake archive
-    sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
-      --mode mount --flake ".#{{host}}"
 
 # 事前に partition (または mount) 済みで /mnt がマウントされていること。disko.nix に
 # 実デバイスパスが書き込まれた状態のままコピーされるが、それは意図通り (起動後の
@@ -200,15 +199,9 @@ mount host:
 # あるので、UID/GID は数値 (1000:100) で直接指定する。
 # Live ISO 上で clone した .ml-nix と ~/.ssh を丸ごと /mnt/home/eeshta へコピーし、
 # 再起動後に再 clone / 鍵の再生成をしなくて済むようにする
-carry-over host:
+carry-over host: (_check-disko-ready host)
     #!/usr/bin/env bash
     set -euo pipefail
-    diskoFile="hosts/{{host}}/parts/disko.nix"
-    if grep -q REPLACE_AT_INSTALL_TIME "$diskoFile"; then
-      echo "エラー: $diskoFile がまだプレースホルダーのまま。" >&2
-      echo "先に \`just partition {{host}} <device>\` を実行すること。" >&2
-      exit 1
-    fi
     if ! mountpoint -q /mnt; then
       echo "エラー: /mnt がマウントされていない。先に partition か mount を実行すること。" >&2
       exit 1
