@@ -170,6 +170,11 @@ install host:
       echo "age-keygen で {{host}} 用の鍵を作り、そこへ置いてから再実行すること。" >&2
       exit 1
     fi
+    # sudo すると SSH_AUTH_SOCK/$HOME がリセットされ、root は git+ssh な
+    # inputs (ml-secrets) を fetch できず認証エラーになる。sudo する前に
+    # 自分の権限で inputs だけ fetch しておく (ビルドはせず入力の取得だけ)。
+    echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
+    nix {{nix_flakes}} flake archive
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
 
 # 実行する前に、disko.nix が最後に partition した時から変わっていないことを
