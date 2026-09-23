@@ -130,9 +130,10 @@ disks:
 # そのまま残す (`just install` と、以後の rebuild の両方がこれを必要とするため)。
 # 'yes' 以外・失敗のどちらでもプレースホルダーに戻す。
 #
-# disko が生成する実際のシェルスクリプトは数百行あり (内部関数・UUID処理等を含む)、
-# tty で確認プロンプトの前に流すと肝心の情報が流れてしまう。そのため disko.nix
-# 自身の宣言 (パーティション/データセット構成) から要約を組み立てて見せる。
+# レイアウトの整形表示は scripts/disko-layout.nu に切り出してある (読み取り専用・
+# 非対話。disko.nix の書き換えや確認プロンプト、実行はここ bash 側に残した:
+# nu の `input` はターミナル経由専用でパイプされた標準入力を読めないため、
+# 対話が要る箇所を持ち込まなかった)。
 # !!! 危険 !!! 指定ディスクを全消去する
 partition host device: _prefetch
     #!/usr/bin/env bash
@@ -152,31 +153,7 @@ partition host device: _prefetch
     sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|{{device}}|" "$diskoFile"
 
     echo "--- {{host}} の disko レイアウト ({{device}}) ---"
-    nix {{nix_flakes}} eval --raw ".#nixosConfigurations.{{host}}.config.disko.devices" --apply '
-      d:
-      let
-        partSummary = p:
-          if (p.content.type or "") == "filesystem" then "-> ${p.content.mountpoint}"
-          else if (p.content.type or "") == "swap" then "-> swap"
-          else if (p.content.type or "") == "zfs" then "-> zfs pool ${p.content.pool}"
-          else "-> ${p.content.type or "?"}";
-        diskLines = k:
-          let disk = d.disk.${k}; in
-          [ "disk ${k}: ${disk.device}" ] ++
-          map (pk: "  ${pk}\t${disk.content.partitions.${pk}.size}\t${partSummary disk.content.partitions.${pk}}")
-            (builtins.attrNames disk.content.partitions);
-        dsMount = ds: if (ds.mountpoint or null) == null then "(none)" else ds.mountpoint;
-        isInternal = n: builtins.substring 0 2 n == "__";
-        zpoolLines = k:
-          [ "zpool ${k}" ] ++
-          map (dk: "  ${dk}\t-> ${dsMount d.zpool.${k}.datasets.${dk}}")
-            (builtins.filter (dk: !(isInternal dk)) (builtins.attrNames d.zpool.${k}.datasets));
-      in
-      builtins.concatStringsSep "\n" (
-        builtins.concatMap diskLines (builtins.attrNames d.disk or { })
-        ++ builtins.concatMap zpoolLines (builtins.attrNames d.zpool or { })
-      )
-    ' | column -t -s $'\t'
+    nix {{nix_flakes}} run nixpkgs#nushell -- scripts/disko-layout.nu {{host}}
     echo
     echo "!!! {{device}} 上の全データを破棄して {{host}} 用にパーティショニングします !!!"
     readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
