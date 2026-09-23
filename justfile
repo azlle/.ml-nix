@@ -75,7 +75,7 @@ eval host attr:
     nix eval ".#nixosConfigurations.{{host}}.config.{{attr}}"
 
 # 指定ホストがマウントするファイルシステム一覧
-mounts host:
+list-mounts host:
     nix eval --json ".#nixosConfigurations.{{host}}.config.fileSystems" \
       --apply 'fs: builtins.attrNames fs'
 
