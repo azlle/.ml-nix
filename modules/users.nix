@@ -4,6 +4,14 @@ delib.module {
   name = "users";
 
   nixos.always = {
+    # デフォルト (true) だとユーザー新規作成時にしか hashedPasswordFile が
+    # 適用されず、以後の rebuild では変更を無視する。plainasia で secrets の
+    # 復号自体は直っているのに /etc/shadow が古い (ロックされた) ままという
+    # 事象が起きたのはこれが原因。毎 rebuild で宣言値に強制同期させる。
+    # 代わりに `passwd` 等での対話的な変更はできなくなる (次の rebuild で
+    # 巻き戻る)。
+    users.mutableUsers = false;
+
     imports = [
       (
         { config, pkgs, ... }:
