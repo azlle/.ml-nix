@@ -24,6 +24,13 @@
     loader = {
       systemd-boot.enable = true;
       efi.canTouchEfiVariables = true;
+
+      # 上限が無いと世代ごとの kernel+initrd が無限に ESP に溜まる。実測で
+      # bzImage 11M + initrd 44M = 1世代あたり55M (カーネル更新を伴う最悪ケース
+      # 想定)。20世代だと switch 中のピークで 21 * 55M ≈ 1155M となり、2G の
+      # ESP なら十分収まる (1G だと超過する)。nh の --keep よりだいぶ多めの
+      # バッファを持たせてある。
+      systemd-boot.configurationLimit = 20;
     };
 
     tmp.useTmpfs = true;
