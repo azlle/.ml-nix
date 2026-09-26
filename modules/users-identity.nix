@@ -1,7 +1,7 @@
-# modules/user.nix
+# modules/users-identity.nix
 { delib, ... }:
 delib.module {
-  name = "user";
+  name = "users-identity";
 
   nixos.always = {
     imports = [
