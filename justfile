@@ -141,9 +141,11 @@ partition host device: _prefetch
     echo "次に \`just install {{host}}\` を実行すること。"
 
 # age鍵が無いと setupSecrets が黙って失敗する (installation finished! と出るのに気づけない)
-# eeshta はまだ存在しないので UID/GID は数値 (1000:100) で指定する
+# ユーザー名はホストごとに違いうるので nix eval で実際の normal user を引く
+# (ハードコードしない)。まだ存在しないアカウントなので UID/GID は数値
+# (1000:100、NixOSの最初の一般ユーザーの既定値) で指定する。
 # nixos-install でビルド・インストールし、Live ISO 上の .ml-nix と ~/.ssh を
-# /mnt/home/eeshta へコピーする (再起動後の再 clone / 鍵再生成を省く)
+# 新ユーザーのホームへコピーする (再起動後の再 clone / 鍵再生成を省く)
 install host: (_check-disko-ready host) _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
@@ -155,25 +157,29 @@ install host: (_check-disko-ready host) _prefetch
     fi
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
 
-    sudo mkdir -p /mnt/home/eeshta
+    username=$(nix {{nix_flakes}} eval --raw ".#nixosConfigurations.{{host}}.config.users.users" \
+      --apply 'u: builtins.head (builtins.filter (n: u.${n}.isNormalUser or false) (builtins.attrNames u))')
+    homeDir="/mnt/home/$username"
 
-    echo "--- $(pwd) を /mnt/home/eeshta/.ml-nix へコピー ---"
-    sudo cp -r "$(pwd)" /mnt/home/eeshta/.ml-nix
+    sudo mkdir -p "$homeDir"
+
+    echo "--- $(pwd) を $homeDir/.ml-nix へコピー ---"
+    sudo cp -r "$(pwd)" "$homeDir/.ml-nix"
     # result-disko-* は Live ISO の /nix/store を指す symlink で再起動後に解決できないので除外
-    sudo find /mnt/home/eeshta/.ml-nix -maxdepth 1 -name 'result*' -type l -delete
+    sudo find "$homeDir/.ml-nix" -maxdepth 1 -name 'result*' -type l -delete
 
     if [ -d "$HOME/.ssh" ]; then
-      echo "--- $HOME/.ssh を /mnt/home/eeshta/.ssh へコピー ---"
-      sudo mkdir -p /mnt/home/eeshta/.ssh
-      sudo cp -r "$HOME/.ssh/." /mnt/home/eeshta/.ssh/
-      sudo chmod 700 /mnt/home/eeshta/.ssh
-      sudo find /mnt/home/eeshta/.ssh -maxdepth 1 -type f ! -name "*.pub" -exec chmod 600 {} +
+      echo "--- $HOME/.ssh を $homeDir/.ssh へコピー ---"
+      sudo mkdir -p "$homeDir/.ssh"
+      sudo cp -r "$HOME/.ssh/." "$homeDir/.ssh/"
+      sudo chmod 700 "$homeDir/.ssh"
+      sudo find "$homeDir/.ssh" -maxdepth 1 -type f ! -name "*.pub" -exec chmod 600 {} +
     else
       echo "警告: $HOME/.ssh が無いのでSSH鍵はコピーしなかった。" >&2
     fi
 
-    sudo chown -R 1000:100 /mnt/home/eeshta
-    echo "完了。/mnt/home/eeshta に .ml-nix と .ssh をコピーした。"
+    sudo chown -R 1000:100 "$homeDir"
+    echo "完了。$homeDir に .ml-nix と .ssh をコピーした。"
 
 # ==================== Maintenance ====================
 
