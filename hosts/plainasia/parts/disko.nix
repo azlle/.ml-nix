@@ -1,33 +1,21 @@
 # hosts/plainasia/parts/disko.nix
-#
-# root on ZFS のディスクレイアウト。
-#
-# `device` は検証用ミニPCと本番機で異なるため、ここの値はプレースホルダー。
-# インストール時に disko-install の `--disk main <device>` で上書きする:
-#
-#   sudo nix run 'github:nix-community/disko/latest#disko-install' -- \
-#     --flake <repo>#plainasia --disk main /dev/disk/by-id/<実際のID>
-#
-# データセットの3層構成は https://grahamc.com/blog/nixos-on-zfs/ に準拠:
-#   local/  = 再構築可能。スナップショット・バックアップ対象外
-#   system/ = OS状態
-#   user/   = ユーザーデータ
-# /nix をバックアップ対象の「従兄弟」の位置に置くことで、system/user を再帰
-# スナップショットしても /nix を巻き込まない。
+# Reference: https://grahamc.com/blog/nixos-on-zfs/
 { inputs, ... }:
+let
+  mainDevice = "/dev/disk/by-id/REPLACE_AT_INSTALL_TIME";
+in
 {
   imports = [ inputs.disko.nixosModules.disko ];
 
   disko.devices = {
     disk.main = {
       type = "disk";
-      device = "/dev/disk/by-id/REPLACE_AT_INSTALL_TIME";
+      device = mainDevice;
       content = {
         type = "gpt";
         partitions = {
           ESP = {
-            # 1G だと systemd-boot のインストール中に実機で容量不足になった
-            # (カーネル+initrd+複数のboot entryで想定より嵩んだ)。余裕を見て2Gに。
+            # Kept generous (see boot.nix's configurationLimit for the capacity math)
             size = "2G";
             type = "EF00";
             content = {
@@ -38,8 +26,7 @@
             };
           };
 
-          # ZFS は swapfile 非対応。zvol swap はメモリ逼迫時にデッドロックする
-          # 既知の問題があるため、プールの外に通常パーティションとして確保する。
+          # zvol swap is excluded from rpool: known deadlock risk under memory pressure
           swap = {
             size = "16G";
             content = {
@@ -66,20 +53,19 @@
       rootFsOptions = {
         compression = "zstd";
 
-        # journald のログを一般ユーザーが読むために必須。個別指定ではなく
-        # プール既定にして全データセットへ継承させる。
+        # Pool default so all datasets inherit it; needed for all users to read journald logs.
         acltype = "posixacl";
         xattr = "sa";
 
         relatime = "on";
         mountpoint = "none";
 
-        # 既定は取らない。残したいデータセットだけ opt-in する。
+        # Opt-in only: datasets that need snapshots enable it individually.
         "com.sun:auto-snapshot" = "false";
       };
 
       datasets = {
-        # --- local: 再構築可能。バックアップ不要 ---
+        # Reproducible from the Nix store; doesn't need snapshots.
         "local" = {
           type = "zfs_fs";
           options = {
@@ -95,8 +81,8 @@
             atime = "off";
           };
         };
-        # コンテナのイメージレイヤー置き場。永続データは tank 側に置くため
-        # ここはスナップショット不要。
+
+        # Container image layers. Persistent data lives on tank, so no snapshots needed here.
         "local/containers" = {
           type = "zfs_fs";
           mountpoint = "/var/lib/containers";
@@ -106,7 +92,7 @@
           };
         };
 
-        # --- system: OS状態 ---
+        # OS state.
         "system" = {
           type = "zfs_fs";
           options = {
@@ -131,7 +117,7 @@
           };
         };
 
-        # --- user: ユーザーデータ ---
+        # User data.
         "user" = {
           type = "zfs_fs";
           options = {
@@ -148,8 +134,7 @@
           };
         };
 
-        # ZFS は使用率80%超で性能が劣化し、満杯になると CoW の性質上
-        # 削除操作すら失敗しうる。その緩衝材として確保しておく。
+        # Reserved buffer: ZFS performance degrades as the pool fills up.
         "reserved" = {
           type = "zfs_fs";
           options = {
