@@ -1,5 +1,10 @@
 # modules/nix.nix
-{ delib, nixSettings, ... }:
+{
+  delib,
+  nixSettings,
+  username,
+  ...
+}:
 delib.module {
   name = "nix";
 
@@ -13,7 +18,7 @@ delib.module {
         ];
         trusted-users = [
           "root"
-          "eeshta"
+          username
         ];
       };
     };

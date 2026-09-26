@@ -5,7 +5,7 @@ delib.host {
   name = "plainasia";
 
   useHomeManagerModule = true;
-  homeManagerUser = "eeshta";
+  homeManagerUser = "keine";
   homeManagerSystem = "x86_64-linux";
   wsl = false;
   stateVersion = "25.05";
