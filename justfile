@@ -106,7 +106,9 @@ disks:
 # プレースホルダーを実デバイスパスへ直接書き換え、その状態で評価した構成を見せる
 # (実際にどのデバイス・レイアウトになるかをそのまま確認できる)。'yes' で進めたら
 # そのまま残す (`just install` と、以後の rebuild の両方がこれを必要とするため)。
-# 'yes' 以外・失敗のどちらでもプレースホルダーに戻す。
+# 'yes' 以外・失敗のどちらでも元の状態に戻す (プレースホルダーだった場合も、既に
+# 実デバイスパスが入っていて再パーティションした場合も同様)
+# 指定ディスクを全消去してパーティショニングする
 partition host device: _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
@@ -121,8 +123,10 @@ partition host device: _prefetch
 
     diskoFile="hosts/{{host}}/parts/disko.nix"
     cp "$diskoFile" "$diskoFile.bak"
-    trap 'mv -f "$diskoFile.bak" "$diskoFile" 2>/dev/null; echo "$diskoFile をプレースホルダーに戻した" >&2' EXIT
-    sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|$device|" "$diskoFile"
+    trap 'mv -f "$diskoFile.bak" "$diskoFile" 2>/dev/null; echo "$diskoFile を元の状態に戻した" >&2' EXIT
+    # mainDevice の行全体を置換する (プレースホルダーだけでなく、既に実デバイスパスが
+    # 入っている状態からの再パーティション時も同じように動くようにするため)。
+    sed -i "s|mainDevice = \"[^\"]*\";|mainDevice = \"$device\";|" "$diskoFile"
 
     echo "--- {{host}} の disko レイアウト ($device) ---"
     nix {{nix_flakes}} run nixpkgs#nushell -- scripts/disko-layout.nu {{host}}
