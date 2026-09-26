@@ -9,24 +9,15 @@
 # NixOS として構成されるホスト (sumizomenosakura は WSL / home-manager のみ)
 nixos_hosts := "necrofantasia plainasia"
 
-# disko系レシピはインストール済みシステムだけでなく Live ISO 上でも動く前提。
-# インストール済み側は modules/nix.nix で experimental-features が有効だが、
-# Live ISO のデフォルト nix.conf は保証がないので明示的に付ける。
+# Live環境ではnix-commandとflakes、そしてsubstitutersの設定がめんどくさいのでこのようにしておく
 nix_flakes := "--extra-experimental-features \"nix-command flakes\""
-
-# インストール済みシステムでは modules/nix.nix (nixSettings) がこれを常に設定するが、
-# Live ISO 上の素の nix はまだこの flake の設定下で動いていないので知らない。
-# 特に nix-cachyos-kernel (attic.xuyh0120.win/lantian) が無いと、cachyos の
-# LTO付きカーネルをソースから毎回ビルドする羽目になり、時間・容量・メモリを大量に
-# 消費する (LTO のリンク工程は特にメモリを食う)。partition/install ではこれを
-# 明示する。
 nix_substituters := "--option extra-substituters \"https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org\" --option extra-trusted-public-keys \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0=\""
 
 # 引数なしで叩いたらレシピ一覧を出す
 default:
     @just --list
 
-# ---------------------------------------------------------------- 検証
+# ==================== Verification ====================
 
 # 全ホストの eval を検証する
 check:
@@ -49,7 +40,7 @@ build host:
 dry host:
     nixos-rebuild dry-build --flake ".#{{host}}"
 
-# ---------------------------------------------------------------- 調査
+# ==================== Inspection ====================
 
 # 指定ホストで desktop/containers の cascade がどう解決されたかを表示する
 show-enabled host:
@@ -79,14 +70,9 @@ list-mounts host:
     nix eval --json ".#nixosConfigurations.{{host}}.config.fileSystems" \
       --apply 'fs: builtins.attrNames fs'
 
-# ---------------------------------------------------------------- disko
-#
-# 作業順: disks → partition (レイアウト確認込み) → (再起動/再接続のたびに) mount →
-# install → carry-over
+# ==================== disko ====================
 
-# disko.nix に実デバイスパスが入っているか (プレースホルダーのままでないか) を
-# 確認する。install/mount/carry-over が個別に同じチェックを重複させていたのを
-# ここへ集約した。
+# disko.nix が実デバイスパスになっているか確認する
 _check-disko-ready host:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -97,10 +83,8 @@ _check-disko-ready host:
       exit 1
     fi
 
-# sudo すると SSH_AUTH_SOCK/$HOME がリセットされ、root は git+ssh な inputs
-# (ml-secrets) を fetch できず認証エラーになる。sudo する前に自分の権限で
-# inputs だけ fetch しておく (ビルドはせず入力の取得だけ)。partition/install/mount
-# が個別にこれを実行していたのをここへ集約した。
+# sudoはSSH_AUTH_SOCKを継承せず、git+sshを使用するml-secretsのfetchが不可能となるために、これを用意する
+# これによりinputsだけ取得、ビルド時に再利用できる
 _prefetch:
     @echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
     nix {{nix_flakes}} flake archive
@@ -111,30 +95,13 @@ disks:
     @echo
     ls -l /dev/disk/by-id/
 
-# device はデフォルト値を持たせていないので `just partition` だけでは何も
-# 起きない。必ず /dev/disk/by-id/... の安定パスを指定すること
-# (/dev/sdX は起動ごとに変わる)。
-#
-# diskoプロジェクト自身の一括バイナリ (disko#disko-install) は使わない。あれは
-# パーティショニングより先にシステム全体をビルドするため、実ディスクがまだ無い段階で
-# Live ISO の tmpfs 上にフルのクロージャを構築しようとして、RAM が潤沢でも (32GB でも)
-# OOM Killer に落とされることがある
-# (https://discourse.nixos.org/t/disko-install-oom-killed/57688)。
-# 代わりにパーティショニング (このレシピ) とビルド (`just install`) を分離し、
-# ビルド開始前に実ディスク側の swap 等が使える状態にしてから進む。
-#
+# OOM Killerへの対策として、partitionとinstallは分割して実行する。
 # 素の `disko --flake` は --arg/--argstr でのデバイス上書きが効かない (flake モード
 # 未対応、実測で確認済み) ため、確認プロンプトの前に hosts/<host>/parts/disko.nix の
 # プレースホルダーを実デバイスパスへ直接書き換え、その状態で評価した構成を見せる
 # (実際にどのデバイス・レイアウトになるかをそのまま確認できる)。'yes' で進めたら
 # そのまま残す (`just install` と、以後の rebuild の両方がこれを必要とするため)。
 # 'yes' 以外・失敗のどちらでもプレースホルダーに戻す。
-#
-# レイアウトの整形表示は scripts/disko-layout.nu に切り出してある (読み取り専用・
-# 非対話。disko.nix の書き換えや確認プロンプト、実行はここ bash 側に残した:
-# nu の `input` はターミナル経由専用でパイプされた標準入力を読めないため、
-# 対話が要る箇所を持ち込まなかった)。
-# !!! 危険 !!! 指定ディスクを全消去する
 partition host device: _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
@@ -168,26 +135,13 @@ partition host device: _prefetch
     echo "パーティショニング成功。$diskoFile に実デバイスパスを残した。"
     echo "次に \`just install {{host}}\` を実行すること。"
 
-# 実行する前に、disko.nix が最後に partition した時から変わっていないことを
-# 自分で確認すること (このコマンド自体はそこを検証しない)。/mnt が既にマウント
-# 済みかどうかは自動判定しない (「マウントされてるか」は分かっても「それが今の
-# disko.nix の宣言と一致してるか」は分からないため。disko の --mode mount 自体、
-# 既存パーティションをそのまま使うだけで宣言との整合性は検証しない)。別セッション・
-# 再起動後で disko.nix を前回の partition から変えていないならこのレシピを、
-# パーティションサイズ等を変えたなら `just partition` からやり直すこと。この判断は
-# 人間がすること。
-# 既存のパーティション・データセットを壊さず /mnt へ繋ぎ直すだけ
-mount host: (_check-disko-ready host) _prefetch
-    sudo nix {{nix_flakes}} {{nix_substituters}} run github:nix-community/disko/latest -- \
-      --mode mount --flake ".#{{host}}"
-
-# 標準の nixos-install でビルド・インストールを実行する
+# age鍵が無いと setupSecrets が黙って失敗する (installation finished! と出るのに気づけない)
+# eeshta はまだ存在しないので UID/GID は数値 (1000:100) で指定する
+# nixos-install でビルド・インストールし、Live ISO 上の .ml-nix と ~/.ssh を
+# /mnt/home/eeshta へコピーする (再起動後の再 clone / 鍵再生成を省く)
 install host: (_check-disko-ready host) _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
-    # modules/sops.nix の ageKeyFile = "/var/lib/sops-nix/age-${hostname}" 規約。
-    # ここが無いまま進めると setupSecrets が黙って失敗し (--graceful で installation
-    # finished! まで表示される)、起動後に気づく羽目になる。
     ageKeyFile="/mnt/var/lib/sops-nix/age-{{host}}"
     if [ ! -s "$ageKeyFile" ]; then
       echo "エラー: $ageKeyFile が無い (またはサイズ0)。secrets が復号できないまま進む。" >&2
@@ -196,26 +150,11 @@ install host: (_check-disko-ready host) _prefetch
     fi
     sudo nixos-install --flake ".#{{host}}" {{nix_substituters}}
 
-# 事前に partition (または mount) 済みで /mnt がマウントされていること。disko.nix に
-# 実デバイスパスが書き込まれた状態のままコピーされるが、それは意図通り (起動後の
-# rebuild にそのまま使う)。eeshta はこの時点でターゲット側にまだ存在しないことが
-# あるので、UID/GID は数値 (1000:100) で直接指定する。
-# Live ISO 上で clone した .ml-nix と ~/.ssh を丸ごと /mnt/home/eeshta へコピーし、
-# 再起動後に再 clone / 鍵の再生成をしなくて済むようにする
-carry-over host: (_check-disko-ready host)
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! mountpoint -q /mnt; then
-      echo "エラー: /mnt がマウントされていない。先に partition か mount を実行すること。" >&2
-      exit 1
-    fi
-
     sudo mkdir -p /mnt/home/eeshta
 
     echo "--- $(pwd) を /mnt/home/eeshta/.ml-nix へコピー ---"
     sudo cp -r "$(pwd)" /mnt/home/eeshta/.ml-nix
-    # disko-script が残す result-disko-* は Live ISO 自身の /nix/store を指す
-    # symlink で、再起動後は解決できない dangling link になるだけなので持ち込まない。
+    # result-disko-* は Live ISO の /nix/store を指す symlink で再起動後に解決できないので除外
     sudo find /mnt/home/eeshta/.ml-nix -maxdepth 1 -name 'result*' -type l -delete
 
     if [ -d "$HOME/.ssh" ]; then
@@ -231,19 +170,16 @@ carry-over host: (_check-disko-ready host)
     sudo chown -R 1000:100 /mnt/home/eeshta
     echo "完了。/mnt/home/eeshta に .ml-nix と .ssh をコピーした。"
 
-# ---------------------------------------------------------------- 保守
+# ==================== Maintenance ====================
 
-# --no-cache が要る: statix/deadnix が構文木を書き換えると nixfmt が再整形すべき
-# 状態になるが、キャッシュが効いていると2回目が丸ごとスキップされ、`just fmt` は
-# 「0 changed」と言うのに `just check` の formatting が落ちる、という食い違いが出る。
-# treefmt (nixfmt + statix + deadnix) をかける
 fmt:
     nix fmt -- --no-cache
 
-# flake input を全部更新する
-update:
-    nix flake update
-
-# 特定の input だけ更新する (例: just update-input nixpkgs)
-update-input input:
-    nix flake update {{input}}
+update input="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "{{input}}" ]; then
+      nix flake update
+    else
+      nix flake update "{{input}}"
+    fi
