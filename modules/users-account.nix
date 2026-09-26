@@ -7,12 +7,17 @@ delib.module {
     users.mutableUsers = false;
     imports = [
       (
-        { config, pkgs, ... }:
         {
-          users.users.eeshta = {
+          config,
+          pkgs,
+          username,
+          ...
+        }:
+        {
+          users.users.${username} = {
             isNormalUser = true;
-            hashedPasswordFile = config.sops.secrets."users/password/eeshta".path;
-            description = "eeshta";
+            hashedPasswordFile = config.sops.secrets."users/password/${username}".path;
+            description = username;
             shell = pkgs.zsh;
             ignoreShellProgramCheck = true;
             openssh.authorizedKeys.keys = [

@@ -34,7 +34,7 @@ delib.module {
             secrets = {
               "smb/yamaxanadu" = { };
 
-              "users/password/eeshta" = {
+              "users/password/${username}" = {
                 neededForUsers = true;
               };
 
