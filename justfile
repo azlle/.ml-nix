@@ -95,6 +95,11 @@ disks:
     @echo
     ls -l /dev/disk/by-id/
 
+# device は /dev/disk/by-id/ 配下の名前だけ渡せばいい (`just disks` で確認できる
+# 短い名前の方)。プレフィックスは固定してあるので毎回フルパスを打つ必要はない
+# (フルパスを渡しても動く)。/dev/sdX のような不安定パスは前提にしていない
+# (起動ごとに指す先が変わりうるため)。
+#
 # OOM Killerへの対策として、partitionとinstallは分割して実行する。
 # 素の `disko --flake` は --arg/--argstr でのデバイス上書きが効かない (flake モード
 # 未対応、実測で確認済み) ため、確認プロンプトの前に hosts/<host>/parts/disko.nix の
@@ -105,25 +110,25 @@ disks:
 partition host device: _prefetch
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ ! -e "{{device}}" ]; then
-      echo "エラー: {{device}} が存在しない。\`just disks\` で確認すること。" >&2
+    case "{{device}}" in
+      /dev/disk/by-id/*) device="{{device}}" ;;
+      *) device="/dev/disk/by-id/{{device}}" ;;
+    esac
+    if [ ! -e "$device" ]; then
+      echo "エラー: $device が存在しない。\`just disks\` で確認すること。" >&2
       exit 1
     fi
-    case "{{device}}" in
-      /dev/disk/by-id/*) ;;
-      *) echo "警告: {{device}} は by-id パスではない。起動ごとに指す先が変わりうる。" >&2 ;;
-    esac
 
     diskoFile="hosts/{{host}}/parts/disko.nix"
     cp "$diskoFile" "$diskoFile.bak"
     trap 'mv -f "$diskoFile.bak" "$diskoFile" 2>/dev/null; echo "$diskoFile をプレースホルダーに戻した" >&2' EXIT
-    sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|{{device}}|" "$diskoFile"
+    sed -i "s|/dev/disk/by-id/REPLACE_AT_INSTALL_TIME|$device|" "$diskoFile"
 
-    echo "--- {{host}} の disko レイアウト ({{device}}) ---"
+    echo "--- {{host}} の disko レイアウト ($device) ---"
     nix {{nix_flakes}} run nixpkgs#nushell -- scripts/disko-layout.nu {{host}}
     echo
-    echo "!!! {{device}} 上の全データを破棄して {{host}} 用にパーティショニングします !!!"
-    readlink -f "{{device}}" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
+    echo "!!! $device 上の全データを破棄して {{host}} 用にパーティショニングします !!!"
+    readlink -f "$device" | xargs -r lsblk -o NAME,SIZE,MODEL,SERIAL
     read -rp "続行するには 'yes' と入力: " reply
     [ "$reply" = "yes" ] || { echo "中止した。"; exit 1; }
 
