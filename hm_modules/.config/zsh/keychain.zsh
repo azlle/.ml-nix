@@ -1,4 +1,5 @@
 ssh_keys=(
+    asia2git
     deb2nix
     nix2git
     deb2git
