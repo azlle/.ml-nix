@@ -18,6 +18,13 @@
       # (通常の手順で普通に起きる) だと -f 無しでは import を拒否され、
       # "Failed to start Import ZFS pool" で emergency mode に落ちる。
       forceImportRoot = true;
+
+      # 旧 TrueNAS の data_pool を tank としてリネームimport済み (IronWolf
+      # 8TB ミラー)。forceImportAll は forceImportRoot が有効な時しか使えない
+      # 制約があるが、上で true にしてあるので問題ない。rpool と同じ理由
+      # (無人リブート優先) で tank も強制import対象にする。
+      extraPools = [ "tank" ];
+      forceImportAll = true;
     };
 
     # ネイティブ暗号化なしを選んだため、Secure Boot (lanzaboote) の enroll 手順に
