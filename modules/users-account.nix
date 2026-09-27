@@ -16,6 +16,10 @@ delib.module {
         {
           users.users.${username} = {
             isNormalUser = true;
+            # 自動採番だと、ユーザー名変更のような移行の途中で古いアカウントが
+            # 残っている場合に1000以外(1001等)へずれることがある。justfileの
+            # install/carry-over が1000:100を決め打ちしているため、ここで固定する。
+            uid = 1000;
             hashedPasswordFile = config.sops.secrets."users/password/${username}".path;
             description = username;
             shell = pkgs.zsh;
