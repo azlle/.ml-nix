@@ -11,8 +11,7 @@ delib.host {
   stateVersion = "25.05";
   type = "server";
 
-  # ForgejoとTrueNASを移行する目処が立ったのならtrueに
-  myconfig.containers.enable = false;
+  myconfig.containers.enable = true;
 
   nixos.imports = [
     ./parts/hardware-configuration.nix
