@@ -2,7 +2,6 @@
 {
   delib,
   config,
-  inputs,
   pkgs,
   ...
 }:
@@ -88,13 +87,13 @@ delib.module {
     in
     {
       # containers.enable が false な間はこのモジュール自体が評価されないので、
-      # .ml-secrets 側にまだ実体が無くてもビルドは壊れない。それぞれ生の
-      # パスワード文字列 1つだけを内容に持つファイルとして用意すること。
+      # secret.yaml 側にまだキーが無くてもビルドは壊れない。sopsFile は
+      # modules/sops.nix の defaultSopsFile (secret.yaml) をそのまま使う。
       sops.secrets = {
-        "nextcloud/postgres-password".sopsFile = "${inputs.ml-secrets}/nextcloud-postgres-password.enc";
-        "nextcloud/oc-admin-password".sopsFile = "${inputs.ml-secrets}/nextcloud-oc-admin-password.enc";
-        "nextcloud/admin-password".sopsFile = "${inputs.ml-secrets}/nextcloud-admin-password.enc";
-        "nextcloud/redis-password".sopsFile = "${inputs.ml-secrets}/nextcloud-redis-password.enc";
+        "nextcloud/postgres-password" = { };
+        "nextcloud/oc-admin-password" = { };
+        "nextcloud/admin-password" = { };
+        "nextcloud/redis-password" = { };
       };
 
       virtualisation = {
