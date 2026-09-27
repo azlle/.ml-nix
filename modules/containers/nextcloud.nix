@@ -110,7 +110,7 @@ delib.module {
             # ブートストラップ用スーパーユーザー。Nextcloud 本体はこれでは
             # 繋がず、下の initOcAdminRole が作る oc_admin ロールを使う。
             nextcloud-postgres = {
-              image = "postgres:18.6";
+              image = "docker.io/library/postgres:18.6";
               environment = {
                 POSTGRES_DB = "nextcloud";
                 POSTGRES_USER = "nextcloud";
@@ -134,7 +134,7 @@ delib.module {
             # いなかった (storage 設定に redis 用の host_path が無い)。同様に
             # ここも永続ボリュームなしにする。
             nextcloud-redis = {
-              image = "valkey/valkey:9.1.2";
+              image = "docker.io/valkey/valkey:9.1.2";
               entrypoint = "sh";
               cmd = [
                 "-c"
@@ -153,7 +153,7 @@ delib.module {
             };
 
             nextcloud = {
-              image = "nextcloud:34-apache";
+              image = "docker.io/library/nextcloud:34-apache";
               dependsOn = [
                 "nextcloud-postgres"
                 "nextcloud-redis"
@@ -226,12 +226,12 @@ delib.module {
       # RequiresMountsFor で実際にマウントされているまで起動をブロックする。
       systemd.services.podman-nextcloud-postgres = {
         after = [ "podman-network-nextcloud.service" ];
-        serviceConfig.RequiresMountsFor = [ "${dataDir}/postgres" ];
+        unitConfig.RequiresMountsFor = [ "${dataDir}/postgres" ];
       };
 
       systemd.services.podman-nextcloud = {
         after = [ "podman-network-nextcloud.service" ];
-        serviceConfig.RequiresMountsFor = [
+        unitConfig.RequiresMountsFor = [
           "${dataDir}/appdata"
           "${dataDir}/userdata"
         ];
