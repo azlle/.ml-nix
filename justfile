@@ -11,7 +11,9 @@ nixos_hosts := "necrofantasia plainasia"
 
 # Live環境ではnix-commandとflakes、そしてsubstitutersの設定がめんどくさいのでこのようにしておく
 nix_flakes := "--extra-experimental-features \"nix-command flakes\""
-nix_substituters := "--option extra-substituters \"https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org\" --option extra-trusted-public-keys \"nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0=\""
+substituters_urls := "https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org"
+substituters_keys := "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
+nix_substituters := "--option extra-substituters \"" + substituters_urls + "\" --option extra-trusted-public-keys \"" + substituters_keys + "\""
 
 # 引数なしで叩いたらレシピ一覧を出す
 default:
@@ -83,9 +85,33 @@ _check-disko-ready host:
       exit 1
     fi
 
+# Live ISO は ~/.local/share/nix/trusted-settings.json が空なので、
+# extra-substituters/extra-trusted-public-keys を使う nix 呼び出しのたびに
+# 対話確認 (y/N) が入る。sudo 経由の呼び出しは root 自身の同ファイルを見るため、
+# 実行ユーザーと root の両方に先回りで書き込んで対話をスキップする。
+_trust-substituters:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    script=$(mktemp)
+    cat > "$script" <<'EOF'
+    #!/usr/bin/env bash
+    set -euo pipefail
+    home="$1"; urls="$2"; keys="$3"
+    mkdir -p "$home/.local/share/nix"
+    f="$home/.local/share/nix/trusted-settings.json"
+    [ -s "$f" ] || echo '{}' > "$f"
+    nix run nixpkgs#jq -- --arg s "$urls" --arg k "$keys" \
+      '.["extra-substituters"][$s] = true | .["extra-trusted-public-keys"][$k] = true' \
+      "$f" > "$f.tmp"
+    mv "$f.tmp" "$f"
+    EOF
+    bash "$script" "$HOME" "{{substituters_urls}}" "{{substituters_keys}}"
+    sudo bash "$script" /root "{{substituters_urls}}" "{{substituters_keys}}"
+    rm -f "$script"
+
 # sudoはSSH_AUTH_SOCKを継承せず、git+sshを使用するml-secretsのfetchが不可能となるために、これを用意する
 # これによりinputsだけ取得、ビルド時に再利用できる
-_prefetch:
+_prefetch: _trust-substituters
     @echo "--- 事前フェッチ (自分の権限で、ビルドはしない) ---"
     nix {{nix_flakes}} flake archive
 
