@@ -16,10 +16,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    ml-twist = {
-      url = "git+https://github.com/Azlle/.ml-twist";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # nixpkgs を follows させない: ml-twist 側で emacs-overlay 自身の nixpkgs に
+    # follows させてあり (cachix のキャッシュヒットに必要)、ここで上書きすると
+    # 無関係な組み合わせになってキャッシュミスする。
+    ml-twist.url = "git+https://github.com/Azlle/.ml-twist";
 
     catppuccin.url = "github:catppuccin/nix";
 

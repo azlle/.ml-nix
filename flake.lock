@@ -599,6 +599,8 @@
         "flake-parts": "flake-parts",
         "melpa": "melpa",
         "nixpkgs": [
+          "ml-twist",
+          "emacs-overlay",
           "nixpkgs"
         ],
         "nongnu": "nongnu",
