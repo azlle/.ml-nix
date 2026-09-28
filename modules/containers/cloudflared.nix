@@ -12,9 +12,11 @@ delib.module {
         credentialsFile = config.sops.secrets."cloudflared/melocy-edge".path;
         default = "http_status:404";
         ingress = {
-          "drive.melocy.cc" = "http://192.168.11.96:22300";
-          "git.melocy.cc" = "http://localhost:3080";
-          "git-ssh.melocy.cc" = "ssh://localhost:2222";
+          # cloudflared 自体は plainasia (Nextcloud と同居) で動く。
+          # git系は necrofantasia 上の Forgejo に LAN 越しで繋ぐ。
+          "drive.melocy.cc" = "http://localhost:22300";
+          "git.melocy.cc" = "http://192.168.11.78:3080";
+          "git-ssh.melocy.cc" = "ssh://192.168.11.78:2222";
         };
       };
     };

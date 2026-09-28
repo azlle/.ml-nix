@@ -18,6 +18,14 @@ with lib;
     };
 
     networking = mkMerge [
+      # cloudflared は plainasia 側で動くようになったため、Forgejo (http/ssh) を
+      # LAN 越しに叩けるようにする。全開放はせず plainasia の固定IPだけ許可。
+      {
+        firewall.extraInputRules = ''
+          ip saddr 192.168.11.92 tcp dport { 3080, 2222 } accept
+        '';
+      }
+
       # 通常モード（無線接続）
       (mkIf (!config.haukanRuri.enable) {
         wireless = {
