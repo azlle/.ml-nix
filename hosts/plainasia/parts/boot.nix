@@ -47,9 +47,9 @@
   services.zfs = {
     autoScrub = {
       enable = true;
-      # 旧TrueNASの実設定 (storage_scrub) を踏襲: 毎月14日 02:30。
-      # (NixOSのデフォルトは "monthly" = 毎月1日 00:00)
-      interval = "*-*-14 02:30:00";
+      # 旧TrueNASの実設定 (storage_scrub) を踏襲しつつ、LONG SMARTテストと
+      # 同じ2時台に揃える (14日と28日は絶対に重ならないので衝突しない)。
+      interval = "*-*-14 02:00:00";
     };
     trim.enable = true; # NVMe
   };
@@ -59,10 +59,12 @@
   # 汎用Cron Jobsとして毎週日曜 02:00 に SHORT、毎月28日 02:30 に LONG の
   # S.M.A.R.T. セルフテストを全ディスクに対して実行していた
   # (`midclt call disk.smart_test SHORT/LONG '["*"]'`)。
-  # smartdの -s スケジュール構文は分単位を持たないため、時刻は時間単位に丸まる。
+  # smartdの -s スケジュール構文は分単位を持たないため、元の30分ずらしが
+  # 潰れて両方2時になり、28日が日曜と重なる月に衝突しうる。SHORTを1時に
+  # ずらして完全に分離する (LONG/Scrubは14日・28日で日自体が重ならない)。
   services.smartd = {
     enable = true;
-    defaults.monitored = "-a -o on -S on -s (S/../../7/02|L/../28/./02)";
+    defaults.monitored = "-a -o on -S on -s (S/../../7/01|L/../28/./02)";
   };
 
   # 旧TrueNASの実設定 (storage_task) を踏襲: data_pool/main と
