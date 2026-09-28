@@ -119,7 +119,12 @@ delib.module {
                 POSTGRES_PASSWORD_FILE = "/run/secrets/postgres-password";
               };
               volumes = [
-                "${dataDir}/postgres:/var/lib/postgresql/data"
+                # postgres 18+ の公式イメージは /var/lib/postgresql/data ではなく
+                # /var/lib/postgresql 単体へのマウントを前提に変わった (内部で
+                # 18/docker のようなメジャーバージョン別サブディレクトリを自分で
+                # 管理する)。実データも旧TrueNAS側で既にこの新レイアウト
+                # (postgres/18/docker) になっている。
+                "${dataDir}/postgres:/var/lib/postgresql"
                 "${secretPath "postgres-password"}:/run/secrets/postgres-password:ro"
                 "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
                 "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sh:ro"
