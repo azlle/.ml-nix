@@ -15,7 +15,9 @@ delib.module {
       # tank (旧 TrueNAS では data_pool という名前だったプール) 側の実データ
       # 置き場。TrueNAS 側の既存レイアウト (/mnt/data_pool/nextcloud) と
       # 同じ相対構造に揃えてある (zpool import 時に tank へ改名する想定)。
-      dataDir = "/mnt/tank/nextcloud";
+      # TrueNAS の慣習 (/mnt/<pool>/...) を引きずらないこと。plainasia では
+      # tank データセットの mountpoint プロパティがそのまま /tank/... になっている。
+      dataDir = "/tank/nextcloud";
       # cloudflared.nix の drive.melocy.cc ingress が指してるポートに合わせてある。
       httpPort = 22300;
       trustedDomains = "127.0.0.1 localhost nextcloud drive.melocy.cc";
