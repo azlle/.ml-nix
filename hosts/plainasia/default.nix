@@ -12,6 +12,8 @@ delib.host {
   type = "server";
 
   myconfig.containers.enable = true;
+  # Forgejo は necrofantasia 側の担当。cloudflared/nextcloud だけこちらで動かす。
+  myconfig.containers.forgejo.enable = false;
 
   nixos.imports = [
     ./parts/hardware-configuration.nix

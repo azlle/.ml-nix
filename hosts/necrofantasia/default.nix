@@ -10,6 +10,10 @@ delib.host {
   stateVersion = "24.11";
   type = "laptop";
 
+  # cloudflared/nextcloud は plainasia 側の担当。Forgejo だけこちらで動かす。
+  myconfig.containers.cloudflared.enable = false;
+  myconfig.containers.nextcloud.enable = false;
+
   nixos.imports = [
     ./parts/hardware-configuration.nix
     inputs.nixos-hardware.nixosModules.asus-zephyrus-ga503
