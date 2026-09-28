@@ -86,7 +86,11 @@
         yearly = 0;
         autosnap = true;
         autoprune = true;
-        daily_hour = 0;
+        # sanoidのNixOSモジュールは systemd.services.sanoid.environment.TZ を
+        # "UTC" に固定している (DST切り替え時の欠落/重複を防ぐための上流の
+        # 意図的な設計)。そのため daily_hour/daily_min はUTC基準で解釈される。
+        # JST 00:00 (旧TrueNASの実行時刻) = UTC 15:00 (前日)。
+        daily_hour = 15;
         daily_min = 0;
       };
       "tank/nextcloud" = {
@@ -98,7 +102,11 @@
         yearly = 0;
         autosnap = true;
         autoprune = true;
-        daily_hour = 0;
+        # sanoidのNixOSモジュールは systemd.services.sanoid.environment.TZ を
+        # "UTC" に固定している (DST切り替え時の欠落/重複を防ぐための上流の
+        # 意図的な設計)。そのため daily_hour/daily_min はUTC基準で解釈される。
+        # JST 00:00 (旧TrueNASの実行時刻) = UTC 15:00 (前日)。
+        daily_hour = 15;
         daily_min = 0;
       };
     };
