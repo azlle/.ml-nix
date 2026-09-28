@@ -35,6 +35,7 @@ delib.module {
               trustedInterfaces = [
                 "docker0"
                 "virbr0"
+                "podman+" # podman0, podman1, ... (netavark が動的に作るブリッジ)
                 config.services.tailscale.interfaceName
               ];
             };
