@@ -129,7 +129,14 @@ delib.module {
                 "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
                 "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sh:ro"
               ];
-              extraOptions = [ "--network=nextcloud" ];
+              # 実データの appdata/config.php は移行元 TrueNAS の docker-compose
+              # 由来で 'dbhost' => 'postgres:5432' と決め打ちされている
+              # (installed 済みの config.php は POSTGRES_HOST 環境変数を見ない
+              # ので、コンテナ名を変えるより別名で解決させる方が早い)。
+              extraOptions = [
+                "--network=nextcloud"
+                "--network-alias=postgres"
+              ];
             };
 
             # valkey/valkey の公式イメージには専用のパスワード用環境変数が無い
@@ -148,7 +155,11 @@ delib.module {
                 ''exec valkey-server --requirepass "$(cat /run/secrets/redis-password)"''
               ];
               volumes = [ "${secretPath "redis-password"}:/run/secrets/redis-password:ro" ];
-              extraOptions = [ "--network=nextcloud" ];
+              # config.php の 'redis' => ['host' => 'redis'] も同様に決め打ち。
+              extraOptions = [
+                "--network=nextcloud"
+                "--network-alias=redis"
+              ];
             };
 
             # プレビュー(サムネイル)生成。旧 TrueNAS 側の imaginary コンテナに
