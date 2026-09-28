@@ -45,9 +45,13 @@ delib.module {
                 FORGEJO__cron_0X2E_git_gc_repos__SCHEDULE = "0 23 * * 6";
                 FORGEJO__cron_0X2E_git_gc_repos__TIMEOUT = "25m";
               };
+              # cloudflared が plainasia 側に移ったため、LAN 越しに叩けるよう
+              # necrofantasia 自身の固定IPにバインドする (loopback限定のままだと
+              # ファイアウォールを開けても届かない)。ファイアウォール側で
+              # plainasia の固定IPだけに絞ってあるので全開放にはならない。
               ports = [
-                "127.0.0.1:${toString forgejoHttpPort}:3000"
-                "127.0.0.1:${toString forgejoSshPort}:22"
+                "192.168.11.78:${toString forgejoHttpPort}:3000"
+                "192.168.11.78:${toString forgejoSshPort}:22"
               ];
               volumes = [
                 "/var/lib/forgejo:/data"
