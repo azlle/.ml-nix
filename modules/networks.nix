@@ -35,15 +35,9 @@ delib.module {
               trustedInterfaces = [
                 "docker0"
                 "virbr0"
+                "podman*" # podman0, podman1, ... (netavark が動的に作るブリッジ)
                 config.services.tailscale.interfaceName
               ];
-              # trustedInterfaces は複数指定すると1つのnftablesセットにまとめられ、
-              # セット要素内では "+" (iptables式ワイルドカード) が文字列リテラル
-              # 扱いになり機能しない (nftablesのワイルドカードは "*")。podman0/
-              # podman1/... を毎回書き足さずに済むよう、単体ルールとして注入する。
-              extraInputRules = ''
-                iifname "podman*" accept
-              '';
             };
           };
         }
