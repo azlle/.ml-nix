@@ -69,43 +69,38 @@
 
   # 旧TrueNASの実設定 (storage_task) を踏襲: data_pool/main と
   # data_pool/nextcloud (→ tank/main, tank/nextcloud) に対して、毎日00:00・
-  # 再帰的・"daily-%Y-%m-%d_%H-%M" 命名・1ヶ月保持のスナップショットを取得。
-  #
-  # services.zfs.autoSnapshot は frequent/hourly/daily/weekly/monthly の
-  # 5段階が無条件で有効になり「毎日だけ」を綺麗に無効化できない (件数を0に
-  # しても、スナップショット作成→即削除という無駄な動作自体は残る) ため、
-  # 独自の systemd timer で実際の挙動 (毎日1回・命名規則・保持数) を再現する。
-  systemd.services.zfs-daily-snapshot = {
-    description = "Daily recursive ZFS snapshots for tank/main and tank/nextcloud";
-    after = [ "zfs-import.target" ];
-    path = [ config.boot.zfs.package ];
-    serviceConfig.Type = "oneshot";
-    script = ''
-      set -euo pipefail
-      stamp=$(date +%Y-%m-%d_%H-%M)
-      for ds in tank/main tank/nextcloud; do
-        zfs snapshot -r "$ds@daily-$stamp"
-        # 1ヶ月 (30日) より古い daily-* スナップショットを削除。
-        zfs list -H -o name -t snapshot -r "$ds" \
-          | grep -E "@daily-[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}$" \
-          | while read -r snap; do
-              snapDate="''${snap#*@daily-}"
-              snapDate="''${snapDate%_*}"
-              ageDays=$(( ($(date +%s) - $(date -d "$snapDate" +%s)) / 86400 ))
-              if [ "$ageDays" -gt 30 ]; then
-                zfs destroy "$snap"
-              fi
-            done
-      done
-    '';
-  };
-
-  systemd.timers.zfs-daily-snapshot = {
-    description = "Run zfs-daily-snapshot every day at 00:00";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "*-*-* 00:00:00";
-      Persistent = true;
+  # 再帰的・1ヶ月保持のスナップショットを取得。sanoidは経過時間ベースの
+  # プルーニング・粒度ごとの独立制御・鮮度監視まで持つ成熟したツールなので、
+  # 自作systemd timerより素直にこちらへ寄せる (スナップショットの命名規則
+  # だけは sanoid 独自の autosnap_<timestamp>_daily 形式になり、TrueNAS の
+  # daily-%Y-%m-%d_%H-%M とは一致しなくなる)。
+  services.sanoid = {
+    enable = true;
+    datasets = {
+      "tank/main" = {
+        recursive = true;
+        daily = 30;
+        hourly = 0;
+        weekly = 0;
+        monthly = 0;
+        yearly = 0;
+        autosnap = true;
+        autoprune = true;
+        daily_hour = 0;
+        daily_min = 0;
+      };
+      "tank/nextcloud" = {
+        recursive = true;
+        daily = 30;
+        hourly = 0;
+        weekly = 0;
+        monthly = 0;
+        yearly = 0;
+        autosnap = true;
+        autoprune = true;
+        daily_hour = 0;
+        daily_min = 0;
+      };
     };
   };
 }
