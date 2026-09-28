@@ -45,7 +45,65 @@
   };
 
   services.zfs = {
-    autoScrub.enable = true;
+    autoScrub = {
+      enable = true;
+      # 旧TrueNASの実設定 (storage_scrub) を踏襲: 毎月14日 02:30。
+      # (NixOSのデフォルトは "monthly" = 毎月1日 00:00)
+      interval = "*-*-14 02:30:00";
+    };
     trim.enable = true; # NVMe
+  };
+
+  # 旧TrueNASの実設定 (services_services / tasks_cronjob) を踏襲。
+  # smartdサービス自体はTrueNAS側で有効化されていなかったが、
+  # 汎用Cron Jobsとして毎週日曜 02:00 に SHORT、毎月28日 02:30 に LONG の
+  # S.M.A.R.T. セルフテストを全ディスクに対して実行していた
+  # (`midclt call disk.smart_test SHORT/LONG '["*"]'`)。
+  # smartdの -s スケジュール構文は分単位を持たないため、時刻は時間単位に丸まる。
+  services.smartd = {
+    enable = true;
+    defaults.monitored = "-a -o on -S on -s (S/../../7/02|L/../28/./02)";
+  };
+
+  # 旧TrueNASの実設定 (storage_task) を踏襲: data_pool/main と
+  # data_pool/nextcloud (→ tank/main, tank/nextcloud) に対して、毎日00:00・
+  # 再帰的・"daily-%Y-%m-%d_%H-%M" 命名・1ヶ月保持のスナップショットを取得。
+  #
+  # services.zfs.autoSnapshot は frequent/hourly/daily/weekly/monthly の
+  # 5段階が無条件で有効になり「毎日だけ」を綺麗に無効化できない (件数を0に
+  # しても、スナップショット作成→即削除という無駄な動作自体は残る) ため、
+  # 独自の systemd timer で実際の挙動 (毎日1回・命名規則・保持数) を再現する。
+  systemd.services.zfs-daily-snapshot = {
+    description = "Daily recursive ZFS snapshots for tank/main and tank/nextcloud";
+    after = [ "zfs-import.target" ];
+    path = [ config.boot.zfs.package ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      set -euo pipefail
+      stamp=$(date +%Y-%m-%d_%H-%M)
+      for ds in tank/main tank/nextcloud; do
+        zfs snapshot -r "$ds@daily-$stamp"
+        # 1ヶ月 (30日) より古い daily-* スナップショットを削除。
+        zfs list -H -o name -t snapshot -r "$ds" \
+          | grep -E "@daily-[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}$" \
+          | while read -r snap; do
+              snapDate="''${snap#*@daily-}"
+              snapDate="''${snapDate%_*}"
+              ageDays=$(( ($(date +%s) - $(date -d "$snapDate" +%s)) / 86400 ))
+              if [ "$ageDays" -gt 30 ]; then
+                zfs destroy "$snap"
+              fi
+            done
+      done
+    '';
+  };
+
+  systemd.timers.zfs-daily-snapshot = {
+    description = "Run zfs-daily-snapshot every day at 00:00";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*-*-* 00:00:00";
+      Persistent = true;
+    };
   };
 }
