@@ -129,12 +129,13 @@ delib.module {
                 "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
                 "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sh:ro"
               ];
-              # aardvark-dns 経由のコンテナ名解決が (原因不明だが) 常に
-              # タイムアウトする環境だったため、--network-alias には頼らず
-              # 固定IP + nextcloud 側の --add-host で名前解決自体を迂回する。
+              # 実データの appdata/config.php は移行元 TrueNAS の docker-compose
+              # 由来で 'dbhost' => 'postgres:5432' と決め打ちされている
+              # (installed 済みの config.php は POSTGRES_HOST 環境変数を見ない
+              # ので、コンテナ名を変えるより別名で解決させる方が早い)。
               extraOptions = [
                 "--network=nextcloud"
-                "--ip=10.89.0.10"
+                "--network-alias=postgres"
               ];
             };
 
@@ -154,9 +155,10 @@ delib.module {
                 ''exec valkey-server --requirepass "$(cat /run/secrets/redis-password)"''
               ];
               volumes = [ "${secretPath "redis-password"}:/run/secrets/redis-password:ro" ];
+              # config.php の 'redis' => ['host' => 'redis'] も同様に決め打ち。
               extraOptions = [
                 "--network=nextcloud"
-                "--ip=10.89.0.11"
+                "--network-alias=redis"
               ];
             };
 
@@ -165,10 +167,7 @@ delib.module {
             # バージョンが分かれていない)。
             nextcloud-imaginary = {
               image = "ghcr.io/nextcloud-releases/aio-imaginary:latest";
-              extraOptions = [
-                "--network=nextcloud"
-                "--ip=10.89.0.12"
-              ];
+              extraOptions = [ "--network=nextcloud" ];
             };
 
             nextcloud = {
@@ -214,18 +213,9 @@ delib.module {
               # コンテナに対するCPU制限は特に意味が無いので外し、動画プレビュー
               # 生成のような重い処理にも余裕を持たせつつ、暴走時の保険として
               # メモリ上限だけ (他サービスと共存する前提で) 8GBに設定する。
-              # 実データの appdata/config.php は移行元 TrueNAS 由来で
-              # 'dbhost' => 'postgres:5432' / redis host => 'redis' と
-              # 決め打ちされている (installed 済みの config.php は
-              # POSTGRES_HOST/REDIS_HOST 環境変数を見ない)。aardvark-dns 経由の
-              # 名前解決が常にタイムアウトする環境だったため、--add-host で
-              # 固定IPに直接マッピングして名前解決自体を迂回する。
               extraOptions = [
                 "--network=nextcloud"
                 "--memory=8192m"
-                "--add-host=postgres:10.89.0.10"
-                "--add-host=redis:10.89.0.11"
-                "--add-host=nextcloud-imaginary:10.89.0.12"
               ];
             };
           };
