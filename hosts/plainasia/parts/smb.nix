@@ -14,6 +14,7 @@
 
   services.samba = {
     enable = true;
+    openFirewall = true;
     settings = {
       global = {
         "netbios name" = "plainasia";
