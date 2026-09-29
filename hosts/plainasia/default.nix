@@ -20,6 +20,7 @@ delib.host {
     ./parts/disko.nix
     ./parts/boot.nix
     ./parts/networking.nix
+    ./parts/smb.nix
   ];
 
   home = _: {
