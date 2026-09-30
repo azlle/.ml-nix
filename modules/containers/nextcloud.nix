@@ -53,6 +53,11 @@ delib.module {
           'preview_max_filesize_image' => -1,
           'preview_max_memory' => 1024,
           'preview_imaginary_url' => 'http://nextcloud-imaginary:9000',
+          # 公式イメージにffmpegが同梱されていないため、OC\Preview\Movieが
+          # 動作しない。カスタムイメージをビルドする代わりに、ホストの
+          # /nix/storeをコンテナへ読み取り専用でbind mountして (下のvolumes参照)、
+          # Nixが既にビルド済みのffmpegを絶対パスで直接指定する。
+          'preview_ffmpeg_path' => '${pkgs.ffmpeg}/bin/ffmpeg',
           'enabledPreviewProviders' => [
             'OC\Preview\PNG',
             'OC\Preview\JPEG',
@@ -201,6 +206,9 @@ delib.module {
                 "${dataDir}/appdata:/var/www/html"
                 "${dataDir}/userdata:/var/www/html/data"
                 "/etc/localtime:/etc/localtime:ro"
+                # 動画プレビュー (OC\Preview\Movie) 用のffmpeg。上のpreview_ffmpeg_path
+                # 参照。
+                "/nix/store:/nix/store:ro"
                 "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
                 "${secretPath "redis-password"}:/run/secrets/redis-password:ro"
                 "${secretPath "admin-password"}:/run/secrets/admin-password:ro"
