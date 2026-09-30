@@ -110,6 +110,13 @@ delib.module {
         "nextcloud/redis-password" = {
           owner = "nextcloud-www-data";
           mode = "0400";
+          # コンテナ自体の定義 (ExecStart等) はシークレットの権限変更では
+          # 変わらないため、restartUnits を明示しないとnixos-rebuild switchが
+          # podman-nextcloud.serviceを再起動しない。すると生成された新しい
+          # secrets.d/<N>/を掴まず、コンテナは古い世代のbind mountを握った
+          # ままになり、パーミッションを直しても反映されない
+          # (実際に一度この状態を踏んだ: switch後も直らず、手動restartで解決)。
+          restartUnits = [ "podman-nextcloud.service" ];
         };
       };
 
