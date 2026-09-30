@@ -21,6 +21,7 @@ delib.host {
     ./parts/videodrivers.nix
     ./parts/powers.nix
     ./parts/networking.nix
+    ./parts/mounts.nix
   ];
 
   home = _: {
