@@ -4,11 +4,10 @@
 # 認識される、.sync-conflict-* の解決UIも内蔵) なので、こちらはただの
 # Syncthingフォルダ共有として宣言するだけでよい。
 #
-# スマホ側のDevice IDが判明したら devices に追加し、folders.org-docs.devices
-# にもそのデバイス名を加えること (Syncthingは双方向ペアリングなので、
-# スマホ側でもnecrofantasiaのDevice IDを登録・共有フォルダを承認する必要がある)。
-_:
-{
+# スマホ側でもnecrofantasiaのDevice ID (journalctl -u syncthing の
+# "Calculated our device ID" 行で確認可能) を登録し、共有フォルダの
+# リクエストを承認する必要がある (Syncthingは双方向ペアリングのため)。
+_: {
   services.syncthing = {
     enable = true;
     user = "eeshta";
@@ -21,11 +20,15 @@ _:
       folders = {
         "org-docs" = {
           path = "/home/eeshta/Documents/org-docs";
-          devices = [ ];
+          devices = [ "phone" ];
         };
       };
 
-      devices = { };
+      devices = {
+        "phone" = {
+          id = "7YKCWPD-QOQFLRP-BAQEJL3-OW3E3BI-N65UZ6Y-AYHZ2FJ-OZ3GLXE-A7FTXQ7";
+        };
+      };
     };
   };
 }
