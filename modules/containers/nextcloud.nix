@@ -100,8 +100,29 @@ delib.module {
         "nextcloud/postgres-password" = { };
         "nextcloud/oc-admin-password" = { };
         "nextcloud/admin-password" = { };
-        "nextcloud/redis-password" = { };
+        # redis.config.phpがPHPリクエストのたびにfile_get_contents()で都度
+        # 読み直す実装なので、コンテナ内でwww-data (uid=33, rootfulなpodman
+        # なのでホスト側でも同じuid=33) として実行されるPHPプロセスから読める
+        # 必要がある。他の3つはインストール時にconfig.phpへ値が焼き込まれ、
+        # 以降ファイル自体は読み直されないのでデフォルトのroot:root 0400の
+        # ままで問題ない。world-readableにはせず、www-dataのuidを持つ専用
+        # ユーザー (下のusers.users.nextcloud-www-data) だけに所有させる。
+        "nextcloud/redis-password" = {
+          owner = "nextcloud-www-data";
+          mode = "0400";
+        };
       };
+
+      # 上のsops.secrets."nextcloud/redis-password"専用。ログイン不可の
+      # システムユーザーとして、コンテナ内www-dataと同じuid/gid=33を割り当てる
+      # だけの存在 (rootfulなpodmanはuid名前空間を分離しないので、ホスト側の
+      # uid=33がそのままコンテナ内www-dataとして見える)。
+      users.users.nextcloud-www-data = {
+        isSystemUser = true;
+        uid = 33;
+        group = "nextcloud-www-data";
+      };
+      users.groups.nextcloud-www-data.gid = 33;
 
       virtualisation = {
         podman = {
