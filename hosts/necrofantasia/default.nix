@@ -22,6 +22,7 @@ delib.host {
     ./parts/powers.nix
     ./parts/networking.nix
     ./parts/mounts.nix
+    ./parts/syncthing.nix
   ];
 
   home = _: {
