@@ -32,8 +32,6 @@ delib.module {
             age.keyFile = ageKeyFile;
             inherit defaultSopsFile;
             secrets = {
-              "smb/yamaxanadu" = { };
-
               "users/password/${username}" = {
                 neededForUsers = true;
               };

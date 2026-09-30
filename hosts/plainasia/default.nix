@@ -21,6 +21,7 @@ delib.host {
     ./parts/boot.nix
     ./parts/networking.nix
     ./parts/smb.nix
+    ./parts/nfs.nix
   ];
 
   home = _: {
