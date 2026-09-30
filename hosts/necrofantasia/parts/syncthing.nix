@@ -21,7 +21,10 @@ _: {
         "org-docs" = {
           path = "/home/eeshta/Documents/org-docs";
           devices = [ "phone" ];
-          ignores.lines = [ ".git" ];
+          ignores.lines = [
+            ".git"
+            ".gitignore"
+          ];
         };
       };
 
