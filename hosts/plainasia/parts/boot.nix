@@ -20,9 +20,9 @@
       forceImportRoot = true;
 
       # 旧 TrueNAS の data_pool を tank としてリネームimport済み (IronWolf
-      # 8TB ミラー)。forceImportAll は forceImportRoot が有効な時しか使えない
-      # 制約があるが、上で true にしてあるので問題ない。rpool と同じ理由
-      # (無人リブート優先) で tank も強制import対象にする。
+      # 8TB ミラー + L2ARCキャッシュ用M.2)。forceImportAll は forceImportRoot が
+      # 有効な時しか使えない制約があるが、上で true にしてあるので問題ない。
+      # rpool と同じ理由 (無人リブート優先) で tank も強制import対象にする。
       extraPools = [ "tank" ];
       forceImportAll = true;
     };
