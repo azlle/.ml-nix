@@ -33,6 +33,14 @@ let
       # smartd style: ヘッダ付き全文。Subject: 行を取り出し、空行より後を本文にする。
       subject=$(printf '%s\n' "$raw" | ${pkgs.gnused}/bin/sed -n 's/^Subject: //p' | ${pkgs.coreutils}/bin/head -n1)
       body=$(printf '%s\n' "$raw" | ${pkgs.gnused}/bin/sed '1,/^$/d')
+      if [ -z "$subject" ]; then
+        # smartdはSMARTD_SUBJECTを常に空文字にする仕様 (smartd.cppのMailWarning()が
+        # 標準添付のsmartd_warning.shによる件名組み立てを前提にしており、そちらを
+        # 経由しないNixOSのsmartdNotifyスクリプト経由だと常に空になる)。
+        # smartdが同じくexec先に渡す SMARTD_FAILTYPE/SMARTD_DEVICESTRING から
+        # 代わりの件名を組み立てる。
+        subject="SMART alert (''${SMARTD_FAILTYPE:-unknown}) on ''${SMARTD_DEVICESTRING:-unknown device}"
+      fi
     else
       # zed style: 件名は引数で渡済み、stdinは本文のみ。
       body="$raw"
