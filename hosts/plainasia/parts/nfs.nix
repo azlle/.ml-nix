@@ -8,21 +8,22 @@
 # に書き込む。root_squash だとこの書き込みが弾かれる。
 # necrofantasiaのIPのみに限定し、NFSv4専用運用のためportmapper(111)は開けない。
 #
-# crossmnt が必要: tank/main の下には creations/documents/misc/music/
-# pictures/videos が独立したZFSデータセット (=別マウント) として存在する。
-# crossmnt無しだとNFSはマウント境界を跨がず、これらが空のディレクトリの
-# ように見えて中身にアクセスできない。crossmntを付けると、明示的に
-# exportしていない配下のマウントも親と同じオプションで暗黙にexportされる
-# ……はずだったが、実際には暗黙exportされた子データセットのルートが
-# root:root 0770という間違った属性で見えてしまい (実際は keine:users 0700)、
-# パーミッションで弾かれて中に入れない不具合に遭遇した。各データセットを
-# 明示的にexportすることで回避する (crossmntは将来データセットが増えた時の
-# 保険として残す)。
+# tank/main の下には creations/documents/misc/music/pictures/videos が
+# 独立したZFSデータセット (=別マウント) として存在し、それぞれ明示的に
+# exportしている。crossmntオプション (配下の未exportマウントを親と同じ
+# オプションで暗黙exportする機能) も試したが、ZFSのネストしたデータセットを
+# 暗黙exportすると子のルートディレクトリがroot:root 0755相当の間違った
+# 属性で見えてしまう既知の未解決バグ (openzfs/zfs#8376) があり、結局
+# パーミッションで弾かれた。各データセットを明示exportする方法が標準的な
+# 回避策。crossmntは今の対象(全データセットを既に明示export済み)に対して
+# 何の効果も持たず、将来の新規データセットに対しても同じバグに当たるだけで
+# 「保険」にならないため、外してある。tank/main配下に新しいデータセットを
+# 増やす際は、ここにexport行を1つ足すこと。
 _: {
   services.nfs.server = {
     enable = true;
     exports = ''
-      /tank/main 192.168.11.78(rw,sync,no_subtree_check,no_root_squash,crossmnt)
+      /tank/main 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
       /tank/main/creations 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
       /tank/main/documents 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
       /tank/main/misc 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
