@@ -17,11 +17,10 @@ delib.module {
         # だった)。TCPベースのhttp2に固定してこれを回避できるか検証する。
         protocol = "http2";
         ingress = {
-          # cloudflared 自体は plainasia (Nextcloud と同居) で動く。
-          # git系は necrofantasia 上の Forgejo に LAN 越しで繋ぐ。
+          # cloudflared/Nextcloud/Forgejoは全部plainasia上に同居している。
           "drive.melocy.cc" = "http://localhost:22300";
-          "git.melocy.cc" = "http://192.168.11.78:3080";
-          "git-ssh.melocy.cc" = "ssh://192.168.11.78:2222";
+          "git.melocy.cc" = "http://localhost:3080";
+          "git-ssh.melocy.cc" = "ssh://localhost:2222";
         };
       };
     };

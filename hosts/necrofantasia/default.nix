@@ -10,9 +10,11 @@ delib.host {
   stateVersion = "24.11";
   type = "laptop";
 
-  # cloudflared/nextcloud は plainasia 側の担当。Forgejo だけこちらで動かす。
+  # cloudflared/nextcloud/forgejo は全部plainasia側の担当。このホストは
+  # ノートPCで常時起動ではないので、コンテナ類はどれも持たない。
   myconfig.containers.cloudflared.enable = false;
   myconfig.containers.nextcloud.enable = false;
+  myconfig.containers.forgejo.enable = false;
 
   nixos.imports = [
     ./parts/hardware-configuration.nix
@@ -21,7 +23,6 @@ delib.host {
     ./parts/videodrivers.nix
     ./parts/powers.nix
     ./parts/networking.nix
-    ./parts/mounts.nix
     ./parts/syncthing.nix
   ];
 

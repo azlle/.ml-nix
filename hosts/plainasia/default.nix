@@ -12,8 +12,8 @@ delib.host {
   type = "server";
 
   myconfig.containers.enable = true;
-  # Forgejo は necrofantasia 側の担当。cloudflared/nextcloud だけこちらで動かす。
-  myconfig.containers.forgejo.enable = false;
+  # Forgejo も necrofantasia (ノートPC、常時起動ではない) からこちらに移した。
+  # cloudflared/nextcloud/forgejo が全部同居する。
 
   nixos.imports = [
     ./parts/hardware-configuration.nix
@@ -21,7 +21,6 @@ delib.host {
     ./parts/boot.nix
     ./parts/networking.nix
     ./parts/smb.nix
-    ./parts/nfs.nix
     ./parts/alerts.nix
   ];
 

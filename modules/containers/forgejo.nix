@@ -45,13 +45,15 @@ delib.module {
                 FORGEJO__cron_0X2E_git_gc_repos__SCHEDULE = "0 23 * * 6";
                 FORGEJO__cron_0X2E_git_gc_repos__TIMEOUT = "25m";
               };
-              # cloudflared が plainasia 側に移ったため、LAN 越しに叩けるよう
-              # necrofantasia 自身の固定IPにバインドする (loopback限定のままだと
-              # ファイアウォールを開けても届かない)。ファイアウォール側で
-              # plainasia の固定IPだけに絞ってあるので全開放にはならない。
+              # plainasiaにcloudflaredと同居させたので、LAN越しのバインドは
+              # 不要になった (旧necrofantasia時代はcloudflaredが別ホストだった
+              # ためLAN固定IPにバインドしていた)。loopback限定にすることで
+              # 直接到達できるのはこのホスト上のcloudflaredだけ、という元の
+              # アクセス範囲 (necrofantasia側ファイアウォールでplainasiaの
+              # 固定IPだけに絞っていたのと同義) を保っている。
               ports = [
-                "192.168.11.78:${toString forgejoHttpPort}:3000"
-                "192.168.11.78:${toString forgejoSshPort}:22"
+                "127.0.0.1:${toString forgejoHttpPort}:3000"
+                "127.0.0.1:${toString forgejoSshPort}:22"
               ];
               volumes = [
                 "/var/lib/forgejo:/data"
@@ -67,17 +69,21 @@ delib.module {
       ];
 
       systemd.services.forgejo-backup = {
-        description = "Forgejo backup and offsite copy";
+        # necrofantasia時代はこのホスト自身がtank/mainを持っていなかったので、
+        # NFS越しに/mnt/yamaxanaduへコピーしていた。plainasiaはtank/main自身を
+        # 抱えているホストなので、ローカルパスへ直接コピーするだけで済む
+        # (オフサイト性は元々ZFS側の冗長性に委ねていて、このコピー自体はただの
+        # 「コンテナの外に出しておく」程度の意味だったため、ローカル化しても
+        # 目的は変わらない)。
+        description = "Forgejo backup";
         after = [
           "podman-forgejo.service"
-          "network-online.target"
         ];
-        wants = [ "network-online.target" ];
-        serviceConfig.RequiresMountsFor = [ "/mnt/yamaxanadu" ];
+        serviceConfig.RequiresMountsFor = [ "/tank/main/misc" ];
         path = [ pkgs.podman ];
         script = ''
           set -euo pipefail
-          dest=/mnt/yamaxanadu/misc/gitlab_backup/
+          dest=/tank/main/misc/gitlab_backup/
           stamp=$(date +%Y%m%d-%H%M%S)
 
           mkdir -p /var/lib/forgejo/backups /var/lib/forgejo/tmp
