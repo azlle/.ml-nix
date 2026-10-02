@@ -80,6 +80,11 @@
       url = "github:nix-community/disko/latest";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    quadlet-nix = {
+      url = "github:mirkolenz/quadlet-nix/v1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
