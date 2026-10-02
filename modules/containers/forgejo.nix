@@ -1,5 +1,5 @@
 # modules/containers/forgejo.nix
-{ delib, pkgs, ... }:
+{ delib, ... }:
 delib.module {
   name = "containers.forgejo";
 
@@ -67,48 +67,5 @@ delib.module {
       systemd.tmpfiles.rules = [
         "d /var/lib/forgejo 0755 root root -"
       ];
-
-      systemd.services.forgejo-backup = {
-        # necrofantasia時代はこのホスト自身がtank/mainを持っていなかったので、
-        # NFS越しに/mnt/yamaxanaduへコピーしていた。plainasiaはtank/main自身を
-        # 抱えているホストなので、ローカルパスへ直接コピーするだけで済む
-        # (オフサイト性は元々ZFS側の冗長性に委ねていて、このコピー自体はただの
-        # 「コンテナの外に出しておく」程度の意味だったため、ローカル化しても
-        # 目的は変わらない)。
-        description = "Forgejo backup";
-        after = [
-          "podman-forgejo.service"
-        ];
-        serviceConfig.RequiresMountsFor = [ "/tank/main/misc" ];
-        path = [ pkgs.podman ];
-        script = ''
-          set -euo pipefail
-          dest=/tank/main/misc/gitlab_backup/
-          stamp=$(date +%Y%m%d-%H%M%S)
-
-          mkdir -p /var/lib/forgejo/backups /var/lib/forgejo/tmp
-          chown 1000:1000 /var/lib/forgejo/backups /var/lib/forgejo/tmp
-          podman exec --user 1000 forgejo forgejo dump \
-            --config /data/gitea/conf/app.ini \
-            --file "/data/backups/$stamp-forgejo-dump.tar.gz" \
-            --type tar.gz \
-            --tempdir /data/tmp
-
-          cp "/var/lib/forgejo/backups/$stamp-forgejo-dump.tar.gz" "$dest"
-
-          find /var/lib/forgejo/backups -name '*-forgejo-dump.tar.gz' -mtime +7 -delete
-          find "$dest" -name '*-forgejo-dump.tar.gz' -mtime +30 -delete
-        '';
-        serviceConfig.Type = "oneshot";
-      };
-
-      systemd.timers.forgejo-backup = {
-        description = "Daily Forgejo backup";
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnCalendar = "23:30";
-          Persistent = true;
-        };
-      };
     };
 }
