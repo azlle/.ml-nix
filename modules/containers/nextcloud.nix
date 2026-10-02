@@ -2,6 +2,7 @@
 {
   delib,
   config,
+  inputs,
   pkgs,
   ...
 }:
@@ -9,6 +10,12 @@ delib.module {
   name = "containers.nextcloud";
 
   options = delib.singleCascadeEnableOption;
+
+  # quadlet-nixのモジュール自体はenable=falseでも読み込んでおいて問題ない
+  # (オプションを増やすだけで何も有効化しない)。containers.nextcloud.enableに
+  # 条件付けたいのはそれを使う側のvirtualisation.quadlet.*設定の方なので、
+  # そちらはnixos.ifEnabled側に残す。
+  nixos.always.imports = [ inputs.quadlet-nix.nixosModules.default ];
 
   nixos.ifEnabled =
     let
@@ -94,6 +101,12 @@ delib.module {
       '';
     in
     {
+      # quadlet-nix: ユニットファイルはビルド時にpodman-system-generatorを
+      # 実際に走らせて生成される (oci-containers + dockerCompatの薄いpython層を
+      # 経由しない)。生成されるsystemd unit名はoci-containers時代の
+      # `podman-<name>.service`ではなく、属性名そのまま`<name>.service`になる
+      # 点に注意 (下の各systemd.services.*やrestartUnitsの参照先もそれに追従済み)。
+
       # containers.enable が false な間はこのモジュール自体が評価されないので、
       # secret.yaml 側にまだキーが無くてもビルドは壊れない。sopsFile は
       # modules/sops.nix の defaultSopsFile (secret.yaml) をそのまま使う。
@@ -113,11 +126,11 @@ delib.module {
           mode = "0400";
           # コンテナ自体の定義 (ExecStart等) はシークレットの権限変更では
           # 変わらないため、restartUnits を明示しないとnixos-rebuild switchが
-          # podman-nextcloud.serviceを再起動しない。すると生成された新しい
+          # nextcloud.serviceを再起動しない。すると生成された新しい
           # secrets.d/<N>/を掴まず、コンテナは古い世代のbind mountを握った
           # ままになり、パーミッションを直しても反映されない
           # (実際に一度この状態を踏んだ: switch後も直らず、手動restartで解決)。
-          restartUnits = [ "podman-nextcloud.service" ];
+          restartUnits = [ "nextcloud.service" ];
         };
       };
 
@@ -132,27 +145,46 @@ delib.module {
       };
       users.groups.nextcloud-www-data.gid = 33;
 
-      virtualisation = {
-        podman = {
-          enable = true;
-          dockerCompat = true;
-          defaultNetwork.settings.dns_enabled = true;
-          autoPrune.enable = true;
+      virtualisation.podman = {
+        enable = true;
+        dockerCompat = true;
+        defaultNetwork.settings.dns_enabled = true;
+        autoPrune.enable = true;
+      };
+
+      virtualisation.quadlet = {
+        enable = true;
+
+        # oci-containers時代は`podman network create nextcloud`を叩く手製の
+        # oneshot unitで代用していた。quadletなら.networkユニットとして
+        # 宣言できるので、そのunitは丸ごと不要になる (コンテナ側で
+        # `Network = "nextcloud.network"`と参照するだけでpodman-system-
+        # generatorが依存関係(Requires=/After=nextcloud-network.service)を
+        # 自動で張る)。
+        networks.nextcloud = {
+          networkConfig.NetworkName = "nextcloud";
         };
 
-        oci-containers = {
-          backend = "podman";
-          containers = {
-            # ブートストラップ用スーパーユーザー。Nextcloud 本体はこれでは
-            # 繋がず、下の initOcAdminRole が作る oc_admin ロールを使う。
-            nextcloud-postgres = {
-              image = "docker.io/library/postgres:18.6";
-              environment = {
+        containers = {
+          # ブートストラップ用スーパーユーザー。Nextcloud 本体はこれでは
+          # 繋がず、下の initOcAdminRole が作る oc_admin ロールを使う。
+          nextcloud-postgres = {
+            containerConfig = {
+              Image = "docker.io/library/postgres:18.6";
+              # podmanName (実際のコンテナ名) をoci-containers時代と揃える。
+              ContainerName = "nextcloud-postgres";
+              Network = "nextcloud.network";
+              # 実データの appdata/config.php は移行元 TrueNAS の docker-compose
+              # 由来で 'dbhost' => 'postgres:5432' と決め打ちされている
+              # (installed 済みの config.php は POSTGRES_HOST 環境変数を見ない
+              # ので、コンテナ名を変えるより別名で解決させる方が早い)。
+              NetworkAlias = "postgres";
+              Environment = {
                 POSTGRES_DB = "nextcloud";
                 POSTGRES_USER = "nextcloud";
                 POSTGRES_PASSWORD_FILE = "/run/secrets/postgres-password";
               };
-              volumes = [
+              Volume = [
                 # postgres 18+ の公式イメージは /var/lib/postgresql/data ではなく
                 # /var/lib/postgresql 単体へのマウントを前提に変わった (内部で
                 # 18/docker のようなメジャーバージョン別サブディレクトリを自分で
@@ -163,55 +195,53 @@ delib.module {
                 "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
                 "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sh:ro"
               ];
-              # 実データの appdata/config.php は移行元 TrueNAS の docker-compose
-              # 由来で 'dbhost' => 'postgres:5432' と決め打ちされている
-              # (installed 済みの config.php は POSTGRES_HOST 環境変数を見ない
-              # ので、コンテナ名を変えるより別名で解決させる方が早い)。
-              extraOptions = [
-                "--network=nextcloud"
-                "--network-alias=postgres"
-              ];
             };
+            # postgresは tank 側の独立したデータセット。systemd.tmpfiles.rules
+            # で「無ければ作る」形にすると、tank が import されていない/
+            # マウント失敗時でも黙ってOS側に空ディレクトリが作られてしまい、
+            # 気づかないまま間違った場所にデータを書き込みかねない。
+            # RequiresMountsFor で実際にマウントされているまで起動をブロックする。
+            unitConfig.RequiresMountsFor = [ "${dataDir}/postgres" ];
+          };
 
-            # valkey/valkey の公式イメージには専用のパスワード用環境変数が無い
-            # (Bitnami 版と違って VALKEY_PASSWORD 相当が存在しない)。--requirepass
-            # を渡す必要があるが、cmd/environment に生のパスワードを直書きすると
-            # `podman inspect` で丸見えになるため、シェル経由でマウントした
-            # secret ファイルから起動時に読ませる。
-            # キャッシュ/セッション/ロック用途のみで、TrueNAS 側でも永続化して
-            # いなかった (storage 設定に redis 用の host_path が無い)。同様に
-            # ここも永続ボリュームなしにする。
-            nextcloud-redis = {
-              image = "docker.io/valkey/valkey:9.1.2";
-              entrypoint = "sh";
-              cmd = [
-                "-c"
-                ''exec valkey-server --requirepass "$(cat /run/secrets/redis-password)"''
-              ];
-              volumes = [ "${secretPath "redis-password"}:/run/secrets/redis-password:ro" ];
+          # valkey/valkey の公式イメージには専用のパスワード用環境変数が無い
+          # (Bitnami 版と違って VALKEY_PASSWORD 相当が存在しない)。--requirepass
+          # を渡す必要があるが、cmd/environment に生のパスワードを直書きすると
+          # `podman inspect` で丸見えになるため、シェル経由でマウントした
+          # secret ファイルから起動時に読ませる。
+          # キャッシュ/セッション/ロック用途のみで、TrueNAS 側でも永続化して
+          # いなかった (storage 設定に redis 用の host_path が無い)。同様に
+          # ここも永続ボリュームなしにする。
+          nextcloud-redis = {
+            containerConfig = {
+              Image = "docker.io/valkey/valkey:9.1.2";
+              ContainerName = "nextcloud-redis";
+              Network = "nextcloud.network";
               # config.php の 'redis' => ['host' => 'redis'] も同様に決め打ち。
-              extraOptions = [
-                "--network=nextcloud"
-                "--network-alias=redis"
-              ];
+              NetworkAlias = "redis";
+              Entrypoint = "sh";
+              Exec = ''-c 'exec valkey-server --requirepass "$(cat /run/secrets/redis-password)"' '';
+              Volume = [ "${secretPath "redis-password"}:/run/secrets/redis-password:ro" ];
             };
+          };
 
-            # プレビュー(サムネイル)生成。旧 TrueNAS 側の imaginary コンテナに
-            # 相当する。AIO 用の日付タグではなく latest を使う (単体運用では
-            # バージョンが分かれていない)。
-            nextcloud-imaginary = {
-              image = "ghcr.io/nextcloud-releases/aio-imaginary:latest";
-              extraOptions = [ "--network=nextcloud" ];
+          # プレビュー(サムネイル)生成。旧 TrueNAS 側の imaginary コンテナに
+          # 相当する。AIO 用の日付タグではなく latest を使う (単体運用では
+          # バージョンが分かれていない)。
+          nextcloud-imaginary = {
+            containerConfig = {
+              Image = "ghcr.io/nextcloud-releases/aio-imaginary:latest";
+              ContainerName = "nextcloud-imaginary";
+              Network = "nextcloud.network";
             };
+          };
 
-            nextcloud = {
-              image = "docker.io/library/nextcloud:34-apache";
-              dependsOn = [
-                "nextcloud-postgres"
-                "nextcloud-redis"
-                "nextcloud-imaginary"
-              ];
-              environment = {
+          nextcloud = {
+            containerConfig = {
+              Image = "docker.io/library/nextcloud:34-apache";
+              ContainerName = "nextcloud";
+              Network = "nextcloud.network";
+              Environment = {
                 POSTGRES_HOST = "nextcloud-postgres";
                 POSTGRES_DB = "nextcloud";
                 POSTGRES_USER = "oc_admin";
@@ -228,7 +258,7 @@ delib.module {
                 # 1G未満にできなかっただけで、本来望んでいたのはこちら。
                 PHP_UPLOAD_LIMIT = "100M";
               };
-              volumes = [
+              Volume = [
                 # TrueNAS 側は appdata (アプリ本体・apps/custom_apps) と
                 # userdata (実データ、config.php の datadirectory) を別データ
                 # セット相当のディレクトリに分けていたので、同じ形に揃える。
@@ -246,7 +276,7 @@ delib.module {
               ];
               # 192.168.11.92はCloudflare Tunnel迂回でのLAN直接アクセス診断用
               # (動画再生がTunnel起因かNextcloud/Apache起因か切り分けるため)。
-              ports = [
+              PublishPort = [
                 "127.0.0.1:${toString httpPort}:80"
                 "192.168.11.92:${toString httpPort}:80"
               ];
@@ -255,53 +285,37 @@ delib.module {
               # コンテナに対するCPU制限は特に意味が無いので外し、動画プレビュー
               # 生成のような重い処理にも余裕を持たせつつ、暴走時の保険として
               # メモリ上限だけ (他サービスと共存する前提で) 8GBに設定する。
-              extraOptions = [
-                "--network=nextcloud"
-                "--memory=8192m"
+              Memory = "8192m";
+            };
+            unitConfig = {
+              # oci-containersのdependsOnに相当。Network=経由の依存とは違い、
+              # コンテナ間の起動順序はquadletが自動で張ってくれないので明示する。
+              After = [
+                "nextcloud-postgres.service"
+                "nextcloud-redis.service"
+                "nextcloud-imaginary.service"
+              ];
+              Requires = [
+                "nextcloud-postgres.service"
+                "nextcloud-redis.service"
+                "nextcloud-imaginary.service"
+              ];
+              # appdata/userdata も postgres と同じ理由でRequiresMountsForで守る。
+              RequiresMountsFor = [
+                "${dataDir}/appdata"
+                "${dataDir}/userdata"
               ];
             };
           };
         };
       };
 
-      systemd.services.podman-network-nextcloud = {
-        description = "Podman network for the Nextcloud containers";
-        after = [ "podman.service" ];
-        wantedBy = [ "multi-user.target" ];
-        path = [ config.virtualisation.podman.package ];
-        serviceConfig.Type = "oneshot";
-        serviceConfig.RemainAfterExit = true;
-        script = ''
-          podman network exists nextcloud || podman network create nextcloud
-        '';
-      };
-
-      systemd.services.podman-nextcloud-redis.after = [ "podman-network-nextcloud.service" ];
-      systemd.services.podman-nextcloud-imaginary.after = [ "podman-network-nextcloud.service" ];
-
-      # postgres/appdata/userdata は tank 側の独立したデータセット。
-      # systemd.tmpfiles.rules で「無ければ作る」形にすると、tank が import
-      # されていない/マウント失敗時でも黙ってOS側に空ディレクトリが作られて
-      # しまい、気づかないまま間違った場所にデータを書き込みかねない。
-      # RequiresMountsFor で実際にマウントされているまで起動をブロックする。
-      systemd.services.podman-nextcloud-postgres = {
-        after = [ "podman-network-nextcloud.service" ];
-        unitConfig.RequiresMountsFor = [ "${dataDir}/postgres" ];
-      };
-
-      systemd.services.podman-nextcloud = {
-        after = [ "podman-network-nextcloud.service" ];
-        unitConfig.RequiresMountsFor = [
-          "${dataDir}/appdata"
-          "${dataDir}/userdata"
-        ];
-      };
-
       # TrueNAS 側の専用 cron コンテナ (5分おき) の代わりに、systemd timer から
       # occ の cron ジョブを叩く。コンテナを1つ追加で常駐させる必要が無い分軽い。
       systemd.services.nextcloud-cron = {
         description = "Nextcloud background job runner";
-        after = [ "podman-nextcloud.service" ];
+        # quadletが生成するunit名は属性名そのまま (`nextcloud.service`)。
+        after = [ "nextcloud.service" ];
         path = [ config.virtualisation.podman.package ];
         serviceConfig = {
           Type = "oneshot";
