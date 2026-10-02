@@ -20,7 +20,8 @@ delib.module {
       dataDir = "/tank/nextcloud";
       # cloudflared.nix の drive.melocy.cc ingress が指してるポートに合わせてある。
       httpPort = 22300;
-      trustedDomains = "127.0.0.1 localhost nextcloud drive.melocy.cc";
+      # 192.168.11.92はCloudflare Tunnel経由かどうかの切り分け用、LAN直接アクセス診断目的。
+      trustedDomains = "127.0.0.1 localhost nextcloud drive.melocy.cc 192.168.11.92";
 
       secretPath = name: config.sops.secrets."nextcloud/${name}".path;
 
@@ -243,7 +244,12 @@ delib.module {
                 "${extraConfigPhp}:/var/www/html/config/extra.config.php:ro"
                 "${extraPhpIni}:/usr/local/etc/php/conf.d/zz-extra.ini:ro"
               ];
-              ports = [ "127.0.0.1:${toString httpPort}:80" ];
+              # 192.168.11.92はCloudflare Tunnel迂回でのLAN直接アクセス診断用
+              # (動画再生がTunnel起因かNextcloud/Apache起因か切り分けるため)。
+              ports = [
+                "127.0.0.1:${toString httpPort}:80"
+                "192.168.11.92:${toString httpPort}:80"
+              ];
               # 旧環境 (N100/8GB) の cpus:2/memory:4096 は非力なハード向けの
               # 制約でしかなかった。新ハード (Ryzen 5 5600G/32GB) では単一用途
               # コンテナに対するCPU制限は特に意味が無いので外し、動画プレビュー
