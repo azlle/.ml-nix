@@ -12,12 +12,23 @@
 # pictures/videos が独立したZFSデータセット (=別マウント) として存在する。
 # crossmnt無しだとNFSはマウント境界を跨がず、これらが空のディレクトリの
 # ように見えて中身にアクセスできない。crossmntを付けると、明示的に
-# exportしていない配下のマウントも親と同じオプションで暗黙にexportされる。
+# exportしていない配下のマウントも親と同じオプションで暗黙にexportされる
+# ……はずだったが、実際には暗黙exportされた子データセットのルートが
+# root:root 0770という間違った属性で見えてしまい (実際は keine:users 0700)、
+# パーミッションで弾かれて中に入れない不具合に遭遇した。各データセットを
+# 明示的にexportすることで回避する (crossmntは将来データセットが増えた時の
+# 保険として残す)。
 _: {
   services.nfs.server = {
     enable = true;
     exports = ''
       /tank/main 192.168.11.78(rw,sync,no_subtree_check,no_root_squash,crossmnt)
+      /tank/main/creations 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/documents 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/misc 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/music 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/pictures 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/videos 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
     '';
   };
 
