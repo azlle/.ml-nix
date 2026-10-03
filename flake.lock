@@ -629,11 +629,11 @@
         "twist": "twist"
       },
       "locked": {
-        "lastModified": 1790491556,
-        "narHash": "sha256-DDhjnNdyFP5p+cLlPBJIgD9F0tRd+zH+iugrQ0lepvI=",
+        "lastModified": 1791009360,
+        "narHash": "sha256-wOxxQW1tqM/AJYwCaKuq18E2w30JeWezVaRxOCy/ZC8=",
         "ref": "refs/heads/main",
-        "rev": "8fa5d652d1e1a6ef4412a9fb713345aa680acebb",
-        "revCount": 50,
+        "rev": "65c291963ced12e5a1ca3d631ce2cfe3d2bf2508",
+        "revCount": 52,
         "type": "git",
         "url": "https://github.com/Azlle/.ml-twist"
       },
