@@ -11,6 +11,10 @@ delib.module {
       forgejoSshDomain = "git-ssh.melocy.cc";
       forgejoHttpPort = 3080;
       forgejoSshPort = 2222;
+      # necrofantasiaはM.2単発で冗長性が無かったのでtankへの定期dumpコピーで
+      # 保険をかけていたが、本体をplainasiaに持ってきたならtank(IronWolf 8TB
+      # ミラー)自体に直接データを置けば済む。/tank/nextcloudと同じ考え方。
+      dataDir = "/tank/forgejo";
     in
     {
       virtualisation = {
@@ -56,7 +60,7 @@ delib.module {
                 "127.0.0.1:${toString forgejoSshPort}:22"
               ];
               volumes = [
-                "/var/lib/forgejo:/data"
+                "${dataDir}:/data"
                 "/etc/localtime:/etc/localtime:ro"
               ];
             };
@@ -64,8 +68,11 @@ delib.module {
         };
       };
 
-      systemd.tmpfiles.rules = [
-        "d /var/lib/forgejo 0755 root root -"
-      ];
+      # tank/forgejoはZFSデータセット自身のマウントとして既に存在するディレクトリ
+      # なので、tmpfiles.rulesで「無ければ作る」は使わない (nextcloud.nixと同じ
+      # 理由: tankがimportされていない/マウント失敗時でも黙ってOS側に空ディレクトリ
+      # が作られてしまい、気づかないまま間違った場所にデータを書き込みかねない)。
+      # RequiresMountsForで実際にマウントされているまで起動をブロックする。
+      systemd.services.podman-forgejo.unitConfig.RequiresMountsFor = [ dataDir ];
     };
 }

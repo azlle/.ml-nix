@@ -109,6 +109,20 @@
         daily_hour = 15;
         daily_min = 0;
       };
+      # necrofantasiaからForgejoを移してきた際に新設 (modules/containers/
+      # forgejo.nix)。旧TrueNAS由来ではないので保持期間は他の2つに合わせただけ。
+      "tank/forgejo" = {
+        recursive = true;
+        daily = 30;
+        hourly = 0;
+        weekly = 0;
+        monthly = 0;
+        yearly = 0;
+        autosnap = true;
+        autoprune = true;
+        daily_hour = 15;
+        daily_min = 0;
+      };
     };
   };
 }
