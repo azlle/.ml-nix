@@ -10,7 +10,7 @@
 { config, pkgs, ... }:
 let
   discordNotify = pkgs.writeShellScript "discord-notify" ''
-    set -eu
+    set -euo pipefail
 
     webhook_url=$(${pkgs.coreutils}/bin/cat "$DISCORD_WEBHOOK_FILE")
 
