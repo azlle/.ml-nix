@@ -1,5 +1,9 @@
 # modules/containers/forgejo.nix
-{ delib, ... }:
+{
+  delib,
+  config,
+  ...
+}:
 delib.module {
   name = "containers.forgejo";
 
@@ -15,8 +19,44 @@ delib.module {
       # 保険をかけていたが、本体をplainasiaに持ってきたならtank(IronWolf 8TB
       # ミラー)自体に直接データを置けば済む。/tank/nextcloudと同じ考え方。
       dataDir = "/tank/forgejo";
+
+      # rootless化の第一段階: 専用システムユーザーだけ先行投入する。この時点
+      # ではまだ下のoci-containersブロック(rootful)を使い続けるので無関係 —
+      # 実際にこのユーザーのsystemd --userインスタンス配下でForgejoを動かす
+      # のはrootlessイメージへの切り替えとデータ移行が済んでから (別PR)。
+      forgejoUser = config.users.users.forgejo;
     in
     {
+      # home (/var/lib/forgejo-podman) はForgejo自体のデータ(dataDir)とは
+      # 別物で、rootless podman自身のストレージ(イメージ/コンテナlayer)置き場
+      # でしかないのでtank配下に置く必要はない。
+      users.users.forgejo = {
+        isSystemUser = true;
+        uid = 990;
+        group = "forgejo";
+        home = "/var/lib/forgejo-podman";
+        createHome = true;
+        linger = true;
+        autoSubUidGidRange = true;
+      };
+      users.groups.forgejo.gid = 990;
+
+      # 2026-10-06に一度踏んだ罠を先取りで回避する: デフォルトの
+      # overrideStrategy (asDropinIfExists) は「同名のユニットファイルが
+      # 既にパッケージから提供されているか」をファイル名の完全一致で判定する。
+      # user@.serviceはテンプレートユニットなので実体ファイルとして存在する
+      # のはuser@.service自身だけで、user@990.serviceというファイルはどの
+      # パッケージにも存在しない。判定が外れるとドロップインではなく新規
+      # ユニットとして丸ごと生成されてしまい、ExecStartを持たない空の
+      # ユニットが本物のuser@.serviceテンプレートを差し替え、
+      # loginctl enable-lingerが user@990.service の起動に失敗する
+      # ("Exec format error")。overrideStrategy = "asDropin" を明示することで
+      # 本物のuser@990.service.d/overrides.confとして生成させる。
+      systemd.services."user@${toString forgejoUser.uid}" = {
+        overrideStrategy = "asDropin";
+        unitConfig.RequiresMountsFor = [ dataDir ];
+      };
+
       virtualisation = {
         podman = {
           enable = true;
