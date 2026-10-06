@@ -1,13 +1,40 @@
 # hosts/plainasia/parts/boot.nix
-{ config, pkgs, ... }:
-
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
+let
+  # linuxPackages-cachyos-lts-lto-x86_64-v3プリセットに無いチューニングを
+  # 追加するため、生カーネル (mkCachyKernel) を.overrideしてから
+  # kernel-cachyos/packages.nixと同じ手順で組み立て直す: zfs_cachyosを
+  # 新カーネルに繋ぎ直し、kernelModuleLLVMOverride (helpers.nix) でLTOカーネル
+  # 上のout-of-tree moduleのgcc直呼び出しをcc経由に書き換える。
+  cachyKernel = pkgs.cachyosKernels.linux-cachyos-lts-lto-x86_64-v3.override {
+    # Cloudflare Tunnel越しのNextcloudアップロード/ダウンロードのような、
+    # 遅延の大きい経路のスループットを優先してBBR3に変更 (デフォルトはCubic)。
+    bbr3 = true;
+    # ZFS ARC + Postgres + PHPが同居するため、デフォルトの"always" (透過的
+    # ヒュージページを全面適用) によるkhugepaged圧縮起因のレイテンシスパイクを
+    # 避ける。
+    hugepage = "madvise";
+  };
+  cachyHelpers = pkgs.callPackage "${inputs.nix-cachyos-kernel}/helpers.nix" { };
+in
 {
   boot = {
     # CachyOS には BORE + LTS の組み合わせが存在しない (BORE は latest カーネル、
     # LTS は EEVDF + Cachy Sauce)。ZFS モジュールも zfs-cachyos-lts 系しか LTS に
     # 対応しない。NAS 用途には BORE (対話・ゲーミング向け) より EEVDF が適合する。
     # x86_64-v3 は 13世代 i7 (検証機) / Ryzen 5 5600G (本番機) 双方が対応する。
-    kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-lts-lto-x86_64-v3;
+    kernelPackages = cachyHelpers.kernelModuleLLVMOverride (
+      (pkgs.linuxKernel.packagesFor cachyKernel).extend (
+        _final: _prev: {
+          zfs_cachyos = pkgs.cachyosKernels.zfs-cachyos-lts-lto.override { kernel = cachyKernel; };
+        }
+      )
+    );
 
     supportedFilesystems = [ "zfs" ];
     zfs = {
