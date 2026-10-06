@@ -2,7 +2,7 @@
 # Reference: https://grahamc.com/blog/nixos-on-zfs/
 { inputs, ... }:
 let
-  mainDevice = "/dev/disk/by-id/REPLACE_AT_INSTALL_TIME";
+  mainDevice = "/dev/disk/by-id/nvme-SPCC_M.2_PCIe_SSD_WWDD250311052002133";
 in
 {
   imports = [ inputs.disko.nixosModules.disko ];
