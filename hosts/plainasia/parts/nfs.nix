@@ -8,24 +8,24 @@
 # keine (uid=1000) 所有ディレクトリに書き込めるようにするため。root_squash
 # だとこの書き込みが弾かれる。
 
-_: {
+{ lan, ... }: {
   services.nfs.server = {
     enable = true;
 
     # When mounting nested ZFS datasets over NFS, each dataset must be exported separately.
     # See: https://github.com/openzfs/zfs/issues/8376
     exports = ''
-      /tank/main           192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/creations 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/documents 192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/misc      192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/music     192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/pictures  192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/videos    192.168.11.78(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main           ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/creations ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/documents ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/misc      ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/music     ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/pictures  ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main/videos    ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
     '';
   };
 
   networking.firewall.extraInputRules = ''
-    ip saddr 192.168.11.78 tcp dport 2049 accept
+    ip saddr ${lan.necrofantasia} tcp dport 2049 accept
   '';
 }

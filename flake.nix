@@ -180,6 +180,7 @@
           );
           specialArgs = {
             inherit inputs nixSettings moduleSystem;
+            lan = import ./lan.nix;
           };
         };
     in

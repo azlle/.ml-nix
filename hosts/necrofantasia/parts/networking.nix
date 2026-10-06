@@ -1,5 +1,10 @@
 # hosts/necrofantasia/parts/networking.nix
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  lan,
+  ...
+}:
 with lib;
 {
   options = {
@@ -33,12 +38,12 @@ with lib;
         };
         interfaces.wlp4s0.ipv4.addresses = [
           {
-            address = "192.168.11.78";
+            address = lan.necrofantasia;
             prefixLength = 24;
           }
         ];
         defaultGateway = {
-          address = "192.168.11.1";
+          address = lan.gateway;
           interface = "wlp4s0";
         };
       })
@@ -50,7 +55,7 @@ with lib;
           useDHCP = false;
           ipv4.addresses = [
             {
-              address = "192.168.11.78";
+              address = lan.necrofantasia;
               prefixLength = 24;
             }
           ];
@@ -67,7 +72,7 @@ with lib;
         };
 
         defaultGateway = {
-          address = "192.168.11.1";
+          address = lan.gateway;
           interface = "enp3s0";
         };
 

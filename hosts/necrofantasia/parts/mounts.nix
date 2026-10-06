@@ -2,9 +2,9 @@
 # plainasia (hosts/plainasia/parts/nfs.nix) が tank/main を necrofantasia の
 # IPにのみエクスポートしているNFSマウント。旧TrueNAS時代のCIFSマウントを
 # 引き継ぐパス (/mnt/yamaxanadu)。
-_: {
+{ lan, ... }: {
   fileSystems."/mnt/yamaxanadu" = {
-    device = "192.168.11.92:/tank/main";
+    device = "${lan.plainasia}:/tank/main";
     fsType = "nfs";
     options = [
       "nfsvers=4.2"

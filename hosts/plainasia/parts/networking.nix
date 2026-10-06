@@ -1,5 +1,5 @@
 # hosts/plainasia/parts/networking.nix
-_:
+{ lan, ... }:
 
 {
   networking.hostId = "dc0cfb0e";
@@ -7,8 +7,8 @@ _:
   networking.useNetworkd = true;
   systemd.network.networks."10-lan" = {
     matchConfig.Name = "en*";
-    address = [ "192.168.11.92/24" ];
-    routes = [ { Gateway = "192.168.11.1"; } ];
+    address = [ "${lan.plainasia}/24" ];
+    routes = [ { Gateway = lan.gateway; } ];
     linkConfig.RequiredForOnline = "routable";
   };
 }
