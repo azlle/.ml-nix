@@ -67,62 +67,40 @@
     defaults.monitored = "-a -o on -S on -s (S/../../7/01|L/../28/./02)";
   };
 
-  # 旧TrueNASの実設定 (storage_task) を踏襲: data_pool/main と
-  # data_pool/nextcloud (→ tank/main, tank/nextcloud) に対して、毎日00:00・
-  # 再帰的・1ヶ月保持のスナップショットを取得。sanoidは経過時間ベースの
-  # プルーニング・粒度ごとの独立制御・鮮度監視まで持つ成熟したツールなので、
-  # 自作systemd timerより素直にこちらへ寄せる (スナップショットの命名規則
-  # だけは sanoid 独自の autosnap_<timestamp>_daily 形式になり、TrueNAS の
-  # daily-%Y-%m-%d_%H-%M とは一致しなくなる)。
   services.sanoid = {
     enable = true;
-    datasets = {
-      "tank/main" = {
-        recursive = true;
-        daily = 30;
-        hourly = 0;
-        weekly = 0;
-        monthly = 0;
-        yearly = 0;
-        autosnap = true;
-        autoprune = true;
-        # sanoidのNixOSモジュールは systemd.services.sanoid.environment.TZ を
-        # "UTC" に固定している (DST切り替え時の欠落/重複を防ぐための上流の
-        # 意図的な設計)。そのため daily_hour/daily_min はUTC基準で解釈される。
-        # JST 00:00 (旧TrueNASの実行時刻) = UTC 15:00 (前日)。
-        daily_hour = 15;
-        daily_min = 0;
+    datasets =
+      let
+        # 旧TrueNASの実設定 (storage_task) を踏襲: data_pool/main と
+        # data_pool/nextcloud (→ tank/main, tank/nextcloud) に対して、毎日00:00・
+        # 再帰的・1ヶ月保持のスナップショットを取得。sanoidは経過時間ベースの
+        # プルーニング・粒度ごとの独立制御・鮮度監視まで持つ成熟したツールなので、
+        # 自作systemd timerより素直にこちらへ寄せる (スナップショットの命名規則
+        # だけは sanoid 独自の autosnap_<timestamp>_daily 形式になり、TrueNAS の
+        # daily-%Y-%m-%d_%H-%M とは一致しなくなる)。tank/forgejoはnecrofantasia
+        # からForgejoを移してきた際に新設 (modules/containers/forgejo.nix)。
+        # 旧TrueNAS由来ではないので保持期間は他の2つに合わせただけ。
+        common = {
+          recursive = true;
+          daily = 30;
+          hourly = 0;
+          weekly = 0;
+          monthly = 0;
+          yearly = 0;
+          autosnap = true;
+          autoprune = true;
+          # sanoidのNixOSモジュールは systemd.services.sanoid.environment.TZ を
+          # "UTC" に固定している (DST切り替え時の欠落/重複を防ぐための上流の
+          # 意図的な設計)。そのため daily_hour/daily_min はUTC基準で解釈される。
+          # JST 00:00 (旧TrueNASの実行時刻) = UTC 15:00 (前日)。
+          daily_hour = 15;
+          daily_min = 0;
+        };
+      in
+      {
+        "tank/main" = common;
+        "tank/nextcloud" = common;
+        "tank/forgejo" = common;
       };
-      "tank/nextcloud" = {
-        recursive = true;
-        daily = 30;
-        hourly = 0;
-        weekly = 0;
-        monthly = 0;
-        yearly = 0;
-        autosnap = true;
-        autoprune = true;
-        # sanoidのNixOSモジュールは systemd.services.sanoid.environment.TZ を
-        # "UTC" に固定している (DST切り替え時の欠落/重複を防ぐための上流の
-        # 意図的な設計)。そのため daily_hour/daily_min はUTC基準で解釈される。
-        # JST 00:00 (旧TrueNASの実行時刻) = UTC 15:00 (前日)。
-        daily_hour = 15;
-        daily_min = 0;
-      };
-      # necrofantasiaからForgejoを移してきた際に新設 (modules/containers/
-      # forgejo.nix)。旧TrueNAS由来ではないので保持期間は他の2つに合わせただけ。
-      "tank/forgejo" = {
-        recursive = true;
-        daily = 30;
-        hourly = 0;
-        weekly = 0;
-        monthly = 0;
-        yearly = 0;
-        autosnap = true;
-        autoprune = true;
-        daily_hour = 15;
-        daily_min = 0;
-      };
-    };
   };
 }
