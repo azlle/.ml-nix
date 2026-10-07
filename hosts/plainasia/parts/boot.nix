@@ -94,6 +94,10 @@ in
     defaults.monitored = "-a -o on -S on -s (S/../../7/01|L/../28/./02)";
   };
 
+  # smartmontools自体はsmartdの依存として既にクロージャに入っているが、
+  # environment.systemPackagesに入れないとsmartctlが対話シェルのPATHに出てこない。
+  environment.systemPackages = [ pkgs.smartmontools ];
+
   services.sanoid = {
     enable = true;
     datasets =

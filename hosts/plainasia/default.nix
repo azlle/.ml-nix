@@ -23,6 +23,7 @@ delib.host {
     ./parts/smb.nix
     ./parts/nfs.nix
     ./parts/alerts.nix
+    ./parts/fancontrol.nix
   ];
 
   home = _: {
