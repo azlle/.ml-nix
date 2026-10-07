@@ -92,6 +92,25 @@ delib.module {
             UserNS = "keep-id:uid=1000,gid=1000";
 
             Environment = {
+              # rootlessイメージのGITEA_CUSTOM/GITEA_APP_INI/GITEA_WORK_DIR/
+              # HOMEは/var/lib/gitea基準の値がDockerfile内で${GITEA_CUSTOM}
+              # 展開済みの固定文字列としてビルド時に焼き込まれている
+              # (GITEA_APP_INI=/var/lib/gitea/custom/conf/app.ini相当)。
+              # 実行時にGITEA_CUSTOMだけ上書きしても、既にビルド時に展開済みの
+              # GITEA_APP_INIは連動して変わらない。entrypointはどのapp.iniを
+              # -cで開くかをこれで決めるので、Volumeをどこにマウントしようと
+              # 無関係にそちらを見てしまい、既存データを全く読まない新規インス
+              # タンスが生成される (2026-10-07の実機投入で実際に踏んだ —
+              # HTTP/SSHバナーは新規インスタンスでも普通に応答するので、通常の
+              # 動作確認だけでは気づけない。起動ログのWorkPath:/ConfigFile:行
+              # で実データを指しているか確認する必要がある)。4つとも明示的に
+              # 実データ側 (/data、volumesで${dataDir}をマウントしている先) へ
+              # 向ける。
+              GITEA_CUSTOM = "/data/gitea";
+              GITEA_APP_INI = "/data/gitea/conf/app.ini";
+              GITEA_WORK_DIR = "/data/gitea";
+              HOME = "/data/git";
+
               # USER_UID/USER_GIDは通常版イメージが内部でusermod/groupmodする
               # ためのもので、USER 1000:1000が焼き込まれているrootlessイメージ
               # には存在しない/無意味なので削除。
@@ -102,10 +121,9 @@ delib.module {
               FORGEJO__server__SSH_DOMAIN = forgejoSshDomain;
               # rootlessイメージの既定は2222 (<1024のbindにはCAP_NET_BIND_SERVICE
               # /rootが要るが、このイメージはuid 1000から一度もrootにならない)。
-              # 既存のapp.iniには旧インストール時の値 (22) がそのまま永続化
-              # されていて、対応する環境変数が無いキーは上書きされない
-              # (SSH_DOMAIN等、対応する環境変数があるキーは毎回書き込まれる
-              # ことをドライランで実証済み)。明示的に指定して毎回同期させる。
+              # 実データのapp.iniには旧インストール時の値 (22) がそのまま永続
+              # 化されているので、SSH_DOMAINと同じ仕組み (FORGEJO__*環境変数が
+              # 毎回app.iniに書き込まれる) で2222に同期させる。
               FORGEJO__server__SSH_PORT = "2222";
               FORGEJO__server__SSH_LISTEN_PORT = "2222";
               FORGEJO__service__DISABLE_REGISTRATION = "true";
@@ -130,12 +148,9 @@ delib.module {
               # そのまま、コンテナ内側(右辺)だけ22→2222に直す。
               "127.0.0.1:${toString forgejoSshPort}:2222"
             ];
-            # ドライランで実証済み: app.iniに既に焼き込まれているWORK_PATH/
-            # APP_DATA_PATH等が/data/gitea基準なので、マウント先を
-            # /var/lib/gitea (rootlessイメージの既定) に変えると「/dataが
-            # 存在しない」エラーで即死する。対応する環境変数が無いこれらの
-            # キーは書き換わらないので、マウント先はrootful時代と同じ/data
-            # のまま変えない (ディレクトリの再構成も不要)。
+            # マウント先はrootful時代と同じ/dataのまま変えない (上の
+            # GITEA_CUSTOM等の環境変数でこの/data/gitea・/data/gitを指して
+            # いるので、ディレクトリの再構成は不要)。
             Volume = [
               "${dataDir}:/data"
               "/etc/localtime:/etc/localtime:ro"
