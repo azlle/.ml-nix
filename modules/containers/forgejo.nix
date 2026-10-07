@@ -119,6 +119,16 @@ delib.module {
               FORGEJO__server__PROTOCOL = "http";
               FORGEJO__server__HTTP_PORT = "3000";
               FORGEJO__server__SSH_DOMAIN = forgejoSshDomain;
+              # 実データのapp.iniは通常版イメージの頃に作られたままなので
+              # START_SSH_SERVER/BUILTIN_SSH_SERVER_USERキー自体が存在しない
+              # (rootlessイメージ専用の設定で、通常版の頃は実sshd+
+              # AuthorizedKeysCommand方式だったためこのキーが要らなかった)。
+              # 無いと埋め込みSSHサーバーが一切起動しない (ドライランで実証:
+              # SSH_PORT/SSH_LISTEN_PORTは正しく2222になっていてもHTTPの3000
+              # 以外どのポートもlistenしておらず、SSH接続は毎回kex前に
+              # connection resetになっていた)。明示的に有効化する。
+              FORGEJO__server__START_SSH_SERVER = "true";
+              FORGEJO__server__BUILTIN_SSH_SERVER_USER = "git";
               # rootlessイメージの既定は2222 (<1024のbindにはCAP_NET_BIND_SERVICE
               # /rootが要るが、このイメージはuid 1000から一度もrootにならない)。
               # 実データのapp.iniには旧インストール時の値 (22) がそのまま永続
