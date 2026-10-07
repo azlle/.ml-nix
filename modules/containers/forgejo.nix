@@ -3,6 +3,7 @@
   delib,
   config,
   inputs,
+  pkgs,
   ...
 }:
 delib.module {
@@ -42,6 +43,29 @@ delib.module {
       };
       users.groups.forgejo.gid = 990;
 
+      # 2026-10-07の移行作業で手動で一度叩いただけだった`chown -R 990:990`を
+      # 宣言化する。これが無いと、古いsanoidスナップショットからの復元や
+      # 再インストール後の再import等でdataDirの所有者がuid 1000 (rootful
+      # 時代) に戻ってしまった場合、rootless化の設定(UserNS=keep-id)自体は
+      # 正しく再現されてもForgejoコンテナ側は再現されず、docker-entrypoint.sh
+      # 内の各種chmod/mkdirがEPERMで失敗する (2026-10-07に実際に踏んだ:
+      # chmod: /data/git: Operation not permitted)。起動の度に
+      # (ZFSデータセットとしては安価な) chownを再適用することで、tank配下の
+      # データが生き残っていればuidがズレていても自己修復するようにする。
+      # systemd.tmpfiles.rulesのZ型ではなく専用serviceにする理由: tmpfiles
+      # はブート初期に動くためtankのZFS importより先に走る可能性があり、
+      # マウント前の空ディレクトリに対して実行されてしまう (nextcloud.nixと
+      # 同じ理由でtmpfiles.rulesの「無ければ作る」系を避けているのと同根)。
+      # RequiresMountsForで実マウントまで待つ。
+      systemd.services.forgejo-fix-ownership = {
+        description = "Ensure ${dataDir} is owned by the forgejo user";
+        unitConfig.RequiresMountsFor = [ dataDir ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${pkgs.coreutils}/bin/chown -R ${toString forgejoUser.uid}:${toString forgejoUser.uid} ${dataDir}";
+        };
+      };
+
       # 2026-10-06に一度踏んだ罠を先取りで回避する: デフォルトの
       # overrideStrategy (asDropinIfExists) は「同名のユニットファイルが
       # 既にパッケージから提供されているか」をファイル名の完全一致で判定する。
@@ -53,9 +77,20 @@ delib.module {
       # loginctl enable-lingerが user@990.service の起動に失敗する
       # ("Exec format error")。overrideStrategy = "asDropin" を明示することで
       # 本物のuser@990.service.d/overrides.confとして生成させる。
+      #
+      # forgejo-fix-ownershipへのRequires/Afterも、tank未マウント時の保護
+      # (RequiresMountsFor) と同じ理由でここに付ける: コンテナ本体
+      # (forgejo.service) はuid 990のsystemd --userインスタンス配下にあり、
+      # system側のuser@990.serviceが先に起動を終えていなければそもそも
+      # 存在し得ないので、ここでchownを待たせれば十分で、forgejo.service
+      # 自体に個別に依存を付ける必要は無い。
       systemd.services."user@${toString forgejoUser.uid}" = {
         overrideStrategy = "asDropin";
-        unitConfig.RequiresMountsFor = [ dataDir ];
+        unitConfig = {
+          RequiresMountsFor = [ dataDir ];
+          Requires = [ "forgejo-fix-ownership.service" ];
+          After = [ "forgejo-fix-ownership.service" ];
+        };
       };
 
       virtualisation.podman = {
