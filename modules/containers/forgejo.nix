@@ -2,12 +2,17 @@
 {
   delib,
   config,
+  inputs,
   ...
 }:
 delib.module {
   name = "containers.forgejo";
 
   options = delib.singleCascadeEnableOption;
+
+  # nextcloud.nixと同じ理由でここでも読み込んでおく (containers.forgejo.enable
+  # がfalseでも問題ない)。
+  nixos.always.imports = [ inputs.quadlet-nix.nixosModules.default ];
 
   nixos.ifEnabled =
     let
@@ -20,10 +25,6 @@ delib.module {
       # ミラー)自体に直接データを置けば済む。/tank/nextcloudと同じ考え方。
       dataDir = "/tank/forgejo";
 
-      # rootless化の第一段階: 専用システムユーザーだけ先行投入する。この時点
-      # ではまだ下のoci-containersブロック(rootful)を使い続けるので無関係 —
-      # 実際にこのユーザーのsystemd --userインスタンス配下でForgejoを動かす
-      # のはrootlessイメージへの切り替えとデータ移行が済んでから (別PR)。
       forgejoUser = config.users.users.forgejo;
     in
     {
@@ -57,62 +58,90 @@ delib.module {
         unitConfig.RequiresMountsFor = [ dataDir ];
       };
 
-      virtualisation = {
-        podman = {
-          enable = true;
-          dockerCompat = true;
-          defaultNetwork.settings.dns_enabled = true;
-          autoPrune.enable = true;
-        };
+      virtualisation.podman = {
+        enable = true;
+        dockerCompat = true;
+        defaultNetwork.settings.dns_enabled = true;
+        autoPrune.enable = true;
+      };
 
-        oci-containers = {
-          backend = "podman";
-          containers = {
-            forgejo = {
-              image = "codeberg.org/forgejo/forgejo:16";
-              hostname = forgejoDomain;
-              environment = {
-                USER_UID = "1000";
-                USER_GID = "1000";
-                FORGEJO__server__DOMAIN = forgejoDomain;
-                FORGEJO__server__ROOT_URL = "https://${forgejoDomain}/";
-                FORGEJO__server__PROTOCOL = "http";
-                FORGEJO__server__HTTP_PORT = "3000";
-                FORGEJO__server__SSH_DOMAIN = forgejoSshDomain;
-                FORGEJO__service__DISABLE_REGISTRATION = "true";
-                FORGEJO__security__INSTALL_LOCK = "true";
-                FORGEJO__session__COOKIE_SECURE = "true";
-                FORGEJO__database__DB_TYPE = "sqlite3";
+      virtualisation.quadlet = {
+        enable = true;
 
-                FORGEJO__cron_0X2E_git_gc_repos__ENABLED = "true";
-                FORGEJO__cron_0X2E_git_gc_repos__RUN_AT_START = "false";
-                FORGEJO__cron_0X2E_git_gc_repos__SCHEDULE = "0 23 * * 6";
-                FORGEJO__cron_0X2E_git_gc_repos__TIMEOUT = "25m";
-              };
-              # plainasiaにcloudflaredと同居させたので、LAN越しのバインドは
-              # 不要になった (旧necrofantasia時代はcloudflaredが別ホストだった
-              # ためLAN固定IPにバインドしていた)。loopback限定にすることで
-              # 直接到達できるのはこのホスト上のcloudflaredだけ、という元の
-              # アクセス範囲 (necrofantasia側ファイアウォールでplainasiaの
-              # 固定IPだけに絞っていたのと同義) を保っている。
-              ports = [
-                "127.0.0.1:${toString forgejoHttpPort}:3000"
-                "127.0.0.1:${toString forgejoSshPort}:22"
-              ];
-              volumes = [
-                "${dataDir}:/data"
-                "/etc/localtime:/etc/localtime:ro"
-              ];
+        containers.forgejo = {
+          # uidを指定すると、rootfulなsystemユニットではなくこのuidのsystemd
+          # --userインスタンス配下のユニットとして生成される
+          # (quadlet-nixのRootless units参照)。RequiresMountsForは上の
+          # systemd.services."user@990"側に付けてあるので、tank未マウント時の
+          # 保護はそちらが担う。
+          uid = forgejoUser.uid;
+
+          containerConfig = {
+            # 通常版イメージのPID1はs6-overlayでroot初期化が必須
+            # (2026-10-06の障害: UserNS=keep-idと組み合わせるとs6-svscanが
+            # .s6-svscan/lockを開けずに即死する)。USER 1000:1000が最初から
+            # 焼き込まれていてroot化する瞬間が無いrootless専用タグに切り替える。
+            Image = "codeberg.org/forgejo/forgejo:16-rootless";
+            ContainerName = "forgejo";
+            HostName = forgejoDomain;
+
+            # rootfulだった頃はコンテナ内uid 1000がホストのuid 1000へ素通し
+            # だったが、rootlessではpodmanのuser namespace越しになる。keep-idで
+            # ホスト側(forgejoユーザー, uid 990)をコンテナ内uid 1000へ固定
+            # マッピングする。
+            UserNS = "keep-id:uid=1000,gid=1000";
+
+            Environment = {
+              # USER_UID/USER_GIDは通常版イメージが内部でusermod/groupmodする
+              # ためのもので、USER 1000:1000が焼き込まれているrootlessイメージ
+              # には存在しない/無意味なので削除。
+              FORGEJO__server__DOMAIN = forgejoDomain;
+              FORGEJO__server__ROOT_URL = "https://${forgejoDomain}/";
+              FORGEJO__server__PROTOCOL = "http";
+              FORGEJO__server__HTTP_PORT = "3000";
+              FORGEJO__server__SSH_DOMAIN = forgejoSshDomain;
+              # rootlessイメージの既定は2222 (<1024のbindにはCAP_NET_BIND_SERVICE
+              # /rootが要るが、このイメージはuid 1000から一度もrootにならない)。
+              # 既存のapp.iniには旧インストール時の値 (22) がそのまま永続化
+              # されていて、対応する環境変数が無いキーは上書きされない
+              # (SSH_DOMAIN等、対応する環境変数があるキーは毎回書き込まれる
+              # ことをドライランで実証済み)。明示的に指定して毎回同期させる。
+              FORGEJO__server__SSH_PORT = "2222";
+              FORGEJO__server__SSH_LISTEN_PORT = "2222";
+              FORGEJO__service__DISABLE_REGISTRATION = "true";
+              FORGEJO__security__INSTALL_LOCK = "true";
+              FORGEJO__session__COOKIE_SECURE = "true";
+              FORGEJO__database__DB_TYPE = "sqlite3";
+
+              FORGEJO__cron_0X2E_git_gc_repos__ENABLED = "true";
+              FORGEJO__cron_0X2E_git_gc_repos__RUN_AT_START = "false";
+              FORGEJO__cron_0X2E_git_gc_repos__SCHEDULE = "0 23 * * 6";
+              FORGEJO__cron_0X2E_git_gc_repos__TIMEOUT = "25m";
             };
+            # plainasiaにcloudflaredと同居させたので、LAN越しのバインドは
+            # 不要になった (旧necrofantasia時代はcloudflaredが別ホストだった
+            # ためLAN固定IPにバインドしていた)。loopback限定にすることで
+            # 直接到達できるのはこのホスト上のcloudflaredだけ、という元の
+            # アクセス範囲 (necrofantasia側ファイアウォールでplainasiaの
+            # 固定IPだけに絞っていたのと同義) を保っている。
+            PublishPort = [
+              "127.0.0.1:${toString forgejoHttpPort}:3000"
+              # 公開側(左辺、cloudflared.nixのgit-ssh.melocy.cc ingress先)は
+              # そのまま、コンテナ内側(右辺)だけ22→2222に直す。
+              "127.0.0.1:${toString forgejoSshPort}:2222"
+            ];
+            # ドライランで実証済み: app.iniに既に焼き込まれているWORK_PATH/
+            # APP_DATA_PATH等が/data/gitea基準なので、マウント先を
+            # /var/lib/gitea (rootlessイメージの既定) に変えると「/dataが
+            # 存在しない」エラーで即死する。対応する環境変数が無いこれらの
+            # キーは書き換わらないので、マウント先はrootful時代と同じ/data
+            # のまま変えない (ディレクトリの再構成も不要)。
+            Volume = [
+              "${dataDir}:/data"
+              "/etc/localtime:/etc/localtime:ro"
+            ];
           };
         };
       };
-
-      # tank/forgejoはZFSデータセット自身のマウントとして既に存在するディレクトリ
-      # なので、tmpfiles.rulesで「無ければ作る」は使わない (nextcloud.nixと同じ
-      # 理由: tankがimportされていない/マウント失敗時でも黙ってOS側に空ディレクトリ
-      # が作られてしまい、気づかないまま間違った場所にデータを書き込みかねない)。
-      # RequiresMountsForで実際にマウントされているまで起動をブロックする。
-      systemd.services.podman-forgejo.unitConfig.RequiresMountsFor = [ dataDir ];
     };
 }
