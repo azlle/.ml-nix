@@ -66,6 +66,29 @@ delib.module {
         };
       };
 
+      # virtualisation.podman.autoPrune (nixpkgs本体) が生成するpodman-prune.
+      # serviceはrequires=podman.serviceの素のsystemユニットで、root所有の
+      # rootfulなpodmanストレージ(/var/lib/containers/storage)にしか
+      # ExecStart = podman system prune -fを投げない。rootlessでuid 990
+      # 専用のストレージ(/var/lib/forgejo-podman)に切り出した時点でそちら
+      # の対象から外れる (quadlet/oci-containersの違いは無関係 — rootfulで
+      # 動く限りは元々同じストレージを共有しているので、Nextcloud含め
+      # 既存のautoPruneはそのまま効き続ける)。同じ理屈をforgejo自身の
+      # ストレージにも適用するため、User=でuid 990として実行するだけの
+      # 専用unitを用意する。
+      systemd.services.forgejo-podman-prune = {
+        description = "Prune forgejo's rootless podman resources";
+        after = [ "user@${toString forgejoUser.uid}.service" ];
+        requires = [ "user@${toString forgejoUser.uid}.service" ];
+        startAt = "weekly";
+        serviceConfig = {
+          Type = "oneshot";
+          User = forgejoUser.name;
+          Environment = "XDG_RUNTIME_DIR=/run/user/${toString forgejoUser.uid}";
+          ExecStart = "${config.virtualisation.podman.package}/bin/podman system prune -f";
+        };
+      };
+
       # 2026-10-06に一度踏んだ罠を先取りで回避する: デフォルトの
       # overrideStrategy (asDropinIfExists) は「同名のユニットファイルが
       # 既にパッケージから提供されているか」をファイル名の完全一致で判定する。
