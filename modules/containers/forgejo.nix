@@ -85,7 +85,13 @@ delib.module {
           Type = "oneshot";
           User = forgejoUser.name;
           Environment = "XDG_RUNTIME_DIR=/run/user/${toString forgejoUser.uid}";
-          ExecStart = "${config.virtualisation.podman.package}/bin/podman system prune -f";
+          # --all --volumes: 素の`prune -f`(nixpkgs本体のautoPruneの既定と
+          # 同じ)はdanglingな(タグ無し)イメージしか消さず、volumeも対象外。
+          # このストレージはforgejo専用コンテナ1つのためだけに存在するので、
+          # タグ付きでも未使用なイメージ・volumeを残しておく理由が無い
+          # (実際に旧通常版イメージのタグ付き残骸195MBと未使用volume
+          # 5.49MBが素のprune -fでは全く回収されなかった)。
+          ExecStart = "${config.virtualisation.podman.package}/bin/podman system prune --force --all --volumes";
         };
       };
 
