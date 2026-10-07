@@ -119,6 +119,15 @@ delib.module {
               FORGEJO__server__PROTOCOL = "http";
               FORGEJO__server__HTTP_PORT = "3000";
               FORGEJO__server__SSH_DOMAIN = forgejoSshDomain;
+              # 埋め込みSSHサーバーの既定鍵名はgitea.rsa等だが、実データの
+              # ホスト鍵は旧来の実sshd時代の命名 (ssh_host_*_key) で
+              # /data/ssh配下 (APP_DATA_PATHである/data/giteaの外) にある。
+              # 指定しないと埋め込みサーバーは既定の場所に新規鍵を生成して
+              # しまい (実際に2回, 再起動ごとに毎回違う鍵で発生した)、
+              # git-ssh.melocy.ccのホスト鍵がデプロイごとに変わり続ける。
+              # 鍵ファイル自体は標準PEM形式なのでファイル名が違っても読める
+              # はず — 絶対パスで実ファイルを直接指定する。
+              FORGEJO__server__SSH_SERVER_HOST_KEYS = "/data/ssh/ssh_host_rsa_key,/data/ssh/ssh_host_ecdsa_key,/data/ssh/ssh_host_ed25519_key";
               # 実データのapp.iniは通常版イメージの頃に作られたままなので
               # START_SSH_SERVER/BUILTIN_SSH_SERVER_USERキー自体が存在しない
               # (rootlessイメージ専用の設定で、通常版の頃は実sshd+
