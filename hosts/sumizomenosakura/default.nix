@@ -8,6 +8,9 @@ delib.host {
   system = "x86_64-linux";
   wsl = true;
   stateVersion = "24.11";
+  type = "homeManager";
+
+  myconfig.emacs = "pgtk";
 
   home = {
     nix = nixSettings { extraSettings = { }; };

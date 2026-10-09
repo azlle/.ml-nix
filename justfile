@@ -50,7 +50,7 @@ show-enabled host:
     set -euo pipefail
     errfile=$(mktemp)
     trap 'rm -f "$errfile"' EXIT
-    for a in host.type host.isPC host.isServer \
+    for a in host.type host.isLaptop host.isServer \
              desktop.enable containers.enable \
              containers.forgejo.enable containers.cloudflared.enable; do
       printf '%-34s = ' "$a"

@@ -3,6 +3,12 @@
 delib.module {
   name = "emacs";
 
+  options = delib.moduleOptions (
+    { myconfig, ... }:
+    with delib;
+    enumOption [ "pgtk" "nox" ] (if myconfig.host.isLaptop then "pgtk" else "nox")
+  );
+
   home.always =
     { myconfig, ... }:
     {
@@ -13,9 +19,9 @@ delib.module {
         emacsclient.enable = true;
         createInitFile = true;
         createManifestFile = true;
-        # GUIの要らないホスト (NAS機等) はGTK/native-comp抜きのnox版にする。
+
         config =
-          if myconfig.host.isPC then
+          if myconfig.emacs == "pgtk" then
             inputs.ml-twist.packages.x86_64-linux.default
           else
             inputs.ml-twist.packages.x86_64-linux.nox;

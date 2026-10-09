@@ -7,8 +7,8 @@ delib.module {
     { myconfig, ... }:
     with delib;
     {
-      # isPC = isDesktop || isLaptop (denix base extension's built-in host type).
-      enable = boolOption myconfig.host.isPC;
+      # isLaptop: denix base extension の host type ("laptop") から自動生成される。
+      enable = boolOption myconfig.host.isLaptop;
     }
   );
 }

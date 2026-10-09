@@ -151,6 +151,14 @@
           inherit moduleSystem;
           extensions = [
             (denix.lib.extensions.base.withConfig {
+              # 既定の desktop/laptop/server ではなく、実際に使う3分類
+              # (WMを持つNixOS/standaloneなNix+home-manager/サーバー機のNixOS)
+              # に合わせて上書きする。isPC 等はこの types から自動生成される。
+              hosts.type.types = [
+                "laptop"
+                "homeManager"
+                "server"
+              ];
               hosts.extraSubmodules = [
                 {
                   options.wsl = denix.lib.options.boolOption false;
