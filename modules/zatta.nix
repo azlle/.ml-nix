@@ -14,7 +14,7 @@ delib.module {
             btop
             claude-code
             curl
-            ffmpeg
+            ffmpeg-headless
             gh
             htop
             just
