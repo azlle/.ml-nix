@@ -64,7 +64,7 @@ delib.module {
           # 動作しない。カスタムイメージをビルドする代わりに、ホストの
           # /nix/storeをコンテナへ読み取り専用でbind mountして (下のvolumes参照)、
           # Nixが既にビルド済みのffmpegを絶対パスで直接指定する。
-          'preview_ffmpeg_path' => '${pkgs.ffmpeg}/bin/ffmpeg',
+          'preview_ffmpeg_path' => '${pkgs.ffmpeg-headless}/bin/ffmpeg',
           'enabledPreviewProviders' => [
             'OC\Preview\PNG',
             'OC\Preview\JPEG',
