@@ -97,6 +97,12 @@
     }@inputs:
 
     let
+      lan = {
+        plainasia = "192.168.11.92";
+        necrofantasia = "192.168.11.78";
+        gateway = "192.168.11.1";
+      };
+
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
@@ -171,8 +177,7 @@
             map (host: ./hosts + "/${host}/parts") (builtins.attrNames (builtins.readDir ./hosts))
           );
           specialArgs = {
-            inherit inputs nixSettings moduleSystem;
-            lan = import ./lan.nix;
+            inherit inputs nixSettings moduleSystem lan;
           };
         };
     in
