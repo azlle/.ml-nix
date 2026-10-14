@@ -16,9 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nixpkgs を follows させない: ml-twist 側で emacs-overlay 自身の nixpkgs に
-    # follows させてあり (cachix のキャッシュヒットに必要)、ここで上書きすると
-    # 無関係な組み合わせになってキャッシュミスする。
     ml-twist.url = "git+https://github.com/Azlle/.ml-twist";
 
     catppuccin.url = "github:catppuccin/nix";
@@ -113,7 +110,6 @@
 
       treefmtEval = treefmt-nix.lib.evalModule pkgs {
         projectRootFile = "flake.nix";
-        # nixos-generate-config の生成物なので整形対象から外す
         settings.global.excludes = [ "hosts/*/parts/hardware-configuration.nix" ];
         programs = {
           nixfmt.enable = true;
@@ -151,9 +147,6 @@
           inherit moduleSystem;
           extensions = [
             (denix.lib.extensions.base.withConfig {
-              # 既定の desktop/laptop/server ではなく、実際に使う3分類
-              # (WMを持つNixOS/standaloneなNix+home-manager/サーバー機のNixOS)
-              # に合わせて上書きする。isPC 等はこの types から自動生成される。
               hosts.type.types = [
                 "laptop"
                 "homeManager"
@@ -172,17 +165,8 @@
             ./modules
             ./hosts
           ];
-          # `hosts/<name>/parts/` は素の NixOS モジュール置き場。denix の再帰スキャンに
-          # 拾われると「全ホストに適用されるモジュール」として扱われてしまう
-          # (ホスト固有の IP や PCI バス ID が他ホストにも及び、値が衝突する) ため、
-          # ディレクトリごとスキャン対象から外し、各ホストが自分の `nixos.imports`
-          # で明示的に読む。
-          #
-          # ここを手書きのリストにすると、ファイルを足すたびに1行追加が必要な上、
-          # 忘れても衝突相手がいなければ eval が通ってしまい気づけない。
-          # ホスト一覧から導出して、追加時に何も書き足さなくて済むようにする。
-          # parts/ を持たないホスト (WSL の sumizomenosakura など) もあるので、
-          # 実在するものだけを渡す。存在しないパスを fileset に渡すと落ちる。
+
+          # hosts/<name>/partsを再帰的にDenixから除外する設定(e.g. disko.nix, hardware-configuration.nix)
           exclude = builtins.filter builtins.pathExists (
             map (host: ./hosts + "/${host}/parts") (builtins.attrNames (builtins.readDir ./hosts))
           );
