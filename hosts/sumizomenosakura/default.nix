@@ -10,7 +10,10 @@ delib.host {
   stateVersion = "24.11";
   type = "homeManager";
 
-  myconfig.emacs = "pgtk";
+  myconfig = {
+    emacs = "pgtk";
+    desktop.fonts.enable = true; # for Emacs
+  };
 
   home = {
     nix = nixSettings { extraSettings = { }; };
