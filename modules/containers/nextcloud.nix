@@ -229,7 +229,7 @@ delib.module {
           # バージョンが分かれていない)。
           nextcloud-imaginary = {
             containerConfig = {
-              Image = "ghcr.io/nextcloud-releases/aio-imaginary:latest";
+              Image = "ghcr.io/nextcloud-releases/aio-imaginary:20260929_105435";
               ContainerName = "nextcloud-imaginary";
               Network = "nextcloud.network";
             };
