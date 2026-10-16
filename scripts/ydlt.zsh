@@ -21,6 +21,7 @@ integer CURRENT=0 SUCCESS=0 WAIT=0
 
 while IFS= read -r URL || [[ -n "${URL}" ]]; do
     [[ -z "${URL}" || "${URL}" == '#'* ]] && continue
+    [[ "${URL}" =~ '^https?://' ]] || continue
 
     (( CURRENT++ ))
     print "[${CURRENT}/${TOTAL}] ${URL}"
@@ -35,7 +36,7 @@ while IFS= read -r URL || [[ -n "${URL}" ]]; do
                 -f 'bv*+ba/b' \
                 --merge-output-format mkv \
                 --postprocessor-args 'Merger:-c:a pcm_s16le' \
-                "${URL}"; then
+                -- "${URL}"; then
             SUCCESS=1
             break
         fi
