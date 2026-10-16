@@ -55,6 +55,15 @@ delib.module {
           'upgrade.disable-web' => true,
           'overwriteprotocol' => 'https',
           'overwrite.cli.url' => 'https://drive.melocy.cc',
+          # cloudflaredはこのホスト上で127.0.0.1:httpPortへローカル接続するだけの
+          # リバースプロキシなので、trusted_proxiesを設定しないとNextcloudは
+          # 全リクエストのREMOTE_ADDRを127.0.0.1だと認識してしまう(ブルート
+          # フォース防御のIPごとのカウントやログイン履歴のIPが意味を失う)。
+          # Cloudflareのエッジが実クライアントIPをCF-Connecting-IPに入れて
+          # くれるので、ループバックからの接続だけそのヘッダーを信頼させて
+          # 復元する。
+          'trusted_proxies' => ['127.0.0.1', '::1'],
+          'forwarded_for_headers' => ['HTTP_CF_CONNECTING_IP'],
           'dbtableprefix' => 'oc_',
           'skeletondirectory' => "",
           'preview_max_filesize_image' => -1,
