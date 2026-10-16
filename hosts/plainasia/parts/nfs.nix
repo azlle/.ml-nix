@@ -3,10 +3,6 @@
 # necrofantasia (hosts/necrofantasia/parts/mounts.nix) からtank/mainへ
 # 読み書きするための一般的なLANアクセス用。necrofantasiaのIPのみに限定し、
 # NFSv4専用運用のためportmapper(111)は開けない。
-#
-# no_root_squash: necrofantasia側でrootとして動くプロセスが、tank/main上の
-# keine (uid=1000) 所有ディレクトリに書き込めるようにするため。root_squash
-# だとこの書き込みが弾かれる。
 
 { lan, ... }: {
   services.nfs.server = {
@@ -15,13 +11,13 @@
     # When mounting nested ZFS datasets over NFS, each dataset must be exported separately.
     # See: https://github.com/openzfs/zfs/issues/8376
     exports = ''
-      /tank/main           ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/creations ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/documents ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/misc      ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/music     ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/pictures  ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
-      /tank/main/videos    ${lan.necrofantasia}(rw,sync,no_subtree_check,no_root_squash)
+      /tank/main           ${lan.necrofantasia}(rw,sync,no_subtree_check)
+      /tank/main/creations ${lan.necrofantasia}(rw,sync,no_subtree_check)
+      /tank/main/documents ${lan.necrofantasia}(rw,sync,no_subtree_check)
+      /tank/main/misc      ${lan.necrofantasia}(rw,sync,no_subtree_check)
+      /tank/main/music     ${lan.necrofantasia}(rw,sync,no_subtree_check)
+      /tank/main/pictures  ${lan.necrofantasia}(rw,sync,no_subtree_check)
+      /tank/main/videos    ${lan.necrofantasia}(rw,sync,no_subtree_check)
     '';
   };
 
