@@ -39,7 +39,7 @@
     # Hydra 障害により停止中) から進んでおらず、修正版 (7.2.11 / 6.18.57) を含まない。
     # master の HEAD を素通りで追従せず、動作確認済みの特定コミットにピン留めする
     # (master は Hydra 未検証のため、まだビルドが壊れている版を掴むリスクがある)。
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/4fd3973c801fa95630c2b188d48d07dffba65e14";
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/e61f03b63691ee505bc27274ff1d311a32f64f6c";
 
     millennium.url = "github:SteamClientHomebrew/Millennium/next?dir=packages/nix";
 
