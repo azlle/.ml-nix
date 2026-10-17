@@ -6,12 +6,20 @@
   ...
 }:
 let
-  # linuxPackages-cachyos-lts-lto-x86_64-v3プリセットに無いチューニングを
-  # 追加するため、生カーネル (mkCachyKernel) を.overrideしてから
-  # kernel-cachyos/packages.nixと同じ手順で組み立て直す: zfs_cachyosを
-  # 新カーネルに繋ぎ直し、kernelModuleLLVMOverride (helpers.nix) でLTOカーネル
-  # 上のout-of-tree moduleのgcc直呼び出しをcc経由に書き換える。
-  cachyKernel = pkgs.cachyosKernels.linux-cachyos-lts-lto-x86_64-v3.override {
+  # linux-cachyos-latest-lto-x86_64-v3プリセットに無いチューニングを追加するため、生カーネル
+  # (mkCachyKernel) を.overrideしてから kernel-cachyos/packages.nixと同じ手順で
+  # 組み立て直す: zfs_cachyosを新カーネルに繋ぎ直し、kernelModuleLLVMOverride
+  # (helpers.nix) でLTOカーネル上のout-of-tree moduleのgcc直呼び出しをcc経由に
+  # 書き換える。
+  #
+  # mkCachyKernelの素のデフォルトは cpusched=eevdf, preemptType=full, hzTicks=1000
+  # で、いずれも上書きしていない。serverプリセット (preemptType=none, hzTicks=300)
+  # はスループット優先の設定だが、MinecraftやL4D2のようなゲームサーバーを同居させる
+  # 場合、PREEMPT_NONEはワーストケースレイテンシが最大で不適。元々EEVDFを選んだ理由
+  # (NAS用途にBORE(対話・ゲーミング向け)より適合) は活かしつつ、プリエンプション/
+  # tick rateは素のデフォルト(full/1000Hz、応答性優先側)のままにする。
+  # x86_64-v3 は 13世代 i7 (検証機) / Ryzen 5 5600G (本番機) 双方が対応する。
+  cachyKernel = pkgs.cachyosKernels.linux-cachyos-latest-lto-x86_64-v3.override {
     # Cloudflare Tunnel越しのNextcloudアップロード/ダウンロードのような、
     # 遅延の大きい経路のスループットを優先してBBR3に変更 (デフォルトはCubic)。
     bbr3 = true;
@@ -24,17 +32,20 @@ let
 in
 {
   boot = {
-    # CachyOS には BORE + LTS の組み合わせが存在しない (BORE は latest カーネル、
-    # LTS は EEVDF + Cachy Sauce)。ZFS モジュールも zfs-cachyos-lts 系しか LTS に
-    # 対応しない。NAS 用途には BORE (対話・ゲーミング向け) より EEVDF が適合する。
-    # x86_64-v3 は 13世代 i7 (検証機) / Ryzen 5 5600G (本番機) 双方が対応する。
+    # CVE-2026-99999 (PwnEscape) 対応で LTS 系列から離脱 (詳細は上の let ブロックの
+    # コメント参照)。ZFS モジュールも LTS 専用の zfs-cachyos-lts ではなく通常の
+    # zfs-cachyos を使う。
     kernelPackages = cachyHelpers.kernelModuleLLVMOverride (
       (pkgs.linuxKernel.packagesFor cachyKernel).extend (
         _final: _prev: {
-          zfs_cachyos = pkgs.cachyosKernels.zfs-cachyos-lts-lto.override { kernel = cachyKernel; };
+          zfs_cachyos = pkgs.cachyosKernels.zfs-cachyos-lto.override { kernel = cachyKernel; };
         }
       )
     );
+
+    kernelParams = [
+      "amd_pstate=active" # AMD P-State EPP driver (Ryzen 5 5600G/CezanneはCPPC対応)
+    ];
 
     supportedFilesystems = [ "zfs" ];
     zfs = {

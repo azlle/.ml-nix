@@ -34,7 +34,12 @@
       flake = false;
     };
 
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+    # CVE-2026-99999 (PwnEscape) 対応のため release ブランチから master へ一時的に切替。
+    # release は Hydra CI のキャッシュ完了待ちで 2026-09-28 時点 (#107-#109 で報告されている
+    # Hydra 障害により停止中) から進んでおらず、修正版 (7.2.11 / 6.18.57) を含まない。
+    # master の HEAD を素通りで追従せず、動作確認済みの特定コミットにピン留めする
+    # (master は Hydra 未検証のため、まだビルドが壊れている版を掴むリスクがある)。
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/4fd3973c801fa95630c2b188d48d07dffba65e14";
 
     millennium.url = "github:SteamClientHomebrew/Millennium/next?dir=packages/nix";
 
