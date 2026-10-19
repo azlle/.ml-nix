@@ -1,50 +1,52 @@
 # hosts/plainasia/parts/boot.nix
 {
   config,
+  lib,
   pkgs,
   inputs,
   ...
 }:
 let
-  # linux-cachyos-latest-lto-x86_64-v3プリセットに無いチューニングを追加するため、生カーネル
-  # (mkCachyKernel) を.overrideしてから kernel-cachyos/packages.nixと同じ手順で
-  # 組み立て直す: zfs_cachyosを新カーネルに繋ぎ直し、kernelModuleLLVMOverride
-  # (helpers.nix) でLTOカーネル上のout-of-tree moduleのgcc直呼び出しをcc経由に
-  # 書き換える。
-  #
-  # mkCachyKernelの素のデフォルトは cpusched=eevdf, preemptType=full, hzTicks=1000
-  # で、いずれも上書きしていない。serverプリセット (preemptType=none, hzTicks=300)
-  # はスループット優先の設定だが、MinecraftやL4D2のようなゲームサーバーを同居させる
-  # 場合、PREEMPT_NONEはワーストケースレイテンシが最大で不適。元々EEVDFを選んだ理由
-  # (NAS用途にBORE(対話・ゲーミング向け)より適合) は活かしつつ、プリエンプション/
-  # tick rateは素のデフォルト(full/1000Hz、応答性優先側)のままにする。
-  # x86_64-v3 は 13世代 i7 (検証機) / Ryzen 5 5600G (本番機) 双方が対応する。
+  inherit (lib) mkForce;
+  inherit (lib.kernel) no yes;
+
+  # latest, not LTS: CachyOS's LTS lagged on the CVE-2026-99999 fix.
+  # Scheduler/preempt/tick stay at defaults (EEVDF, full, 1000Hz), not the `server` preset:
+  # its PREEMPT_NONE has too high a worst-case latency next to game servers.
   cachyKernel = pkgs.cachyosKernels.linux-cachyos-latest-lto-x86_64-v3.override {
-    # Cloudflare Tunnel越しのNextcloudアップロード/ダウンロードのような、
-    # 遅延の大きい経路のスループットを優先してBBR3に変更 (デフォルトはCubic)。
-    bbr3 = true;
-    # ZFS ARC + Postgres + PHPが同居するため、デフォルトの"always" (透過的
-    # ヒュージページを全面適用) によるkhugepaged圧縮起因のレイテンシスパイクを
-    # 避ける。
+    # THP "always" causes khugepaged latency spikes with ZFS ARC + Postgres + PHP; use madvise.
     hugepage = "madvise";
+
+    # Default to BBRv3: throughput on high-latency paths (Cloudflare Tunnel), shorter queues than CUBIC.
+    # Not the README's `bbr3 = true`: it builds BBRv1 in, which makes the v3 module fail to load
+    # (same BPF kfuncs), so the Kconfig is set directly.
+    structuredExtraConfig = {
+      TCP_CONG_BBR = mkForce no;
+      TCP_CONG_BBR3 = mkForce yes;
+      DEFAULT_BBR = mkForce no;
+      DEFAULT_BBR3 = mkForce yes;
+    };
   };
   cachyHelpers = pkgs.callPackage "${inputs.nix-cachyos-kernel}/helpers.nix" { };
 in
 {
   boot = {
-    # CVE-2026-99999 (PwnEscape) 対応で LTS 系列から離脱 (詳細は上の let ブロックの
-    # コメント参照)。ZFS モジュールも LTS 専用の zfs-cachyos-lts ではなく通常の
-    # zfs-cachyos を使う。
+    # Some out-of-tree modules hardcode gcc; the clang (LTO) kernel needs cc (LLVMOverride).
+    # ZFS uses callPackage because `.override { kernel }` keeps the stock KBUILD_OUTPUT ("Permission denied").
+    # See: https://github.com/xddxdd/nix-cachyos-kernel/issues/67#issuecomment-4305704829
     kernelPackages = cachyHelpers.kernelModuleLLVMOverride (
       (pkgs.linuxKernel.packagesFor cachyKernel).extend (
-        _final: _prev: {
-          zfs_cachyos = pkgs.cachyosKernels.zfs-cachyos-lto.override { kernel = cachyKernel; };
+        final: _prev: {
+          zfs_cachyos = final.callPackage "${inputs.nix-cachyos-kernel}/zfs-cachyos" {
+            inherit (inputs.nix-cachyos-kernel) inputs;
+            variant = cachyKernel.zfsVariant;
+          };
         }
       )
     );
 
     kernelParams = [
-      "amd_pstate=active" # AMD P-State EPP driver (Ryzen 5 5600G/CezanneはCPPC対応)
+      "amd_pstate=active" # AMD P-State EPP driver (Zen3+)
     ];
 
     supportedFilesystems = [ "zfs" ];

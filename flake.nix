@@ -34,11 +34,8 @@
       flake = false;
     };
 
-    # CVE-2026-99999 (PwnEscape) 対応のため release ブランチから master へ一時的に切替。
-    # release は Hydra CI のキャッシュ完了待ちで 2026-09-28 時点 (#107-#109 で報告されている
-    # Hydra 障害により停止中) から進んでおらず、修正版 (7.2.11 / 6.18.57) を含まない。
-    # master の HEAD を素通りで追従せず、動作確認済みの特定コミットにピン留めする
-    # (master は Hydra 未検証のため、まだビルドが壊れている版を掴むリスクがある)。
+    # Cache is down (https://github.com/xddxdd/nix-cachyos-kernel/issues/110); master gets the 7.2.11 fix for
+    # https://nvd.nist.gov/vuln/detail/CVE-2026-99999 sooner. Revisit `release` once the cache is back and has 7.2.11+.
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/e61f03b63691ee505bc27274ff1d311a32f64f6c";
 
     millennium.url = "github:SteamClientHomebrew/Millennium/next?dir=packages/nix";
@@ -182,7 +179,12 @@
             map (host: ./hosts + "/${host}/parts") (builtins.attrNames (builtins.readDir ./hosts))
           );
           specialArgs = {
-            inherit inputs nixSettings moduleSystem lan;
+            inherit
+              inputs
+              nixSettings
+              moduleSystem
+              lan
+              ;
           };
         };
     in
