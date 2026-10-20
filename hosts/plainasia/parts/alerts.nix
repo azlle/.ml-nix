@@ -7,6 +7,8 @@
 #
 # smartd (-i <recipient>、ヘッダ付き全文をstdin) と zed (-s <件名>
 # <recipient>、本文のみをstdin) で呼び出し方が違うため、両対応させている。
+#
+# upsmon (NUT、ups.nix) のUPSイベントも同じスクリプトでDiscordへ送る。
 { config, pkgs, ... }:
 let
   discordNotify = pkgs.writeShellScript "discord-notify" ''
@@ -55,6 +57,12 @@ let
   '';
 
   webhookFile = config.sops.secrets."discord/smart-alerts-webhook".path;
+
+  # upsmon runs NOTIFYCMD as `cmd "<message>"` with NOTIFYTYPE set.
+  upsNotify = pkgs.writeShellScript "ups-notify" ''
+    export DISCORD_WEBHOOK_FILE=${config.sops.secrets."discord/ups-alerts-webhook".path}
+    printf '%s\n' "$1" | ${discordNotify} -s "UPS $NOTIFYTYPE"
+  '';
 in
 {
   sops.secrets."discord/smart-alerts-webhook" = { };
@@ -77,4 +85,33 @@ in
     ZED_NOTIFY_VERBOSE = false;
   };
   systemd.services.zfs-zed.environment.DISCORD_WEBHOOK_FILE = webhookFile;
+
+  # NOTIFYCMD runs in upsmon's unprivileged child (nutmon), which can't read the root-only secret above.
+  sops.secrets."discord/ups-alerts-webhook" = {
+    key = "discord/smart-alerts-webhook";
+    owner = config.power.ups.upsmon.user;
+  };
+
+  power.ups.upsmon.settings = {
+    NOTIFYCMD = "${upsNotify}";
+    # Left out: FSD and REPLBATT (2.8.4 never emits them here: a standalone primary notifies SHUTDOWN
+    # instead, and cps-hid has no replace-battery flag), COMMBAD/COMMOK (they fire on every start, as
+    # upsmon runs before upsd), and WALL (`wall` is not on the unit's PATH).
+    # On NOCOMM, restart the driver (NUT 2.8.4/2.8.5 may not reconnect after a USB reset):
+    #   sudo systemctl restart upsdrv
+    # See: https://github.com/networkupstools/nut/issues/3385
+    NOTIFYFLAG =
+      map
+        (type: [
+          type
+          "SYSLOG+EXEC"
+        ])
+        [
+          "ONLINE"
+          "ONBATT"
+          "LOWBATT"
+          "SHUTDOWN"
+          "NOCOMM"
+        ];
+  };
 }

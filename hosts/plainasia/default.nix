@@ -24,6 +24,7 @@ delib.host {
     ./parts/nfs.nix
     ./parts/alerts.nix
     ./parts/fancontrol.nix
+    ./parts/ups.nix
   ];
 
   home = _: {
