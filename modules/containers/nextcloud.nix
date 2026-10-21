@@ -317,8 +317,8 @@ delib.module {
           nextcloud = {
             inherit (ncUser) uid;
             containerConfig = {
-              # Same version as the rootful container it replaced; bump separately.
-              Image = "docker.io/library/nextcloud:34.0.4-apache";
+              # Keep PHP >= 8.5.12 (CVE-2026-109618/109619): 34.0.4-apache and older tags are not rebuilt.
+              Image = "docker.io/library/nextcloud:34.0.5-apache";
               ContainerName = "nextcloud";
               Network = "nextcloud.network";
               Environment = {
