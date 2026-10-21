@@ -337,6 +337,10 @@ delib.module {
                 # ので、それ以上大きくしても通らない。旧環境はTrueNASのUI都合で
                 # 1G未満にできなかっただけで、本来望んでいたのはこちら。
                 PHP_UPLOAD_LIMIT = "100M";
+                # The image's remoteip conf trusts X-Real-IP from any 10.x peer, so a
+                # client could choose the address Nextcloud sees. trusted_proxies
+                # already restores the real one from CF-Connecting-IP.
+                APACHE_DISABLE_REWRITE_IP = "1";
               };
               Volume = [
                 # TrueNAS 側は appdata (アプリ本体・apps/custom_apps) と
