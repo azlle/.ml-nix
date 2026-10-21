@@ -386,90 +386,96 @@ delib.module {
         };
       };
 
-      # TrueNAS 側の専用 cron コンテナ (5分おき) の代わりに、systemd timer から
-      # occ の cron ジョブを叩く。コンテナを1つ追加で常駐させる必要が無い分軽い。
-      # A user unit next to the containers: a system timer that Requires user@N would
-      # restart a user manager stopped for maintenance (e.g. during a zfs rollback).
-      systemd.user.services.nextcloud-cron = {
-        description = "Nextcloud background job runner";
-        unitConfig.ConditionUser = uidStr;
-        after = [ "nextcloud.service" ];
-        serviceConfig = {
-          Type = "oneshot";
-          ExecStart = "${podman}/bin/podman exec --user www-data nextcloud php -f /var/www/html/cron.php";
-        };
-      };
+      systemd = {
+        user = {
+          # TrueNAS 側の専用 cron コンテナ (5分おき) の代わりに、systemd timer から
+          # occ の cron ジョブを叩く。コンテナを1つ追加で常駐させる必要が無い分軽い。
+          # A user unit next to the containers: a system timer that Requires user@N would
+          # restart a user manager stopped for maintenance (e.g. during a zfs rollback).
+          services.nextcloud-cron = {
+            description = "Nextcloud background job runner";
+            unitConfig.ConditionUser = uidStr;
+            after = [ "nextcloud.service" ];
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = "${podman}/bin/podman exec --user www-data nextcloud php -f /var/www/html/cron.php";
+            };
+          };
 
-      systemd.user.timers.nextcloud-cron = {
-        description = "Run Nextcloud background jobs every 5 minutes";
-        unitConfig.ConditionUser = uidStr;
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnCalendar = "*:0/5";
-          Persistent = true;
-        };
-      };
+          timers.nextcloud-cron = {
+            description = "Run Nextcloud background jobs every 5 minutes";
+            unitConfig.ConditionUser = uidStr;
+            wantedBy = [ "timers.target" ];
+            timerConfig = {
+              OnCalendar = "*:0/5";
+              Persistent = true;
+            };
+          };
 
-      systemd.user.services.nextcloud-secrets = {
-        description = "Stage Nextcloud secrets for the rootless containers";
-        unitConfig.ConditionUser = uidStr;
-        path = [
-          pkgs.coreutils
-          podman
-        ];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = prepareSecrets;
+          services.nextcloud-secrets = {
+            description = "Stage Nextcloud secrets for the rootless containers";
+            unitConfig.ConditionUser = uidStr;
+            path = [
+              pkgs.coreutils
+              podman
+            ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = prepareSecrets;
+            };
+          };
         };
-      };
 
-      # Runs before the user manager, i.e. while no container can have the data open.
-      systemd.services.nextcloud-fix-ownership = {
-        description = "Align ${dataDir} ownership with ${ncUser.name}'s rootless uid mapping";
-        unitConfig.RequiresMountsFor = [
-          "${dataDir}/appdata"
-          "${dataDir}/userdata"
-          "${dataDir}/postgres"
-        ];
-        path = [
-          pkgs.coreutils
-          pkgs.findutils
-          pkgs.gawk
-        ];
-        serviceConfig = {
-          Type = "oneshot";
-          ExecStart = fixOwnership;
-        };
-      };
+        services = {
+          # Runs before the user manager, i.e. while no container can have the data open.
+          nextcloud-fix-ownership = {
+            description = "Align ${dataDir} ownership with ${ncUser.name}'s rootless uid mapping";
+            unitConfig.RequiresMountsFor = [
+              "${dataDir}/appdata"
+              "${dataDir}/userdata"
+              "${dataDir}/postgres"
+            ];
+            path = [
+              pkgs.coreutils
+              pkgs.findutils
+              pkgs.gawk
+            ];
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = fixOwnership;
+            };
+          };
 
-      # Same as forgejo.nix: asDropin because user@N is an instance of a template
-      # unit; RequiresMountsFor so a missing tank import blocks the containers
-      # instead of letting them start on empty directories.
-      systemd.services."user@${uidStr}" = {
-        overrideStrategy = "asDropin";
-        unitConfig = {
-          RequiresMountsFor = [
-            "${dataDir}/appdata"
-            "${dataDir}/userdata"
-            "${dataDir}/postgres"
-          ];
-          Requires = [ "nextcloud-fix-ownership.service" ];
-          After = [ "nextcloud-fix-ownership.service" ];
-        };
-      };
+          # Same as forgejo.nix: asDropin because user@N is an instance of a template
+          # unit; RequiresMountsFor so a missing tank import blocks the containers
+          # instead of letting them start on empty directories.
+          "user@${uidStr}" = {
+            overrideStrategy = "asDropin";
+            unitConfig = {
+              RequiresMountsFor = [
+                "${dataDir}/appdata"
+                "${dataDir}/userdata"
+                "${dataDir}/postgres"
+              ];
+              Requires = [ "nextcloud-fix-ownership.service" ];
+              After = [ "nextcloud-fix-ownership.service" ];
+            };
+          };
 
-      # autoPrune only reaches root's storage.
-      systemd.services.nextcloud-podman-prune = {
-        description = "Prune nextcloud's rootless podman resources";
-        after = [ "user@${uidStr}.service" ];
-        requires = [ "user@${uidStr}.service" ];
-        startAt = "weekly";
-        serviceConfig = {
-          Type = "oneshot";
-          User = ncUser.name;
-          Environment = "XDG_RUNTIME_DIR=/run/user/${uidStr}";
-          ExecStart = "${podman}/bin/podman system prune --force --all --volumes";
+          # autoPrune only reaches root's storage.
+          nextcloud-podman-prune = {
+            description = "Prune nextcloud's rootless podman resources";
+            after = [ "user@${uidStr}.service" ];
+            requires = [ "user@${uidStr}.service" ];
+            startAt = "weekly";
+            serviceConfig = {
+              Type = "oneshot";
+              User = ncUser.name;
+              Environment = "XDG_RUNTIME_DIR=/run/user/${uidStr}";
+              ExecStart = "${podman}/bin/podman system prune --force --all --volumes";
+            };
+          };
         };
       };
     };
