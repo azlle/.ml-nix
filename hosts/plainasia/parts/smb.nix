@@ -12,8 +12,7 @@
 {
   # secret自体の値 (パスワード) が変わるだけではsmb-set-password.serviceの
   # ユニット定義は変化しないため、restartUnitsを明示しないとnixos-rebuild switch
-  # では再起動がかからず、次の再起動までパスワードが古いままになる
-  # (modules/containers/nextcloud.nixのredis-passwordと同じ理由)。
+  # では再起動がかからず、次の再起動までパスワードが古いままになる。
   sops.secrets."smb/keine".restartUnits = [ "smb-set-password.service" ];
 
   services.samba = {

@@ -29,7 +29,19 @@ delib.module {
       httpPort = 22300;
       trustedDomains = "127.0.0.1 localhost nextcloud drive.melocy.cc";
 
+      ncUser = config.users.users.nextcloud;
+      uidStr = toString ncUser.uid;
+      podman = config.virtualisation.podman.package;
+      # Pinned so Apache's peer address (see trusted_proxies) is predictable.
+      networkSubnet = "10.89.77.0/24";
+      networkGateway = "10.89.77.1";
+      # Fixed by the images: Debian's www-data and the postgres image's postgres user.
+      wwwDataId = 33;
+      postgresId = 999;
+
       secretPath = name: config.sops.secrets."nextcloud/${name}".path;
+      # Per-start copies under $XDG_RUNTIME_DIR (see nextcloud-secrets below).
+      stagedSecret = name: "%t/nextcloud-secrets/${name}";
 
       # 旧 TrueNAS 側では postgres コンテナ自身のブートストラップ用スーパーユーザー
       # (nextcloud) と、Nextcloud アプリ本体が実際に使う権限を絞ったロール
@@ -41,6 +53,44 @@ delib.module {
           "SELECT 'CREATE ROLE oc_admin WITH LOGIN CREATEDB PASSWORD ''$ocAdminPassword''' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname='oc_admin')\gexec"
         psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c \
           "GRANT ALL PRIVILEGES ON DATABASE \"$POSTGRES_DB\" TO oc_admin;"
+      '';
+
+      # sops files are owned by the host user, which is container root. Files that
+      # www-data or postgres must read are copied to tmpfs and chowned to that
+      # container uid; container root still reads them via CAP_DAC_OVERRIDE.
+      prepareSecrets = pkgs.writeShellScript "nextcloud-prepare-secrets" ''
+        set -eu
+        dst="$XDG_RUNTIME_DIR/nextcloud-secrets"
+        install -d -m 0700 "$dst"
+        stage() {
+          rm -f "$dst/$1"
+          install -m 0400 "$2" "$dst/$1"
+          [ "$3" = 0 ] || podman unshare chown "$3:$3" "$dst/$1"
+        }
+        stage postgres-password ${secretPath "postgres-password"} 0
+        stage admin-password ${secretPath "admin-password"} 0
+        stage oc-admin-password ${secretPath "oc-admin-password"} ${toString postgresId}
+        stage redis-password ${secretPath "redis-password"} ${toString wwwDataId}
+      '';
+
+      # Container uid N>0 is the host user's subuid start + N - 1, and the start
+      # is allocated per machine (/var/lib/nixos/auto-subuid-map), so derive it.
+      fixOwnership = pkgs.writeShellScript "nextcloud-fix-ownership" ''
+        set -eu
+        subid() { awk -F: '$1 == "${ncUser.name}" { print $2; exit }' "$1"; }
+        sub_uid=$(subid /etc/subuid)
+        sub_gid=$(subid /etc/subgid)
+        [ -n "$sub_uid" ] && [ -n "$sub_gid" ] || { echo "no subuid range for ${ncUser.name}" >&2; exit 1; }
+        fix() {
+          find "$1" -xdev \( -not -uid "$2" -o -not -gid "$3" \) -exec chown -h "$2:$3" {} +
+        }
+        www_uid=$((sub_uid + ${toString wwwDataId} - 1))
+        www_gid=$((sub_gid + ${toString wwwDataId} - 1))
+        pg_uid=$((sub_uid + ${toString postgresId} - 1))
+        pg_gid=$((sub_gid + ${toString postgresId} - 1))
+        fix ${dataDir}/appdata "$www_uid" "$www_gid"
+        fix ${dataDir}/userdata "$www_uid" "$www_gid"
+        fix ${dataDir}/postgres "$pg_uid" "$pg_gid"
       '';
 
       # 公式イメージの環境変数で賄えない設定分。config.php の元バックアップから
@@ -62,7 +112,9 @@ delib.module {
           # Cloudflareのエッジが実クライアントIPをCF-Connecting-IPに入れて
           # くれるので、ループバックからの接続だけそのヘッダーを信頼させて
           # 復元する。
-          'trusted_proxies' => ['127.0.0.1', '::1'],
+          # Behind rootlessport, Apache's peer is the container's own address on
+          # the nextcloud network, not 127.0.0.1.
+          'trusted_proxies' => ['127.0.0.1', '::1', '${networkSubnet}'],
           'forwarded_for_headers' => ['HTTP_CF_CONNECTING_IP'],
           'dbtableprefix' => 'oc_',
           'skeletondirectory' => "",
@@ -113,45 +165,40 @@ delib.module {
       # 実際に走らせて生成される (oci-containers + dockerCompatの薄いpython層を
       # 経由しない)。生成されるsystemd unit名はoci-containers時代の
       # `podman-<name>.service`ではなく、属性名そのまま`<name>.service`になる
-      # 点に注意 (下の各systemd.services.*やrestartUnitsの参照先もそれに追従済み)。
+      # 点に注意 (下の各systemd.services.*の参照先もそれに追従済み)。
 
       # containers.enable が false な間はこのモジュール自体が評価されないので、
       # secret.yaml 側にまだキーが無くてもビルドは壊れない。sopsFile は
       # modules/sops.nix の defaultSopsFile (secret.yaml) をそのまま使う。
-      sops.secrets = {
-        "nextcloud/postgres-password" = { };
-        "nextcloud/oc-admin-password" = { };
-        "nextcloud/admin-password" = { };
-        # redis.config.phpがPHPリクエストのたびにfile_get_contents()で都度
-        # 読み直す実装なので、コンテナ内でwww-data (uid=33, rootfulなpodman
-        # なのでホスト側でも同じuid=33) として実行されるPHPプロセスから読める
-        # 必要がある。他の3つはインストール時にconfig.phpへ値が焼き込まれ、
-        # 以降ファイル自体は読み直されないのでデフォルトのroot:root 0400の
-        # ままで問題ない。world-readableにはせず、www-dataのuidを持つ専用
-        # ユーザー (下のusers.users.nextcloud-www-data) だけに所有させる。
-        "nextcloud/redis-password" = {
-          owner = "nextcloud-www-data";
-          mode = "0400";
-          # コンテナ自体の定義 (ExecStart等) はシークレットの権限変更では
-          # 変わらないため、restartUnits を明示しないとnixos-rebuild switchが
-          # nextcloud.serviceを再起動しない。すると生成された新しい
-          # secrets.d/<N>/を掴まず、コンテナは古い世代のbind mountを握った
-          # ままになり、パーミッションを直しても反映されない
-          # (実際に一度この状態を踏んだ: switch後も直らず、手動restartで解決)。
-          restartUnits = [ "nextcloud.service" ];
+      # Owned by the rootless user so nextcloud-secrets can stage them. Changing a
+      # secret does not restart the containers; restart nextcloud-secrets (user
+      # unit) afterwards, which restarts everything that requires it.
+      sops.secrets =
+        let
+          owned = {
+            owner = ncUser.name;
+            mode = "0400";
+          };
+        in
+        {
+          "nextcloud/postgres-password" = owned;
+          "nextcloud/oc-admin-password" = owned;
+          "nextcloud/admin-password" = owned;
+          "nextcloud/redis-password" = owned;
         };
-      };
 
-      # 上のsops.secrets."nextcloud/redis-password"専用。ログイン不可の
-      # システムユーザーとして、コンテナ内www-dataと同じuid/gid=33を割り当てる
-      # だけの存在 (rootfulなpodmanはuid名前空間を分離しないので、ホスト側の
-      # uid=33がそのままコンテナ内www-dataとして見える)。
-      users.users.nextcloud-www-data = {
+      # Same pattern as forgejo.nix. Container root maps to this user; every
+      # other container uid maps into its subuid range.
+      users.users.nextcloud = {
         isSystemUser = true;
-        uid = 33;
-        group = "nextcloud-www-data";
+        uid = 991;
+        group = "nextcloud";
+        home = "/var/lib/nextcloud-podman";
+        createHome = true;
+        linger = true;
+        autoSubUidGidRange = true;
       };
-      users.groups.nextcloud-www-data.gid = 33;
+      users.groups.nextcloud.gid = 991;
 
       virtualisation.podman = {
         enable = true;
@@ -170,13 +217,19 @@ delib.module {
         # generatorが依存関係(Requires=/After=nextcloud-network.service)を
         # 自動で張る)。
         networks.nextcloud = {
-          networkConfig.NetworkName = "nextcloud";
+          inherit (ncUser) uid;
+          networkConfig = {
+            NetworkName = "nextcloud";
+            Subnet = networkSubnet;
+            Gateway = networkGateway;
+          };
         };
 
         containers = {
           # ブートストラップ用スーパーユーザー。Nextcloud 本体はこれでは
           # 繋がず、下の initOcAdminRole が作る oc_admin ロールを使う。
           nextcloud-postgres = {
+            inherit (ncUser) uid;
             containerConfig = {
               Image = "docker.io/library/postgres:18.6";
               # podmanName (実際のコンテナ名) をoci-containers時代と揃える。
@@ -199,17 +252,15 @@ delib.module {
                 # 管理する)。実データも旧TrueNAS側で既にこの新レイアウト
                 # (postgres/18/docker) になっている。
                 "${dataDir}/postgres:/var/lib/postgresql"
-                "${secretPath "postgres-password"}:/run/secrets/postgres-password:ro"
-                "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
+                "${stagedSecret "postgres-password"}:/run/secrets/postgres-password:ro"
+                "${stagedSecret "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
                 "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sh:ro"
               ];
             };
-            # postgresは tank 側の独立したデータセット。systemd.tmpfiles.rules
-            # で「無ければ作る」形にすると、tank が import されていない/
-            # マウント失敗時でも黙ってOS側に空ディレクトリが作られてしまい、
-            # 気づかないまま間違った場所にデータを書き込みかねない。
-            # RequiresMountsFor で実際にマウントされているまで起動をブロックする。
-            unitConfig.RequiresMountsFor = [ "${dataDir}/postgres" ];
+            unitConfig = {
+              Requires = [ "nextcloud-secrets.service" ];
+              After = [ "nextcloud-secrets.service" ];
+            };
           };
 
           # valkey/valkey の公式イメージには専用のパスワード用環境変数が無い
@@ -221,6 +272,7 @@ delib.module {
           # いなかった (storage 設定に redis 用の host_path が無い)。同様に
           # ここも永続ボリュームなしにする。
           nextcloud-redis = {
+            inherit (ncUser) uid;
             containerConfig = {
               Image = "docker.io/valkey/valkey:9.1.2";
               ContainerName = "nextcloud-redis";
@@ -229,7 +281,11 @@ delib.module {
               NetworkAlias = "redis";
               Entrypoint = "sh";
               Exec = ''-c 'exec valkey-server --requirepass "$(cat /run/secrets/redis-password)"' '';
-              Volume = [ "${secretPath "redis-password"}:/run/secrets/redis-password:ro" ];
+              Volume = [ "${stagedSecret "redis-password"}:/run/secrets/redis-password:ro" ];
+            };
+            unitConfig = {
+              Requires = [ "nextcloud-secrets.service" ];
+              After = [ "nextcloud-secrets.service" ];
             };
           };
 
@@ -237,6 +293,7 @@ delib.module {
           # 相当する。AIO 用の日付タグではなく latest を使う (単体運用では
           # バージョンが分かれていない)。
           nextcloud-imaginary = {
+            inherit (ncUser) uid;
             containerConfig = {
               Image = "ghcr.io/nextcloud-releases/aio-imaginary:20260929_105435";
               ContainerName = "nextcloud-imaginary";
@@ -245,8 +302,10 @@ delib.module {
           };
 
           nextcloud = {
+            inherit (ncUser) uid;
             containerConfig = {
-              Image = "docker.io/library/nextcloud:34-apache";
+              # Same version as the rootful container it replaced; bump separately.
+              Image = "docker.io/library/nextcloud:34.0.4-apache";
               ContainerName = "nextcloud";
               Network = "nextcloud.network";
               Environment = {
@@ -276,9 +335,9 @@ delib.module {
                 # 動画プレビュー (OC\Preview\Movie) 用のffmpeg。上のpreview_ffmpeg_path
                 # 参照。
                 "/nix/store:/nix/store:ro"
-                "${secretPath "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
-                "${secretPath "redis-password"}:/run/secrets/redis-password:ro"
-                "${secretPath "admin-password"}:/run/secrets/admin-password:ro"
+                "${stagedSecret "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
+                "${stagedSecret "redis-password"}:/run/secrets/redis-password:ro"
+                "${stagedSecret "admin-password"}:/run/secrets/admin-password:ro"
                 "${extraConfigPhp}:/var/www/html/config/extra.config.php:ro"
                 "${extraPhpIni}:/usr/local/etc/php/conf.d/zz-extra.ini:ro"
               ];
@@ -297,16 +356,13 @@ delib.module {
                 "nextcloud-postgres.service"
                 "nextcloud-redis.service"
                 "nextcloud-imaginary.service"
+                "nextcloud-secrets.service"
               ];
               Requires = [
                 "nextcloud-postgres.service"
                 "nextcloud-redis.service"
                 "nextcloud-imaginary.service"
-              ];
-              # appdata/userdata も postgres と同じ理由でRequiresMountsForで守る。
-              RequiresMountsFor = [
-                "${dataDir}/appdata"
-                "${dataDir}/userdata"
+                "nextcloud-secrets.service"
               ];
             };
           };
@@ -315,14 +371,80 @@ delib.module {
 
       # TrueNAS 側の専用 cron コンテナ (5分おき) の代わりに、systemd timer から
       # occ の cron ジョブを叩く。コンテナを1つ追加で常駐させる必要が無い分軽い。
+      # コンテナはnextcloudユーザーのrootless podman側にあるのでそのユーザーで叩く。
       systemd.services.nextcloud-cron = {
         description = "Nextcloud background job runner";
-        # quadletが生成するunit名は属性名そのまま (`nextcloud.service`)。
-        after = [ "nextcloud.service" ];
-        path = [ config.virtualisation.podman.package ];
+        after = [ "user@${uidStr}.service" ];
+        requires = [ "user@${uidStr}.service" ];
+        path = [ podman ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = "${config.virtualisation.podman.package}/bin/podman exec --user www-data nextcloud php -f /var/www/html/cron.php";
+          User = ncUser.name;
+          Environment = "XDG_RUNTIME_DIR=/run/user/${uidStr}";
+          ExecStart = "${podman}/bin/podman exec --user www-data nextcloud php -f /var/www/html/cron.php";
+        };
+      };
+
+      systemd.user.services.nextcloud-secrets = {
+        description = "Stage Nextcloud secrets for the rootless containers";
+        unitConfig.ConditionUser = uidStr;
+        path = [
+          pkgs.coreutils
+          podman
+        ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = prepareSecrets;
+        };
+      };
+
+      # Runs before the user manager, i.e. while no container can have the data open.
+      systemd.services.nextcloud-fix-ownership = {
+        description = "Align ${dataDir} ownership with ${ncUser.name}'s rootless uid mapping";
+        unitConfig.RequiresMountsFor = [
+          "${dataDir}/appdata"
+          "${dataDir}/userdata"
+          "${dataDir}/postgres"
+        ];
+        path = [
+          pkgs.coreutils
+          pkgs.findutils
+          pkgs.gawk
+        ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = fixOwnership;
+        };
+      };
+
+      # Same as forgejo.nix: asDropin because user@N is an instance of a template
+      # unit; RequiresMountsFor so a missing tank import blocks the containers
+      # instead of letting them start on empty directories.
+      systemd.services."user@${uidStr}" = {
+        overrideStrategy = "asDropin";
+        unitConfig = {
+          RequiresMountsFor = [
+            "${dataDir}/appdata"
+            "${dataDir}/userdata"
+            "${dataDir}/postgres"
+          ];
+          Requires = [ "nextcloud-fix-ownership.service" ];
+          After = [ "nextcloud-fix-ownership.service" ];
+        };
+      };
+
+      # autoPrune only reaches root's storage.
+      systemd.services.nextcloud-podman-prune = {
+        description = "Prune nextcloud's rootless podman resources";
+        after = [ "user@${uidStr}.service" ];
+        requires = [ "user@${uidStr}.service" ];
+        startAt = "weekly";
+        serviceConfig = {
+          Type = "oneshot";
+          User = ncUser.name;
+          Environment = "XDG_RUNTIME_DIR=/run/user/${uidStr}";
+          ExecStart = "${podman}/bin/podman system prune --force --all --volumes";
         };
       };
 
