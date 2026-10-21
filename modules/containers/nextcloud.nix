@@ -46,13 +46,15 @@ delib.module {
       # 旧 TrueNAS 側では postgres コンテナ自身のブートストラップ用スーパーユーザー
       # (nextcloud) と、Nextcloud アプリ本体が実際に使う権限を絞ったロール
       # (oc_admin、CREATEDB のみ) が分かれていた。同じ構成に合わせる。
-      initOcAdminRole = pkgs.writeShellScript "init-oc-admin-role.sh" ''
-        set -euo pipefail
-        ocAdminPassword=$(cat /run/secrets/oc-admin-password)
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c \
-          "SELECT 'CREATE ROLE oc_admin WITH LOGIN CREATEDB PASSWORD ''$ocAdminPassword''' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname='oc_admin')\gexec"
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c \
-          "GRANT ALL PRIVILEGES ON DATABASE \"$POSTGRES_DB\" TO oc_admin;"
+      # Plain .sql: the image has no /nix/store for a shebang, psql runs \gexec
+      # only from a file (not -c) and quotes the password itself. PostgreSQL 15+
+      # no longer lets ordinary roles create in public, hence the schema grant.
+      initOcAdminRole = pkgs.writeText "init-oc-admin-role.sql" ''
+        \set pw `cat /run/secrets/oc-admin-password`
+        SELECT format('CREATE ROLE oc_admin WITH LOGIN CREATEDB PASSWORD %L', :'pw')
+        WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'oc_admin') \gexec
+        GRANT ALL PRIVILEGES ON DATABASE :"DBNAME" TO oc_admin;
+        GRANT ALL ON SCHEMA public TO oc_admin;
       '';
 
       # sops files are owned by the host user, which is container root. Files that
@@ -254,7 +256,7 @@ delib.module {
                 "${dataDir}/postgres:/var/lib/postgresql"
                 "${stagedSecret "postgres-password"}:/run/secrets/postgres-password:ro"
                 "${stagedSecret "oc-admin-password"}:/run/secrets/oc-admin-password:ro"
-                "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sh:ro"
+                "${initOcAdminRole}:/docker-entrypoint-initdb.d/init-oc-admin-role.sql:ro"
               ];
             };
             unitConfig = {
