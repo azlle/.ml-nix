@@ -388,17 +388,25 @@ delib.module {
 
       # TrueNAS 側の専用 cron コンテナ (5分おき) の代わりに、systemd timer から
       # occ の cron ジョブを叩く。コンテナを1つ追加で常駐させる必要が無い分軽い。
-      # コンテナはnextcloudユーザーのrootless podman側にあるのでそのユーザーで叩く。
-      systemd.services.nextcloud-cron = {
+      # A user unit next to the containers: a system timer that Requires user@N would
+      # restart a user manager stopped for maintenance (e.g. during a zfs rollback).
+      systemd.user.services.nextcloud-cron = {
         description = "Nextcloud background job runner";
-        after = [ "user@${uidStr}.service" ];
-        requires = [ "user@${uidStr}.service" ];
-        path = [ podman ];
+        unitConfig.ConditionUser = uidStr;
+        after = [ "nextcloud.service" ];
         serviceConfig = {
           Type = "oneshot";
-          User = ncUser.name;
-          Environment = "XDG_RUNTIME_DIR=/run/user/${uidStr}";
           ExecStart = "${podman}/bin/podman exec --user www-data nextcloud php -f /var/www/html/cron.php";
+        };
+      };
+
+      systemd.user.timers.nextcloud-cron = {
+        description = "Run Nextcloud background jobs every 5 minutes";
+        unitConfig.ConditionUser = uidStr;
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnCalendar = "*:0/5";
+          Persistent = true;
         };
       };
 
@@ -462,15 +470,6 @@ delib.module {
           User = ncUser.name;
           Environment = "XDG_RUNTIME_DIR=/run/user/${uidStr}";
           ExecStart = "${podman}/bin/podman system prune --force --all --volumes";
-        };
-      };
-
-      systemd.timers.nextcloud-cron = {
-        description = "Run Nextcloud background jobs every 5 minutes";
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnCalendar = "*:0/5";
-          Persistent = true;
         };
       };
     };
