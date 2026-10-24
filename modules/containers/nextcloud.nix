@@ -167,10 +167,13 @@ delib.module {
       # PHP_MEMORY_LIMIT/PHP_UPLOAD_LIMIT は公式イメージの環境変数で賄えるが、
       # max_execution_time や opcache 系は無いので php.ini の追加ファイルとして
       # 直接置く (php:apache ベースなので conf.d/*.ini が読まれる)。
+      # session.upload_progress.enabled: PHP RCE hardening (GHSA-6wmf-4rv5-p3rp, CVE-2026-115560).
+      # Nextcloud does not use it; set here so it holds whichever image digest is pulled.
       extraPhpIni = pkgs.writeText "nextcloud-extra.ini" ''
         max_execution_time = 3600
         opcache.interned_strings_buffer = 32
         opcache.memory_consumption = 128
+        session.upload_progress.enabled = 0
       '';
     in
     {
