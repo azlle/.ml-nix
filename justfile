@@ -11,8 +11,8 @@ nixos_hosts := "necrofantasia plainasia"
 
 # Live環境ではnix-commandとflakes、そしてsubstitutersの設定がめんどくさいのでこのようにしておく
 nix_flakes := "--extra-experimental-features \"nix-command flakes\""
-substituters_urls := "https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org"
-substituters_keys := "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
+substituters_urls := "https://nix-community.cachix.org https://cache.lantian.pub/lantian https://wezterm.cachix.org"
+substituters_keys := "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
 nix_substituters := "--option extra-substituters \"" + substituters_urls + "\" --option extra-trusted-public-keys \"" + substituters_keys + "\""
 
 # 引数なしで叩いたらレシピ一覧を出す

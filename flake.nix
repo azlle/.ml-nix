@@ -34,9 +34,7 @@
       flake = false;
     };
 
-    # Cache is down (https://github.com/xddxdd/nix-cachyos-kernel/issues/110); master gets the 7.2.11 fix for
-    # https://nvd.nist.gov/vuln/detail/CVE-2026-99999 sooner. Revisit `release` once the cache is back and has 7.2.11+.
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/e61f03b63691ee505bc27274ff1d311a32f64f6c";
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
 
     millennium.url = "github:SteamClientHomebrew/Millennium/next?dir=packages/nix";
 
@@ -135,12 +133,12 @@
           settings = {
             extra-substituters = [
               "https://nix-community.cachix.org"
-              # "https://attic.xuyh0120.win/lantian"
+              "https://cache.lantian.pub/lantian"
               "https://wezterm.cachix.org"
             ];
             extra-trusted-public-keys = [
               "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-              # "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+              "lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ="
               "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
             ];
             warn-dirty = false;
@@ -202,12 +200,12 @@
   nixConfig = {
     extra-substituters = [
       "https://nix-community.cachix.org" # niri et al.
-      # "https://attic.xuyh0120.win/lantian" # nix-cachyos-kernel (Hydra CI)
+      "https://cache.lantian.pub/lantian" # nix-cachyos-kernel (Hydra CI)
       "https://wezterm.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      # "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+      "lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ="
       "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
     ];
   };

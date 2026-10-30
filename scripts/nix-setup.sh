@@ -53,8 +53,8 @@ hostname="sumizomenosakura"
 echo "Applying Home Manager configuration for ${hostname}..."
 nix shell nixpkgs#nh -c nh home switch "$HOME/.ml-nix" \
   -c "eeshta@${hostname}" \
-  --option extra-substituters "https://nix-community.cachix.org https://attic.xuyh0120.win/lantian https://wezterm.cachix.org" \
-  --option extra-trusted-public-keys "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
+  --option extra-substituters "https://nix-community.cachix.org https://cache.lantian.pub/lantian https://wezterm.cachix.org" \
+  --option extra-trusted-public-keys "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ= wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
 
 echo "Cleaning up apt packages..."
 sudo apt purge -y curl xz-utils git && sudo apt autoremove -y
