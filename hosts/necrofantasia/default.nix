@@ -12,9 +12,11 @@ delib.host {
 
   # cloudflared/nextcloud/forgejo は全部plainasia側の担当。このホストは
   # ノートPCで常時起動ではないので、コンテナ類はどれも持たない。
-  myconfig.containers.cloudflared.enable = false;
-  myconfig.containers.nextcloud.enable = false;
-  myconfig.containers.forgejo.enable = false;
+  myconfig.containers = {
+    cloudflared.enable = false;
+    nextcloud.enable = false;
+    forgejo.enable = false;
+  };
 
   nixos.imports = [
     ./parts/hardware-configuration.nix

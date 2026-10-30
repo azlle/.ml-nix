@@ -43,82 +43,84 @@ delib.module {
       };
       users.groups.forgejo.gid = 990;
 
-      # 2026-10-07の移行作業で手動で一度叩いただけだった`chown -R 990:990`を
-      # 宣言化する。これが無いと、古いsanoidスナップショットからの復元や
-      # 再インストール後の再import等でdataDirの所有者がuid 1000 (rootful
-      # 時代) に戻ってしまった場合、rootless化の設定(UserNS=keep-id)自体は
-      # 正しく再現されてもForgejoコンテナ側は再現されず、docker-entrypoint.sh
-      # 内の各種chmod/mkdirがEPERMで失敗する (2026-10-07に実際に踏んだ:
-      # chmod: /data/git: Operation not permitted)。起動の度に
-      # (ZFSデータセットとしては安価な) chownを再適用することで、tank配下の
-      # データが生き残っていればuidがズレていても自己修復するようにする。
-      # systemd.tmpfiles.rulesのZ型ではなく専用serviceにする理由: tmpfiles
-      # はブート初期に動くためtankのZFS importより先に走る可能性があり、
-      # マウント前の空ディレクトリに対して実行されてしまう (nextcloud.nixと
-      # 同じ理由でtmpfiles.rulesの「無ければ作る」系を避けているのと同根)。
-      # RequiresMountsForで実マウントまで待つ。
-      systemd.services.forgejo-fix-ownership = {
-        description = "Ensure ${dataDir} is owned by the forgejo user";
-        unitConfig.RequiresMountsFor = [ dataDir ];
-        serviceConfig = {
-          Type = "oneshot";
-          ExecStart = "${pkgs.coreutils}/bin/chown -R ${toString forgejoUser.uid}:${toString forgejoUser.uid} ${dataDir}";
+      systemd.services = {
+        # 2026-10-07の移行作業で手動で一度叩いただけだった`chown -R 990:990`を
+        # 宣言化する。これが無いと、古いsanoidスナップショットからの復元や
+        # 再インストール後の再import等でdataDirの所有者がuid 1000 (rootful
+        # 時代) に戻ってしまった場合、rootless化の設定(UserNS=keep-id)自体は
+        # 正しく再現されてもForgejoコンテナ側は再現されず、docker-entrypoint.sh
+        # 内の各種chmod/mkdirがEPERMで失敗する (2026-10-07に実際に踏んだ:
+        # chmod: /data/git: Operation not permitted)。起動の度に
+        # (ZFSデータセットとしては安価な) chownを再適用することで、tank配下の
+        # データが生き残っていればuidがズレていても自己修復するようにする。
+        # systemd.tmpfiles.rulesのZ型ではなく専用serviceにする理由: tmpfiles
+        # はブート初期に動くためtankのZFS importより先に走る可能性があり、
+        # マウント前の空ディレクトリに対して実行されてしまう (nextcloud.nixと
+        # 同じ理由でtmpfiles.rulesの「無ければ作る」系を避けているのと同根)。
+        # RequiresMountsForで実マウントまで待つ。
+        forgejo-fix-ownership = {
+          description = "Ensure ${dataDir} is owned by the forgejo user";
+          unitConfig.RequiresMountsFor = [ dataDir ];
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = "${pkgs.coreutils}/bin/chown -R ${toString forgejoUser.uid}:${toString forgejoUser.uid} ${dataDir}";
+          };
         };
-      };
 
-      # virtualisation.podman.autoPrune (nixpkgs本体) が生成するpodman-prune.
-      # serviceはrequires=podman.serviceの素のsystemユニットで、root所有の
-      # rootfulなpodmanストレージ(/var/lib/containers/storage)にしか
-      # ExecStart = podman system prune -fを投げない。rootlessでuid 990
-      # 専用のストレージ(/var/lib/forgejo-podman)に切り出した時点でそちら
-      # の対象から外れる (quadlet/oci-containersの違いは無関係 — rootfulで
-      # 動く限りは元々同じストレージを共有しているので、Nextcloud含め
-      # 既存のautoPruneはそのまま効き続ける)。同じ理屈をforgejo自身の
-      # ストレージにも適用するため、User=でuid 990として実行するだけの
-      # 専用unitを用意する。
-      systemd.services.forgejo-podman-prune = {
-        description = "Prune forgejo's rootless podman resources";
-        after = [ "user@${toString forgejoUser.uid}.service" ];
-        requires = [ "user@${toString forgejoUser.uid}.service" ];
-        startAt = "weekly";
-        serviceConfig = {
-          Type = "oneshot";
-          User = forgejoUser.name;
-          Environment = "XDG_RUNTIME_DIR=/run/user/${toString forgejoUser.uid}";
-          # --all --volumes: 素の`prune -f`(nixpkgs本体のautoPruneの既定と
-          # 同じ)はdanglingな(タグ無し)イメージしか消さず、volumeも対象外。
-          # このストレージはforgejo専用コンテナ1つのためだけに存在するので、
-          # タグ付きでも未使用なイメージ・volumeを残しておく理由が無い
-          # (実際に旧通常版イメージのタグ付き残骸195MBと未使用volume
-          # 5.49MBが素のprune -fでは全く回収されなかった)。
-          ExecStart = "${config.virtualisation.podman.package}/bin/podman system prune --force --all --volumes";
+        # virtualisation.podman.autoPrune (nixpkgs本体) が生成するpodman-prune.
+        # serviceはrequires=podman.serviceの素のsystemユニットで、root所有の
+        # rootfulなpodmanストレージ(/var/lib/containers/storage)にしか
+        # ExecStart = podman system prune -fを投げない。rootlessでuid 990
+        # 専用のストレージ(/var/lib/forgejo-podman)に切り出した時点でそちら
+        # の対象から外れる (quadlet/oci-containersの違いは無関係 — rootfulで
+        # 動く限りは元々同じストレージを共有しているので、Nextcloud含め
+        # 既存のautoPruneはそのまま効き続ける)。同じ理屈をforgejo自身の
+        # ストレージにも適用するため、User=でuid 990として実行するだけの
+        # 専用unitを用意する。
+        forgejo-podman-prune = {
+          description = "Prune forgejo's rootless podman resources";
+          after = [ "user@${toString forgejoUser.uid}.service" ];
+          requires = [ "user@${toString forgejoUser.uid}.service" ];
+          startAt = "weekly";
+          serviceConfig = {
+            Type = "oneshot";
+            User = forgejoUser.name;
+            Environment = "XDG_RUNTIME_DIR=/run/user/${toString forgejoUser.uid}";
+            # --all --volumes: 素の`prune -f`(nixpkgs本体のautoPruneの既定と
+            # 同じ)はdanglingな(タグ無し)イメージしか消さず、volumeも対象外。
+            # このストレージはforgejo専用コンテナ1つのためだけに存在するので、
+            # タグ付きでも未使用なイメージ・volumeを残しておく理由が無い
+            # (実際に旧通常版イメージのタグ付き残骸195MBと未使用volume
+            # 5.49MBが素のprune -fでは全く回収されなかった)。
+            ExecStart = "${config.virtualisation.podman.package}/bin/podman system prune --force --all --volumes";
+          };
         };
-      };
 
-      # 2026-10-06に一度踏んだ罠を先取りで回避する: デフォルトの
-      # overrideStrategy (asDropinIfExists) は「同名のユニットファイルが
-      # 既にパッケージから提供されているか」をファイル名の完全一致で判定する。
-      # user@.serviceはテンプレートユニットなので実体ファイルとして存在する
-      # のはuser@.service自身だけで、user@990.serviceというファイルはどの
-      # パッケージにも存在しない。判定が外れるとドロップインではなく新規
-      # ユニットとして丸ごと生成されてしまい、ExecStartを持たない空の
-      # ユニットが本物のuser@.serviceテンプレートを差し替え、
-      # loginctl enable-lingerが user@990.service の起動に失敗する
-      # ("Exec format error")。overrideStrategy = "asDropin" を明示することで
-      # 本物のuser@990.service.d/overrides.confとして生成させる。
-      #
-      # forgejo-fix-ownershipへのRequires/Afterも、tank未マウント時の保護
-      # (RequiresMountsFor) と同じ理由でここに付ける: コンテナ本体
-      # (forgejo.service) はuid 990のsystemd --userインスタンス配下にあり、
-      # system側のuser@990.serviceが先に起動を終えていなければそもそも
-      # 存在し得ないので、ここでchownを待たせれば十分で、forgejo.service
-      # 自体に個別に依存を付ける必要は無い。
-      systemd.services."user@${toString forgejoUser.uid}" = {
-        overrideStrategy = "asDropin";
-        unitConfig = {
-          RequiresMountsFor = [ dataDir ];
-          Requires = [ "forgejo-fix-ownership.service" ];
-          After = [ "forgejo-fix-ownership.service" ];
+        # 2026-10-06に一度踏んだ罠を先取りで回避する: デフォルトの
+        # overrideStrategy (asDropinIfExists) は「同名のユニットファイルが
+        # 既にパッケージから提供されているか」をファイル名の完全一致で判定する。
+        # user@.serviceはテンプレートユニットなので実体ファイルとして存在する
+        # のはuser@.service自身だけで、user@990.serviceというファイルはどの
+        # パッケージにも存在しない。判定が外れるとドロップインではなく新規
+        # ユニットとして丸ごと生成されてしまい、ExecStartを持たない空の
+        # ユニットが本物のuser@.serviceテンプレートを差し替え、
+        # loginctl enable-lingerが user@990.service の起動に失敗する
+        # ("Exec format error")。overrideStrategy = "asDropin" を明示することで
+        # 本物のuser@990.service.d/overrides.confとして生成させる。
+        #
+        # forgejo-fix-ownershipへのRequires/Afterも、tank未マウント時の保護
+        # (RequiresMountsFor) と同じ理由でここに付ける: コンテナ本体
+        # (forgejo.service) はuid 990のsystemd --userインスタンス配下にあり、
+        # system側のuser@990.serviceが先に起動を終えていなければそもそも
+        # 存在し得ないので、ここでchownを待たせれば十分で、forgejo.service
+        # 自体に個別に依存を付ける必要は無い。
+        "user@${toString forgejoUser.uid}" = {
+          overrideStrategy = "asDropin";
+          unitConfig = {
+            RequiresMountsFor = [ dataDir ];
+            Requires = [ "forgejo-fix-ownership.service" ];
+            After = [ "forgejo-fix-ownership.service" ];
+          };
         };
       };
 
@@ -138,7 +140,7 @@ delib.module {
           # (quadlet-nixのRootless units参照)。RequiresMountsForは上の
           # systemd.services."user@990"側に付けてあるので、tank未マウント時の
           # 保護はそちらが担う。
-          uid = forgejoUser.uid;
+          inherit (forgejoUser) uid;
 
           containerConfig = {
             # 通常版イメージのPID1はs6-overlayでroot初期化が必須
