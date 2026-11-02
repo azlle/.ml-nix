@@ -22,8 +22,6 @@
 
     blender-bin.url = "github:edolstra/nix-warez?dir=blender";
 
-    niri.url = "github:sodiboo/niri-flake";
-
     aagl = {
       url = "github:ezKEa/aagl-gtk-on-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -91,7 +89,6 @@
     {
       self,
       nixpkgs,
-      niri,
       nix-cachyos-kernel,
       millennium,
       treefmt-nix,
@@ -111,7 +108,6 @@
         inherit system;
         config.allowUnfree = true;
         overlays = [
-          niri.overlays.niri
           nix-cachyos-kernel.overlays.pinned
           millennium.overlays.default
         ];

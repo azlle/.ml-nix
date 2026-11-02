@@ -20,8 +20,6 @@ delib.module {
 
     nixpkgs.config.allowUnfree = true;
     nixpkgs.overlays = [
-      inputs.niri.overlays.niri
-      (import ../pkgs/niri-libdisplay-info-overlay.nix)
       inputs.nix-cachyos-kernel.overlays.pinned
       inputs.millennium.overlays.default
       (final: _prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })
@@ -47,8 +45,6 @@ delib.module {
         lib.mkIf (!(useHomeManagerModule && moduleSystem == "nixos")) {
           nixpkgs.config.allowUnfree = true;
           nixpkgs.overlays = [
-            inputs.niri.overlays.niri
-            (import ../pkgs/niri-libdisplay-info-overlay.nix)
             inputs.nix-cachyos-kernel.overlays.pinned
             inputs.millennium.overlays.default
             (final: _prev: { git-vrc = final.callPackage ../pkgs/git-vrc.nix { }; })

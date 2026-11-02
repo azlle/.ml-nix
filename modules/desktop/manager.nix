@@ -1,7 +1,6 @@
 # modules/desktop/manager.nix
 {
   delib,
-  inputs,
   pkgs,
   ...
 }:
@@ -10,19 +9,26 @@ delib.module {
 
   options = delib.singleCascadeEnableOption;
 
-  # niri only registers its options here; it has no effect until enabled below.
-  nixos.always.imports = [ inputs.niri.nixosModules.niri ];
-
   nixos.ifEnabled = {
     programs = {
-      niri = {
-        enable = true;
-        package = pkgs.niri-unstable;
-      };
+      niri.enable = true;
       dconf.enable = true;
     };
 
-    niri-flake.cache.enable = true;
+    # programs.niri enables polkit but starts no authentication agent
+    systemd.user.services.polkit-kde-agent = {
+      description = "PolicyKit Authentication Agent";
+      wantedBy = [ "niri.service" ];
+      after = [ "graphical-session.target" ];
+      partOf = [ "graphical-session.target" ];
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${pkgs.kdePackages.polkit-kde-agent-1}/libexec/polkit-kde-authentication-agent-1";
+        Restart = "on-failure";
+        RestartSec = 1;
+        TimeoutStopSec = 10;
+      };
+    };
 
     services = {
       displayManager.ly.enable = false;
