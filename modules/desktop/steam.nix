@@ -1,5 +1,5 @@
 # modules/desktop/steam.nix
-{ delib, ... }:
+{ delib, pkgs, ... }:
 delib.module {
   name = "desktop.steam";
 
@@ -8,7 +8,7 @@ delib.module {
   nixos.ifEnabled = {
     programs.steam = {
       enable = true;
-      # package = pkgs.millennium-steam;
+      package = pkgs.millennium-steam;
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
       localNetworkGameTransfers.openFirewall = true;
