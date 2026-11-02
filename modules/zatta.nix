@@ -23,7 +23,10 @@ delib.module {
               pkgs.curl;
         in
         {
-          home.packages = [ curl ] ++ (with pkgs; [
+          home.packages = [
+            curl
+          ]
+          ++ (with pkgs; [
             age
             bat
             btop
