@@ -4,6 +4,10 @@ delib.module {
   name = "ssh";
 
   nixos.always = {
+    # Single agent for shells and GUI apps; keychain.zsh loads the keys
+    programs.ssh.startAgent = true;
+    services.gnome.gcr-ssh-agent.enable = false;
+
     services.openssh = {
       enable = true;
 
