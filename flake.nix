@@ -65,7 +65,10 @@
 
     nixvim.url = "github:nix-community/nixvim";
 
-    wezterm.url = "github:wezterm/wezterm?dir=nix";
+    wezterm = {
+      url = "github:wezterm/wezterm?dir=nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     denix = {
       url = "github:yunfachi/denix";
